@@ -1,0 +1,6 @@
+<view class="empty {{compact ? 'empty--compact' : ''}}">
+  <view class="empty__img">{{icon}}</view>
+  <view class="empty__text">{{text}}</view>
+  <view wx:if="{{desc}}" class="empty__desc">{{desc}}</view>
+  <view wx:if="{{btn}}" class="btn btn--{{btnType}} empty__btn" bindtap="onAction">{{btn}}</view>
+</view>

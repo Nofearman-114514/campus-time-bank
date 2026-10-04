@@ -1,0 +1,179 @@
+/* 举报 */
+
+/* ---------------- 平台提示 ---------------- */
+.report-tip {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: 20rpx 24rpx;
+  border-radius: var(--r-m);
+  background: var(--c-warn-l);
+}
+.report-tip__icon {
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+.report-tip__text {
+  flex: 1;
+  font-size: var(--fs-cap);
+  color: var(--c-warn);
+  line-height: 1.5;
+}
+
+/* ---------------- 被举报对象 ---------------- */
+.target-card { margin-top: 20rpx; }
+
+.target-card__label {
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+.target-card__row {
+  margin-top: 12rpx;
+  gap: 14rpx;
+}
+.target-card__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.target-card__id {
+  margin-top: 10rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* ---------------- 举报原因（单选卡片） ---------------- */
+.reason-list {
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  overflow: hidden;
+  box-shadow: var(--sh-1);
+}
+
+.reason {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  min-height: 108rpx;
+  padding: 0 var(--sp);
+  position: relative;
+}
+.reason:active { background: var(--c-bg); }
+.reason + .reason::before {
+  content: '';
+  position: absolute;
+  left: var(--sp);
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+.reason.is-active { background: var(--c-primary-l); }
+.reason.is-active .reason__text {
+  color: var(--c-primary);
+  font-weight: 500;
+}
+
+/* 圆点单选 */
+.reason__radio {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 3rpx solid var(--c-t4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.reason.is-active .reason__radio { border-color: var(--c-primary); }
+.reason__radio-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: var(--c-primary);
+}
+
+.reason__text {
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+
+/* ---------------- 凭证上传 ---------------- */
+.uploader {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.uploader__item {
+  position: relative;
+  width: 180rpx;
+  height: 180rpx;
+}
+.uploader__img {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--r-s);
+  background: var(--c-line);
+}
+.uploader__del {
+  position: absolute;
+  right: -10rpx;
+  top: -10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--c-danger);
+  color: var(--c-inverse);
+  font-size: 28rpx;
+  line-height: 38rpx;
+  text-align: center;
+}
+
+.uploader__add {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--r-s);
+  border: 2rpx dashed var(--c-t4);
+  background: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+}
+.uploader__add:active { background: var(--c-line); }
+.uploader__add-icon {
+  font-size: 44rpx;
+  color: var(--c-t3);
+  line-height: 1;
+}
+.uploader__add-text {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+.uploader__tip {
+  margin-top: 20rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+  line-height: 1.5;
+}
+
+/* ---------------- 离线提示 ---------------- */
+.mock-note {
+  margin-top: 20rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-warn-l);
+  color: var(--c-warn);
+  font-size: var(--fs-mini);
+  line-height: 1.5;
+}

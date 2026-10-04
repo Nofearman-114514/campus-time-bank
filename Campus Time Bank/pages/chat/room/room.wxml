@@ -1,0 +1,93 @@
+<!-- 聊天室：自定义导航栏（右侧「查看订单」）+ 消息区 + 底部输入栏 -->
+<view class="page room-page">
+
+  <!-- ============ 自定义导航栏 ============ -->
+  <nav-bar title="{{toName || '聊天'}}" bg="{{navBg}}" color="{{navColor}}" showBack="{{true}}" fixed="{{true}}">
+    <view slot="right" class="nb-right">
+      <view wx:if="{{orderId !== ''}}" class="nb-order-btn" bindtap="goOrder">
+        <text class="nb-order-btn__text">查看订单</text>
+      </view>
+    </view>
+  </nav-bar>
+
+  <!-- ============ 离线演示模式标识（MOCK 下才有） ============ -->
+  <view wx:if="{{mockMode}}" class="mode-tip">
+    <text class="mode-tip__icon">⚡</text>
+    <text>离线演示模式 · 本地模拟实时推送「每 2 秒轮询」</text>
+  </view>
+
+  <!-- ============ 实时连接降级提示 ============ -->
+  <view wx:if="{{realtimeDegraded && !mockMode}}" class="mode-tip mode-tip--warn">
+    <text>实时连接已断开，已切换为轮询刷新</text>
+  </view>
+
+  <!-- ============ 消息区 ============ -->
+  <scroll-view
+    class="msg-scroll"
+    style="height:{{scrollHeight}}px;"
+    scroll-y
+    scroll-with-animation
+    scroll-into-view="{{scrollInto}}"
+    bindscrolltoupper="onScrollUpper"
+    upper-threshold="30"
+  >
+    <!-- 顶部：加载更早的历史 -->
+    <view class="msg-head">
+      <text wx:if="{{loadingMore}}" class="msg-head__text">正在加载更早的消息…</text>
+      <text wx:elif="{{hasMore}}" class="msg-head__text">上滑查看更早的消息</text>
+      <text wx:else class="msg-head__text">— 没有更早的消息了 —</text>
+    </view>
+
+    <!-- 消息列表 -->
+    <view wx:for="{{messages}}" wx:key="_id" class="msg-wrap">
+      <!-- 时间分隔：相邻消息超过 5 分钟才显示 -->
+      <view wx:if="{{item.showTime}}" class="msg-time">{{item.timeText}}</view>
+
+      <view class="msg {{item.isMine ? 'msg--mine' : 'msg--other'}}">
+        <user-avatar
+          wx:if="{{!item.isMine}}"
+          url="{{toAvatar}}"
+          name="{{toName}}"
+          size="s"
+        />
+
+        <!-- 图片消息 -->
+        <image
+          wx:if="{{item.isImage}}"
+          class="msg__img"
+          src="{{item.image}}"
+          mode="widthFix"
+          data-url="{{item.image}}"
+          bindtap="onPreview"
+        />
+        <!-- 文本消息 -->
+        <view wx:else class="msg__bubble">{{item.content}}</view>
+      </view>
+    </view>
+
+    <!-- ★ 滚动锚点：固定指向列表底部 -->
+    <view id="msg-bottom" class="msg-bottom"></view>
+  </scroll-view>
+
+  <!-- ============ 底部输入栏 ============ -->
+  <view class="input-bar">
+    <view class="input-bar__plus" bindtap="onSendImage">＋</view>
+    <input
+      class="input-bar__input"
+      value="{{inputText}}"
+      placeholder="说点什么…"
+      placeholder-class="input-bar__ph"
+      confirm-type="send"
+      adjust-position="{{true}}"
+      cursor-spacing="20"
+      maxlength="500"
+      bindinput="onInput"
+      bindconfirm="onSend"
+      bindblur="onBlur"
+    />
+    <view
+      class="input-bar__send {{inputText ? 'is-active' : ''}}"
+      bindtap="onSend"
+    >发送</view>
+  </view>
+</view>

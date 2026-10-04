@@ -1,0 +1,12 @@
+{
+  "usingComponents": {
+    "skill-card": "/components/skill-card/index",
+    "order-card": "/components/order-card/index",
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "我的发布",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 100
+}

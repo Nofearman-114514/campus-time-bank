@@ -1,0 +1,11 @@
+{
+  "usingComponents": {
+    "ec-canvas": "/packageAdmin/components/ec-canvas/ec-canvas",
+    "user-avatar": "/components/user-avatar/index",
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "管理端 · 数据看板",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

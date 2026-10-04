@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index"
+  },
+  "navigationBarTitleText": "系统通知",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 100
+}

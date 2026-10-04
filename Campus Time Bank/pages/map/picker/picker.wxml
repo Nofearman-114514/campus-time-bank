@@ -1,0 +1,95 @@
+<!-- ==================================================================
+     地图选点：<map> 铺满屏幕 + 底部选中地点卡片
+     确认后：eventChannel 回传 + wx.setStorageSync 兜底 + navigateBack
+     ================================================================== -->
+<view class="page picker">
+
+  <!-- 地图铺满 -->
+  <map
+    id="picker-map"
+    class="map"
+    style="height:{{mapHeight}}px;"
+    latitude="{{latitude}}"
+    longitude="{{longitude}}"
+    scale="{{scale}}"
+    markers="{{markers}}"
+    show-location="{{true}}"
+    enable-3D="{{false}}"
+    enable-rotate="{{false}}"
+    enable-overlooking="{{false}}"
+    bindtap="onMapTap"
+    bindregionchange="onRegionChange"
+  ></map>
+
+  <!-- ★ 安全提示：只能选校内（固定在地图左上角，随时可见） -->
+  <view class="notice">
+    <text class="notice__icon">🏫</text>
+    <text class="notice__text">只能选择<text class="notice__strong">校内地点</text>：校外的任务一旦出现纠纷或意外，校方无法及时处理</text>
+  </view>
+
+  <!-- 右上角工具按钮 -->
+  <view class="tool">
+    <view class="tool__btn" bindtap="onBackToMe">
+      <text class="tool__icon">🎯</text>
+      <text class="tool__text">我的位置</text>
+    </view>
+    <view class="tool__btn" bindtap="onChooseInMap">
+      <text class="tool__icon">🗺️</text>
+      <text class="tool__text">微信地图选点</text>
+    </view>
+  </view>
+
+  <!-- 拒绝授权的引导条 -->
+  <view wx:if="{{denied}}" class="deny">
+    <text class="deny__icon">📍</text>
+    <view class="deny__body">
+      <text class="deny__title">还没有获取到位置权限</text>
+      <text class="deny__desc">开启后可以自动定位、按距离筛选；不开启也能直接选点</text>
+    </view>
+    <view class="btn btn--sm btn--primary" bindtap="onOpenSetting">去设置</view>
+  </view>
+
+  <!-- 底部选中地点卡片 -->
+  <view class="picker-card">
+    <!-- 校内常用地点：点一下直接选中，不用跟经纬度打交道。
+         放在卡片内部（而不是卡片上方），这样永远不会被 fixed 的卡片挡住。 -->
+    <scroll-view class="spots" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="spots__inner">
+        <view
+          wx:for="{{spots}}"
+          wx:key="key"
+          class="spots__chip {{picked && picked.name === item.locationName ? 'spots__chip--on' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onPickSpot"
+        >{{item.name}}</view>
+      </view>
+    </scroll-view>
+
+    <view class="picker-card__head">
+      <text class="picker-card__label">已选地点</text>
+      <text wx:if="{{locating}}" class="picker-card__locating">定位中…</text>
+    </view>
+
+    <view class="picker-card__row">
+      <text class="picker-card__icon">📌</text>
+      <view class="picker-card__body">
+        <text class="picker-card__name">{{picked.name || '尚未选择地点'}}</text>
+        <text wx:if="{{picked.address}}" class="picker-card__addr ellipsis-2">{{picked.address}}</text>
+        <text wx:elif="{{picked.latitude}}" class="picker-card__addr nums">
+          经度 {{picked.longitude}}｜纬度 {{picked.latitude}}
+        </text>
+        <text wx:if="{{nearText}}" class="picker-card__near">{{nearText}}</text>
+        <text wx:if="{{rejectText}}" class="picker-card__reject">{{rejectText}}</text>
+      </view>
+    </view>
+
+    <view class="picker-card__tip">
+      提示：可以直接点地图上的位置，或用「微信地图选点」搜索精确地点。
+    </view>
+
+    <view class="picker-card__actions">
+      <view class="btn btn--gray" bindtap="onCancel">取消</view>
+      <view class="btn btn--primary flex-1" bindtap="onConfirm">确认选择</view>
+    </view>
+  </view>
+</view>

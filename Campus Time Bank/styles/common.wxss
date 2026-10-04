@@ -1,0 +1,529 @@
+/* ==================================================================
+ * 通用原子类与共享样式 —— 校园时间银行
+ * 页面里优先复用这些类，避免每个页面重复写同样的 CSS。
+ * ================================================================== */
+
+/* ------------------------------------------------------------------
+ * 1. 布局容器
+ * ------------------------------------------------------------------ */
+.page {
+  min-height: 100vh;
+  background: var(--c-bg);
+  box-sizing: border-box;
+}
+.page-body {
+  padding: var(--sp);
+  box-sizing: border-box;
+}
+/* 底部有固定操作条时，给内容留出空间 */
+.page-body--has-bar {
+  padding-bottom: 200rpx;
+}
+/*
+ * ★ tab 页专用：自定义 tabBar 是浮层，小程序不会自动为它预留空间，
+ *   所以 4 个 tab 页（广场/订单/时间币/我的）的内容容器必须加这个类，
+ *   否则最后一条内容会被 tabBar 遮住。
+ *   高度 = tabBar 108rpx + 凸起按钮露出部分 + 安全区
+ */
+.has-tabbar {
+  padding-bottom: calc(150rpx + env(safe-area-inset-bottom));
+}
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 20rpx);
+}
+
+/* ------------------------------------------------------------------
+ * 2. Flex 工具
+ * ------------------------------------------------------------------ */
+.row { display: flex; flex-direction: row; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; min-width: 0; }
+.between { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+.center { display: flex; align-items: center; justify-content: center; }
+.start { align-items: flex-start; }
+.end { align-items: flex-end; }
+.gap-s { gap: 12rpx; }
+.gap { gap: 20rpx; }
+.gap-l { gap: 32rpx; }
+.mt-s { margin-top: 12rpx; }
+.mt { margin-top: 24rpx; }
+.mt-l { margin-top: 40rpx; }
+.mb-s { margin-bottom: 12rpx; }
+.mb { margin-bottom: 24rpx; }
+
+/* ------------------------------------------------------------------
+ * 3. 文字
+ * ------------------------------------------------------------------ */
+.t1 { color: var(--c-t1); }
+.t2 { color: var(--c-t2); }
+.t3 { color: var(--c-t3); }
+.t-primary { color: var(--c-primary); }
+.t-accent { color: var(--c-accent); }
+.t-danger { color: var(--c-danger); }
+.t-warn { color: var(--c-warn); }
+.t-success { color: var(--c-success); }
+.t-white { color: #fff; }
+.fs-h1 { font-size: var(--fs-h1); }
+.fs-h2 { font-size: var(--fs-h2); }
+.fs-h3 { font-size: var(--fs-h3); }
+.fs-body { font-size: var(--fs-body); }
+.fs-cap { font-size: var(--fs-cap); }
+.fs-mini { font-size: var(--fs-mini); }
+.bold { font-weight: 600; }
+.bolder { font-weight: 700; }
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ellipsis-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.ellipsis-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+/* 数字等宽，金额对齐更整齐 */
+.nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ------------------------------------------------------------------
+ * 4. 卡片
+ * ------------------------------------------------------------------ */
+.card {
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  padding: var(--sp);
+  box-shadow: var(--sh-1);
+  box-sizing: border-box;
+}
+.card--flat {
+  box-shadow: none;
+  border: 2rpx solid var(--c-line);
+}
+.card--tight { padding: 20rpx; }
+.card + .card { margin-top: 20rpx; }
+
+/* 区块标题 */
+.sec-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 32rpx 0 20rpx;
+}
+.sec-title__text {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+  position: relative;
+  padding-left: 20rpx;
+}
+.sec-title__text::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8rpx;
+  height: 28rpx;
+  border-radius: 4rpx;
+  background: var(--c-primary);
+}
+.sec-title__more {
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+
+/* 分割线 */
+.divider {
+  height: 2rpx;
+  background: var(--c-line);
+  margin: 24rpx 0;
+}
+.divider--inset { margin-left: var(--sp); }
+
+/* ------------------------------------------------------------------
+ * 5. 按钮
+ * ------------------------------------------------------------------ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  padding: 0 40rpx;
+  border-radius: var(--r-full);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1;
+  background: var(--c-primary);
+  color: #fff;
+  border: none;
+  box-sizing: border-box;
+  transition: opacity .15s, transform .1s;
+}
+.btn::after { border: none; }
+.btn:active { opacity: .85; transform: scale(.98); }
+
+.btn--primary { background: var(--c-primary); box-shadow: var(--sh-primary); }
+.btn--accent { background: var(--c-accent); box-shadow: var(--sh-accent); }
+.btn--danger { background: var(--c-danger); }
+.btn--warn { background: var(--c-warn); }
+.btn--ghost {
+  background: transparent;
+  color: var(--c-primary);
+  border: 2rpx solid var(--c-primary);
+  box-shadow: none;
+}
+.btn--gray {
+  background: var(--c-bg);
+  color: var(--c-t2);
+}
+.btn--light {
+  background: var(--c-primary-l);
+  color: var(--c-primary);
+  box-shadow: none;
+}
+.btn--block { display: flex; width: 100%; }
+.btn--sm { height: 64rpx; padding: 0 28rpx; font-size: var(--fs-cap); }
+.btn--xs { height: 52rpx; padding: 0 22rpx; font-size: var(--fs-mini); border-radius: var(--r-full); }
+.btn--lg { height: 96rpx; font-size: var(--fs-h3); }
+.btn[disabled], .btn--disabled {
+  background: var(--c-line) !important;
+  color: var(--c-t3) !important;
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+ * 6. 标签 / 徽章
+ * ------------------------------------------------------------------ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 40rpx;
+  padding: 0 16rpx;
+  border-radius: 8rpx;
+  font-size: var(--fs-mini);
+  background: var(--c-bg);
+  color: var(--c-t2);
+  line-height: 1;
+}
+.tag--primary { background: var(--c-primary-l); color: var(--c-primary); }
+.tag--accent { background: var(--c-accent-l); color: var(--c-accent); }
+.tag--danger { background: var(--c-danger-l); color: var(--c-danger); }
+.tag--warn { background: var(--c-warn-l); color: var(--c-warn); }
+.tag--info { background: var(--c-info-l); color: var(--c-info); }
+.tag--success { background: var(--c-success-l); color: var(--c-success); }
+.tag--outline {
+  background: transparent;
+  border: 2rpx solid var(--c-line);
+  color: var(--c-t2);
+}
+.tag--lg { height: 52rpx; padding: 0 22rpx; font-size: var(--fs-cap); border-radius: var(--r-full); }
+
+/* ------------------------------------------------------------------
+ * 7. 时间币（统一视觉：金色圆币 + 数字）
+ * ------------------------------------------------------------------ */
+.coin {
+  display: inline-flex;
+  align-items: center;
+  color: var(--c-accent);
+  font-weight: 700;
+}
+.coin__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 6rpx;
+  border-radius: 50%;
+  background: var(--g-accent);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.coin__icon--lg { width: 48rpx; height: 48rpx; font-size: 28rpx; }
+.coin__num { font-size: var(--fs-h3); }
+
+/* ------------------------------------------------------------------
+ * 8. 头像
+ * ------------------------------------------------------------------ */
+.avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: var(--c-line);
+  flex-shrink: 0;
+}
+.avatar--s { width: 64rpx; height: 64rpx; }
+.avatar--l { width: 128rpx; height: 128rpx; }
+
+/* ------------------------------------------------------------------
+ * 9. 列表单元格（设置项 / 菜单）
+ * ------------------------------------------------------------------ */
+.cell-group {
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  overflow: hidden;
+  box-shadow: var(--sh-1);
+}
+.cell {
+  display: flex;
+  align-items: center;
+  min-height: 104rpx;
+  padding: 0 var(--sp);
+  position: relative;
+  background: var(--c-card);
+}
+.cell:active { background: #FAFBFC; }
+.cell + .cell::before {
+  content: '';
+  position: absolute;
+  left: var(--sp);
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+.cell__icon {
+  width: 44rpx;
+  font-size: 36rpx;
+  margin-right: 20rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+.cell__label {
+  flex: 1;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+.cell__value {
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  margin-right: 8rpx;
+  max-width: 340rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cell__arrow {
+  color: var(--c-t4);
+  font-size: 26rpx;
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------
+ * 10. 表单
+ * ------------------------------------------------------------------ */
+.form-item {
+  display: flex;
+  align-items: center;
+  min-height: 108rpx;
+  padding: 0 var(--sp);
+  background: var(--c-card);
+  position: relative;
+}
+.form-item + .form-item::before {
+  content: '';
+  position: absolute;
+  left: var(--sp);
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+.form-item--top { align-items: flex-start; padding-top: 28rpx; padding-bottom: 28rpx; }
+.form-item__label {
+  width: 170rpx;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+  flex-shrink: 0;
+}
+.form-item__label--required::before {
+  content: '*';
+  color: var(--c-danger);
+  margin-right: 6rpx;
+}
+.form-item__input {
+  flex: 1;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+  text-align: right;
+  min-width: 0;
+}
+.form-item--top .form-item__input { text-align: left; }
+.form-item__input--left { text-align: left; }
+.form-item__ph { color: var(--c-t4); }
+.form-item__unit { font-size: var(--fs-cap); color: var(--c-t2); margin-left: 10rpx; }
+.form-textarea {
+  width: 100%;
+  min-height: 180rpx;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+  line-height: 1.7;
+  box-sizing: border-box;
+}
+.char-count {
+  text-align: right;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+  padding: 8rpx var(--sp) 0;
+}
+
+/* ------------------------------------------------------------------
+ * 11. 空态 / 加载
+ * ------------------------------------------------------------------ */
+.empty {
+  padding: 140rpx 60rpx;
+  text-align: center;
+}
+.empty__img { font-size: 120rpx; line-height: 1; }
+.empty__text {
+  margin-top: 24rpx;
+  font-size: var(--fs-body);
+  color: var(--c-t3);
+}
+.empty__btn { margin-top: 36rpx; }
+
+.loading-more {
+  padding: 32rpx 0;
+  text-align: center;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+.loading-more--nomore { color: var(--c-t4); }
+
+/* 骨架屏 */
+.sk {
+  background: linear-gradient(90deg, #EEF1F4 25%, #F6F8FA 37%, #EEF1F4 63%);
+  background-size: 400% 100%;
+  animation: sk-shine 1.3s ease infinite;
+  border-radius: 8rpx;
+}
+@keyframes sk-shine {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ------------------------------------------------------------------
+ * 12. 底部固定操作条
+ * ------------------------------------------------------------------ */
+.footer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx var(--sp) calc(env(safe-area-inset-bottom) + 20rpx);
+  background: var(--c-card);
+  box-shadow: 0 -4rpx 24rpx rgba(16, 24, 40, 0.06);
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------
+ * 13. 遮罩 / 弹层
+ * ------------------------------------------------------------------ */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: var(--c-mask);
+  z-index: 100;
+}
+.popup {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+  background: var(--c-card);
+  border-radius: var(--r-l) var(--r-l) 0 0;
+  padding: var(--sp-l) var(--sp) calc(env(safe-area-inset-bottom) + 32rpx);
+  box-shadow: var(--sh-2);
+  max-height: 80vh;
+  box-sizing: border-box;
+  animation: popup-up .22s ease;
+}
+@keyframes popup-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.popup__title {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 32rpx;
+  color: var(--c-t1);
+}
+
+/* ------------------------------------------------------------------
+ * 14. 信用分小角标
+ * ------------------------------------------------------------------ */
+.credit-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 36rpx;
+  padding: 0 14rpx;
+  border-radius: var(--r-full);
+  background: var(--c-info-l);
+  color: var(--c-info);
+  font-size: var(--fs-mini);
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------
+ * 15. 状态点
+ * ------------------------------------------------------------------ */
+.dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot--waiting { background: var(--c-warn); }
+.dot--ongoing { background: var(--c-info); }
+.dot--confirming { background: var(--c-accent); }
+.dot--finished { background: var(--c-success); }
+.dot--canceled { background: var(--c-t4); }
+.dot--closed { background: var(--c-t4); }
+
+/* 未读红点 */
+.unread-dot {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  border-radius: var(--r-full);
+  background: var(--c-danger);
+  color: #fff;
+  font-size: 20rpx;
+  line-height: 32rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------
+ * 16. 横向滚动容器（分类栏）
+ * ------------------------------------------------------------------ */
+.scroll-x {
+  white-space: nowrap;
+  width: 100%;
+}
+.scroll-x__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 0 var(--sp);
+}

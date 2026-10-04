@@ -1,0 +1,181 @@
+/* ==================================================================
+ * 搜索页：顶部搜索框 + 历史/热门标签 + 结果列表（关键词高亮）
+ * 只使用 theme.wxss 的 CSS 变量。
+ * ================================================================== */
+
+/* ---------------- 顶部搜索框 ---------------- */
+.search-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--sp);
+  background: var(--c-card);
+}
+
+.search-box {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 76rpx;
+  padding: 0 20rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+}
+
+.search-box__icon {
+  font-size: var(--fs-cap);
+  margin-right: 12rpx;
+}
+
+.search-box__input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+
+.search-box__ph { color: var(--c-t3); }
+
+.search-box__clear {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 44rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  background: var(--c-line);
+}
+
+.search-head__btn {
+  margin-left: 20rpx;
+  font-size: var(--fs-body);
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+/* ---------------- 历史 / 热门标签 ---------------- */
+.tag-wrap {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 18rpx;
+}
+
+/* 历史：文字 + 删除小叉 */
+.h-tag {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 60rpx;
+  padding: 0 12rpx 0 24rpx;
+  border-radius: var(--r-full);
+  background: var(--c-card);
+  box-shadow: var(--sh-1);
+}
+
+.h-tag__text {
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  max-width: 260rpx;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.h-tag__del {
+  margin-left: 10rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 34rpx;
+  font-size: 20rpx;
+  color: var(--c-t3);
+}
+
+/* 热门标签 */
+.hot-tag {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 60rpx;
+  padding: 0 24rpx;
+  border-radius: var(--r-full);
+  background: var(--c-primary-l);
+  color: var(--c-primary);
+  font-size: var(--fs-cap);
+  font-weight: 500;
+}
+
+.hot-tag__flame {
+  margin-right: 6rpx;
+  font-size: var(--fs-mini);
+}
+
+/* ---------------- 结果列表 ---------------- */
+.result-tip {
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  padding: 8rpx 0 16rpx;
+}
+
+.card-list__item + .card-list__item {
+  margin-top: 20rpx;
+}
+
+/* 高亮补充行：卡片组件内部不可改，故在卡片下方给出命中上下文 */
+.hl-note {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 16rpx var(--sp) 20rpx;
+  background: var(--c-card);
+  border-radius: 0 0 var(--r-m) var(--r-m);
+  box-shadow: var(--sh-1);
+  position: relative;
+}
+
+.hl-note::before {
+  content: '';
+  position: absolute;
+  left: var(--sp);
+  right: var(--sp);
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+
+.hl-note__label {
+  flex-shrink: 0;
+  height: 34rpx;
+  padding: 0 12rpx;
+  margin-right: 12rpx;
+  border-radius: 6rpx;
+  background: var(--c-accent-l);
+  color: var(--c-accent);
+  font-size: 20rpx;
+  line-height: 34rpx;
+}
+
+.hl-note__body {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.5;
+}
+
+.hl-note__desc {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--c-t3);
+  font-size: var(--fs-mini);
+}
+
+/* 关键词高亮：命中片段 */
+.hl {
+  color: var(--c-primary);
+  font-weight: 700;
+}

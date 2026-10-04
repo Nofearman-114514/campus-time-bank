@@ -1,0 +1,55 @@
+<view class="oc" bindtap="onCard" hover-class="oc--hover" hover-stay-time="80">
+
+  <!-- 头部 -->
+  <view class="oc__head">
+    <text class="oc__no">订单号 {{item.orderNo}}</text>
+    <view class="flex-1"></view>
+    <view wx:if="{{showRoleTag}}" class="oc__role">{{roleText}}</view>
+    <view class="oc__status oc__status--{{statusKey}}">
+      <view class="dot dot--{{statusKey}}"></view>
+      <text>{{statusText}}</text>
+    </view>
+  </view>
+
+  <!-- 主体 -->
+  <view class="oc__body">
+    <view class="oc__cover" style="background:{{coverBg}}">
+      <image wx:if="{{hasImage}}" class="oc__cover-img" src="{{item.skillSnapshot.images[0]}}" mode="aspectFill" lazy-load />
+      <text wx:else class="oc__cover-icon">{{coverIcon}}</text>
+    </view>
+
+    <view class="oc__info">
+      <view class="oc__title">{{item.skillSnapshot.title}}</view>
+      <view class="oc__meta">
+        <view class="coin">
+          <view class="coin__icon">币</view>
+          <text class="coin__num">{{item.amount}}</text>
+        </view>
+        <text wx:if="{{durationText}}" class="oc__meta-sep">/</text>
+        <text wx:if="{{durationText}}" class="oc__meta-text">{{durationText}}</text>
+      </view>
+      <view wx:if="{{item.remark}}" class="oc__remark">留言：{{item.remark}}</view>
+    </view>
+  </view>
+
+  <!-- 对方 + 操作 -->
+  <view class="oc__foot">
+    <user-avatar size="s" url="{{counterpart.avatarUrl}}" name="{{counterpart.nickName}}" />
+    <view class="oc__counterpart">
+      <text class="oc__cp-name">{{counterpart.nickName || '同学'}}</text>
+      <text class="oc__cp-label">{{counterpartTitle}}</text>
+    </view>
+    <view class="flex-1"></view>
+
+    <view wx:if="{{showActions && actions.length}}" class="oc__actions" catchtap="noop">
+      <view
+        wx:for="{{actions}}"
+        wx:for-item="btn"
+        wx:key="key"
+        class="btn btn--xs btn--{{btn.type}}"
+        data-action="{{btn.key}}"
+        catchtap="onAction"
+      >{{btn.text}}</view>
+    </view>
+  </view>
+</view>

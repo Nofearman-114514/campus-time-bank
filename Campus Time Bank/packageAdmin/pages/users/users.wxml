@@ -1,0 +1,206 @@
+<!-- 管理端 · 用户管理 -->
+<view class="admin-page">
+
+  <!-- ==================== 标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">用户管理</view>
+      <view class="admin-bar__sub">搜索昵称 / 学号 · 封禁 · 角色 · 时间币调整</view>
+    </view>
+    <view class="admin-bar__side">
+      <view class="admin-bar__num">{{total}}</view>
+      <view class="admin-bar__label">命中用户</view>
+    </view>
+  </view>
+
+  <!-- ==================== 筛选 ==================== -->
+  <view class="admin-toolbar">
+    <view class="admin-search">
+      <text class="admin-search__icon">🔍</text>
+      <input
+        class="admin-search__input"
+        type="text"
+        value="{{keyword}}"
+        placeholder="搜索昵称或学号"
+        placeholder-class="admin-search__ph"
+        confirm-type="search"
+        bindinput="onKeyword"
+      />
+      <text wx:if="{{keyword}}" class="admin-search__clear" bindtap="clearKeyword">✕</text>
+    </view>
+
+    <view class="admin-chips">
+      <view
+        wx:for="{{authOptions}}"
+        wx:key="t"
+        class="chip {{authStatus === item.v ? 'chip--on' : ''}}"
+        data-v="{{item.v}}"
+        bindtap="onAuthTab"
+      >{{item.t}}</view>
+    </view>
+    <view class="admin-chips">
+      <view
+        wx:for="{{statusOptions}}"
+        wx:key="t"
+        class="chip {{status === item.v ? 'chip--on' : ''}} {{item.v === '0' ? 'chip--danger' : ''}}"
+        data-v="{{item.v}}"
+        bindtap="onStatusTab"
+      >{{item.t}}</view>
+    </view>
+  </view>
+
+  <!-- ==================== 列表 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">用户列表</text>
+      <text class="admin-panel__hint">共 {{total}} 人</text>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="userId" class="arow">
+      <user-avatar
+        url="{{item.avatarUrl}}"
+        name="{{item.nickName}}"
+        size="m"
+        showCredit
+        credit="{{item.creditScore}}"
+      />
+      <view class="arow__main">
+        <view class="row gap-s">
+          <text class="arow__title ellipsis">{{item.nickName}}</text>
+          <text class="tag tag--{{item.authTone || 'outline'}}">{{item.authText}}</text>
+          <text wx:if="{{item.role === 'admin'}}" class="tag tag--primary">管理员</text>
+          <text wx:if="{{item.status === 0}}" class="tag tag--danger">已封禁</text>
+        </view>
+        <view class="arow__meta">
+          学号 {{item.studentNo || '—'}} · {{item.college || '未填写学院'}}
+        </view>
+        <view class="agrid">
+          <text class="agrid__kv"><text class="k">时间币 </text><text class="v">{{item.coins}}</text></text>
+          <text class="agrid__kv"><text class="k">冻结 </text><text class="v">{{item.frozenCoins}}</text></text>
+          <text class="agrid__kv"><text class="k">信用分 </text><text class="v">{{item.creditScore}}（{{item.creditLevelText}}）</text></text>
+        </view>
+        <view class="arow__meta">注册于 {{item.createTimeText}} · 最近活跃 {{item.lastLoginText}}</view>
+      </view>
+      <view class="arow__side">
+        <view class="more-btn" data-id="{{item.userId}}" catchtap="onMore">更多 ⋯</view>
+      </view>
+    </view>
+
+    <!-- 骨架 -->
+    <view wx:if="{{loading}}" class="page-body">
+      <loading-skeleton type="list" count="{{4}}" />
+    </view>
+
+    <!-- 空态 -->
+    <empty
+      wx:elif="{{!list.length}}"
+      icon="🙈"
+      text="没有符合条件的用户"
+      desc="换个关键词，或把筛选条件调回「全部」"
+    />
+
+    <!-- 触底 -->
+    <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+      {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+    </view>
+  </view>
+
+  <view class="admin-footer">用户数据来源于 users 集合，仅管理员可见学号与证件照</view>
+
+  <!-- ==================== 调整时间币弹层 ==================== -->
+  <view wx:if="{{coinPopup}}" class="mask" bindtap="closeCoin"></view>
+  <view wx:if="{{coinPopup}}" class="popup" catchtap="noop">
+    <view class="popup__title">调整「{{coinUser.nickName}}」的时间币</view>
+    <view class="popup-form">
+      <view class="form-row">
+        <text class="form-row__label">调整数量</text>
+        <input
+          class="form-row__input"
+          type="text"
+          value="{{coinAmount}}"
+          placeholder="正数增加 / 负数扣减"
+          placeholder-class="ph"
+          bindinput="onCoinAmount"
+        />
+        <text class="form-row__unit">枚</text>
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">备注</text>
+        <input
+          class="form-row__input"
+          type="text"
+          value="{{coinRemark}}"
+          placeholder="选填，默认「管理员调整」"
+          placeholder-class="ph"
+          bindinput="onCoinRemark"
+        />
+      </view>
+    </view>
+    <view class="popup-cur">当前余额 {{coinUser.coins}} 枚，冻结 {{coinUser.frozenCoins}} 枚</view>
+    <view class="popup-warn">⚠️ 调整会立即改变用户余额，并写入一条「平台调整」时间币流水记录（用于纠纷仲裁），不可撤销。</view>
+    <view class="row gap mt">
+      <button class="btn btn--gray flex-1" bindtap="closeCoin">取消</button>
+      <button class="btn btn--primary flex-1" bindtap="submitCoins">确认调整</button>
+    </view>
+  </view>
+
+  <!-- ==================== 用户详情弹层 ==================== -->
+  <view wx:if="{{detailPopup}}" class="mask" bindtap="closeDetail"></view>
+  <view wx:if="{{detailPopup}}" class="popup" catchtap="noop">
+    <view class="popup__title">用户详情</view>
+    <scroll-view scroll-y class="detail-scroll">
+      <view class="row gap">
+        <user-avatar
+          url="{{detail.avatarUrl}}"
+          name="{{detail.nickName}}"
+          size="l"
+          showCredit
+          credit="{{detail.creditScore}}"
+        />
+        <view class="flex-1">
+          <view class="arow__title">{{detail.nickName}}</view>
+          <view class="arow__meta">{{detail.campusText}}</view>
+          <view class="row gap-s mt-s">
+            <text class="tag tag--{{detail.authTone || 'outline'}}">{{detail.authText}}</text>
+            <text class="tag {{detail.status === 0 ? 'tag--danger' : 'tag--success'}}">{{detail.statusText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="detail-kv">
+        <view class="detail-kv__i"><text class="k">学号</text><text class="v">{{detail.studentNo || '—'}}</text></view>
+        <view class="detail-kv__i"><text class="k">手机号</text><text class="v">{{detail.phone || '未绑定'}}</text></view>
+        <view class="detail-kv__i"><text class="k">时间币</text><text class="v">{{detail.coins}}（冻结 {{detail.frozenCoins}}）</text></view>
+        <view class="detail-kv__i"><text class="k">累计赚取/消耗</text><text class="v">{{detail.totalEarned || 0}} / {{detail.totalSpent || 0}}</text></view>
+        <view class="detail-kv__i"><text class="k">信用分</text><text class="v">{{detail.creditScore}}（{{detail.creditLevelText}}）</text></view>
+        <view class="detail-kv__i"><text class="k">交易统计</text><text class="v">{{detail.statsText}}</text></view>
+        <view class="detail-kv__i"><text class="k">徽章</text><text class="v">{{detail.badges.length || 0}} 枚</text></view>
+        <view class="detail-kv__i"><text class="k">注册时间</text><text class="v">{{detail.createTimeText}}</text></view>
+        <view class="detail-kv__i">
+          <text class="k">openid</text>
+          <text class="v ellipsis" bindtap="copyOpenid">{{detail.userId}}（点击复制）</text>
+        </view>
+      </view>
+
+      <view wx:if="{{detail.authImages.length}}" class="detail-imgs">
+        <view class="arow__meta">认证证件照（点击放大）</view>
+        <view class="row gap-s mt-s">
+          <image
+            wx:for="{{detail.authImages}}"
+            wx:key="*this"
+            class="detail-imgs__i"
+            src="{{item}}"
+            mode="aspectFill"
+            data-url="{{item}}"
+            bindtap="previewAuth"
+          />
+        </view>
+      </view>
+      <view wx:else class="arow__meta mt-s">该用户没有上传认证证件照</view>
+    </scroll-view>
+
+    <button class="btn btn--gray btn--block mt" bindtap="closeDetail">关闭</button>
+  </view>
+</view>

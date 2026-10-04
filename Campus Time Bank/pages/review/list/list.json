@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "我的评价",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "user-avatar": "/components/user-avatar/index",
+    "star-rate": "/components/star-rate/index",
+    "loading-skeleton": "/components/loading-skeleton/index",
+    "empty": "/components/empty/index"
+  }
+}

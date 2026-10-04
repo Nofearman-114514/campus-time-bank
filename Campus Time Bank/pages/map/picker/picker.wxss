@@ -1,0 +1,260 @@
+/* ==================================================================
+ * 地图选点：铺满的 map + 浮层工具按钮 + 底部确认卡片
+ * 只使用 theme.wxss 的 CSS 变量。
+ * ================================================================== */
+
+.picker {
+  position: relative;
+  overflow: hidden;
+}
+
+.map {
+  width: 100%;
+  display: block;
+}
+
+/* ---------------- 右上角工具 ---------------- */
+.tool {
+  position: fixed;
+  right: var(--sp);
+  top: 32rpx;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.tool__btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 68rpx;
+  padding: 0 22rpx;
+  border-radius: var(--r-full);
+  background: var(--c-card);
+  box-shadow: var(--sh-2);
+}
+
+.tool__btn:active { opacity: .85; }
+
+.tool__icon {
+  font-size: var(--fs-body);
+  margin-right: 8rpx;
+}
+
+.tool__text {
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+}
+
+/* ---------------- 拒绝授权引导 ---------------- */
+.deny {
+  position: fixed;
+  left: var(--sp);
+  right: var(--sp);
+  top: 140rpx;
+  z-index: 20;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-warn-l);
+  box-shadow: var(--sh-1);
+}
+
+.deny__icon {
+  font-size: 40rpx;
+}
+
+.deny__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.deny__title {
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+
+.deny__desc {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  line-height: 1.5;
+}
+
+/* ---------------- 底部选中地点卡片 ---------------- */
+.picker-card {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  padding: var(--sp) var(--sp) calc(env(safe-area-inset-bottom) + 24rpx);
+  background: var(--c-card);
+  border-radius: var(--r-l) var(--r-l) 0 0;
+  box-shadow: var(--sh-2);
+}
+
+.picker-card__head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picker-card__label {
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+
+.picker-card__locating {
+  font-size: var(--fs-mini);
+  color: var(--c-primary);
+}
+
+.picker-card__row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-top: 14rpx;
+}
+
+.picker-card__icon {
+  font-size: var(--fs-h3);
+  margin-right: 12rpx;
+  line-height: 1.4;
+}
+
+.picker-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.picker-card__name {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+
+.picker-card__addr {
+  margin-top: 6rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.5;
+}
+
+.picker-card__tip {
+  margin-top: 16rpx;
+  padding: 14rpx 18rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  line-height: 1.6;
+}
+
+.picker-card__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 22rpx;
+}
+
+/* ==================================================================
+   校内常用地点：横向滚动的快捷选点按钮
+   ★ 存在的意义：让用户不必看懂经纬度也能选对地方
+   ================================================================== */
+.spots {
+  width: 100%;
+  white-space: nowrap;
+  margin-bottom: 8rpx;
+}
+
+.spots__inner {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4rpx 0;
+}
+
+.spots__chip {
+  flex-shrink: 0;
+  height: 58rpx;
+  line-height: 58rpx;
+  padding: 0 24rpx;
+  margin-right: 12rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  border: 2rpx solid var(--c-line);
+  color: var(--c-t2);
+  font-size: var(--fs-cap);
+}
+
+.spots__chip--on {
+  background: var(--c-primary-l);
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+/* 「最近：山下饭堂 约 76 米」—— 比裸坐标好懂的那一行 */
+.picker-card__near {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* ==================================================================
+   只能选校内：顶部常驻提示 + 选到校外时的红字说明
+   ★ 这条是安全策略，必须让用户一眼看见，而不是被拒了还不知道原因
+   ================================================================== */
+.notice {
+  position: fixed;
+  left: var(--sp);
+  top: 32rpx;
+  right: 200rpx;
+  z-index: 20;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-m);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--sh-1);
+}
+
+.notice__icon {
+  flex-shrink: 0;
+  margin-right: 10rpx;
+  font-size: var(--fs-cap);
+}
+
+.notice__text {
+  flex: 1;
+  font-size: var(--fs-mini);
+  line-height: 1.5;
+  color: var(--c-t2);
+}
+
+.notice__strong {
+  color: var(--c-danger);
+  font-weight: 600;
+}
+
+.picker-card__reject {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  line-height: 1.5;
+  color: var(--c-danger);
+}

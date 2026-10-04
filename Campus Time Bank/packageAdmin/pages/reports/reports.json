@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "管理端 · 举报处理",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 120
+}

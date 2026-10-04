@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "nav-bar": "/components/nav-bar/index",
+    "user-avatar": "/components/user-avatar/index"
+  },
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "聊天",
+  "backgroundTextStyle": "dark"
+}

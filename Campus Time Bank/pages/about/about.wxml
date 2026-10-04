@@ -1,0 +1,116 @@
+<!-- 关于 / 平台规则 -->
+<view class="page page-body">
+
+  <!-- ============ App 介绍卡 ============ -->
+  <view class="card app-card">
+    <view class="app-card__logo">
+      <text class="app-card__logo-emoji">🕐</text>
+    </view>
+    <view class="flex-1">
+      <view class="app-card__name">校园时间银行</view>
+      <view class="app-card__slogan">用你的技能，换你需要的帮助</view>
+      <view class="app-card__ver">版本 {{version}}</view>
+    </view>
+  </view>
+
+  <!-- ============ 1. 什么是时间币 ============ -->
+  <view class="card block">
+    <view class="block__title">什么是时间币</view>
+    <view class="block__p">「时间币」是校园时间银行里唯一的交换单位，用来衡量每一次互助的价值：<text class="bold">1 次服务 = 若干时间币</text>。</view>
+    <view class="block__p">你帮助别人获得时间币，需要帮助时用时间币去交换别人的时间。</view>
+    <view class="block__strong">时间币不可充值、不可提现，只能通过帮助他人获得。</view>
+    <view class="block__p block__p--minor">由于不涉及任何资金往来，平台完全不需要支付资质，也杜绝了刷单与套现的动机。</view>
+  </view>
+
+  <!-- ============ 2. 交易流程 ============ -->
+  <view class="card block">
+    <view class="block__title">交易流程</view>
+    <view class="flow">
+      <view wx:for="{{steps}}" wx:key="title" class="flow__row">
+        <view class="flow__left">
+          <view class="flow__dot">
+            <text class="flow__dot-icon">{{item.icon}}</text>
+          </view>
+          <view wx:if="{{index < steps.length - 1}}" class="flow__line"></view>
+        </view>
+        <view class="flow__body">
+          <view class="flow__title">
+            <text class="flow__step">STEP {{index + 1}}</text>
+            <text class="flow__name">{{item.title}}</text>
+          </view>
+          <view class="flow__desc">{{item.desc}}</view>
+        </view>
+      </view>
+    </view>
+    <view class="block__p block__p--minor">取消或拒单会原路解冻退回买家；已接单后爽约将扣除违约方 5 分信用分。</view>
+  </view>
+
+  <!-- ============ 3. 信用分规则 ============ -->
+  <view class="card block">
+    <view class="between">
+      <view class="block__title block__title--inline">信用分规则</view>
+      <text class="block__more" bindtap="goCredit">查看我的信用分 ›</text>
+    </view>
+    <view class="block__p">初始信用分 100，范围 0～150。分数越高，可同时进行的订单越多。</view>
+    <view class="rules">
+      <view wx:for="{{rules}}" wx:key="key" class="rule">
+        <view class="rule__dot"></view>
+        <text class="rule__text flex-1">{{item.text}}</text>
+        <text class="rule__change nums {{item.isUp ? 't-success' : (item.isZero ? 't3' : 't-danger')}}">{{item.changeText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ============ 4. 用户协议要点 ============ -->
+  <view class="card block">
+    <view class="block__title">用户协议要点</view>
+    <view class="block__li">1. 用户须为在校学生，完成校园认证后方可发布技能与下单。</view>
+    <view class="block__li">2. 技能与求助内容须真实合法，禁止发布违法违规、虚假或诱导线下付款的信息。</view>
+    <view class="block__li">3. 时间币仅在本平台内有效，不可转让、不可兑换任何形式的资金或实物。</view>
+    <view class="block__li">4. 双方应按时履行约定；无故爽约、恶意差评将影响信用分。</view>
+    <view class="block__li">5. 平台对违规内容有权下架，并对账号进行警告、限制或封禁。</view>
+  </view>
+
+  <!-- ============ 5. 隐私说明 ============ -->
+  <view class="card block">
+    <view class="block__title">隐私说明</view>
+    <view class="block__li">· 仅收集完成互助所必需的信息：昵称、头像、校园认证资料、技能与订单记录。</view>
+    <view class="block__li">· 校园认证照片与手机号仅供管理员审核使用，不在广场、主页等公开位置展示。</view>
+    <view class="block__li">· 位置信息仅在你主动使用「附近技能」「地图选点」时获取，用于计算距离与展示地点。</view>
+    <view class="block__li">· 举报人身份严格保密，被举报方无法获知举报来源。</view>
+    <view class="block__li">· 数据存储于微信云开发环境，不向任何第三方出售或共享个人信息。</view>
+  </view>
+
+  <!-- ============ 6. 联系我们 ============ -->
+  <view class="card block">
+    <view class="block__title">联系我们</view>
+    <view class="cell-group">
+      <view class="cell" bindtap="onCopyEmail">
+        <text class="cell__icon">✉️</text>
+        <text class="cell__label">反馈邮箱</text>
+        <text class="cell__value">timebank@example.edu.cn</text>
+        <text class="cell__arrow">›</text>
+      </view>
+      <view class="cell" bindtap="onCopyAddress">
+        <text class="cell__icon">🏫</text>
+        <text class="cell__label">校园服务站</text>
+        <text class="cell__value">学生活动中心 2 楼 203 室</text>
+        <text class="cell__arrow">›</text>
+      </view>
+    </view>
+    <view class="block__p block__p--minor">工作时间：周一至周五 10:00 - 18:00（寒暑假暂停线下服务）</view>
+  </view>
+
+  <!-- ============ 运行模式提示（答辩演示用） ============ -->
+  <view class="modebar {{mock ? 'modebar--mock' : 'modebar--cloud'}}">
+    <text class="modebar__icon">{{mock ? '⚠️' : '✅'}}</text>
+    <view class="flex-1">
+      <view class="modebar__title">{{envText}}</view>
+      <view class="modebar__desc">
+        {{mock ? '未检测到云开发环境 ID，页面数据全部来自 utils/mock.js，功能与真实环境一致' : 'envList.js 已配置云开发环境 ID，数据来自真实云函数'}}
+      </view>
+    </view>
+  </view>
+
+  <view class="about-foot">校园时间银行 · 让每一份时间都被认真对待</view>
+</view>

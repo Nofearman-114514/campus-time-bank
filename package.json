@@ -1,0 +1,31 @@
+{
+  "name": "campus-time-bank",
+  "version": "1.0.0",
+  "private": true,
+  "description": "校园时间银行 —— 基于微信云开发的大学生技能互助平台（微信小程序毕业设计）",
+  "keywords": [
+    "微信小程序",
+    "云开发",
+    "毕业设计",
+    "技能互助",
+    "时间银行"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "sync": "node tools/sync-shared.mjs",
+    "check": "node tools/check-project.mjs",
+    "test:mock": "node tools/smoke-test-mock.js",
+    "test:cf": "node tools/test-cloudfunctions/run.js",
+    "test:ui": "node tools/ui-smoke.js",
+    "test:logic": "node tools/check-project.mjs && node tools/smoke-test-mock.js && node tools/test-cloudfunctions/run.js",
+    "test": "npm run test:logic",
+    "fetch:echarts": "node tools/fetch-echarts.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "comment": "本文件仅提供工具脚本入口。小程序端不依赖任何 npm 包（project.config.json 的 nodeModules 为 false）；miniprogram-automator 仅由 tools/ui-smoke.js 使用。",
+  "devDependencies": {
+    "miniprogram-automator": "^0.12.1"
+  }
+}

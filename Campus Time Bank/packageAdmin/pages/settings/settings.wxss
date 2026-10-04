@@ -1,0 +1,107 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 参数配置
+ * ================================================================== */
+
+/* 文本域那一行改为纵向排列 */
+.form-row--col {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.form-row--col .form-row__label { width: auto; }
+
+/* 等宽小字（标注云函数名） */
+.mono {
+  font-family: Consolas, Menlo, monospace;
+  color: var(--c-danger);
+}
+
+/* ---------------- 轮播图 ---------------- */
+.bn-img {
+  width: 200rpx;
+  height: 112rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  flex-shrink: 0;
+}
+.bn-img--ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  color: var(--c-t4);
+}
+
+.bn-upload {
+  height: 240rpx;
+  border-radius: var(--r-s);
+  border: 2rpx dashed var(--c-line);
+  background: var(--c-bg);
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+.bn-upload__img {
+  width: 100%;
+  height: 100%;
+}
+.bn-upload__ph {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+}
+.bn-upload__icon {
+  font-size: 52rpx;
+  color: var(--c-t4);
+  line-height: 1;
+}
+.bn-upload__text {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* 危险区里的按钮左对齐 */
+.admin-danger__actions .btn { flex: none; }
+
+/* ==================================================================
+   调试模式开关（仅管理员可见 —— 本页入口本身就有 requireAdmin 守卫）
+   ================================================================== */
+.dbg-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.dbg-row__body {
+  flex: 1;
+  margin-right: var(--sp);
+}
+
+.dbg-row__title {
+  display: block;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+
+.dbg-row__desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: var(--fs-mini);
+  line-height: 1.6;
+  color: var(--c-t3);
+}
+
+.dbg-warn {
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-m);
+  background: var(--c-warn-l);
+  font-size: var(--fs-mini);
+  line-height: 1.6;
+  color: var(--c-t1);
+}

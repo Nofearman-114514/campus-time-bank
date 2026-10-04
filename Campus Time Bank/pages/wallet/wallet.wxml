@@ -1,0 +1,129 @@
+<!-- 时间币钱包（tab ③） -->
+<!-- 内容容器必须加 has-tabbar：自定义 tabBar 是浮层，不会自动预留底部空间 -->
+<view class="page page-body has-tabbar">
+
+  <!-- ============ 橙色渐变资产卡 ============ -->
+  <view class="asset-card">
+    <view class="asset-card__label">可用余额</view>
+    <view class="asset-card__balance">
+      <text class="asset-card__num nums">{{coins}}</text>
+      <text class="asset-card__unit">时间币</text>
+    </view>
+
+    <view class="asset-card__grid">
+      <view class="asset-card__cell">
+        <text class="asset-card__cell-num nums">{{frozenCoins}}</text>
+        <text class="asset-card__cell-label">冻结中</text>
+      </view>
+      <view class="asset-card__cell-line"></view>
+      <view class="asset-card__cell">
+        <text class="asset-card__cell-num nums">{{totalAssets}}</text>
+        <text class="asset-card__cell-label">总资产</text>
+      </view>
+    </view>
+
+    <view class="asset-card__sub">
+      <text class="asset-card__sub-item">累计赚取 {{totalEarned}}</text>
+      <text class="asset-card__sub-item">累计消耗 {{totalSpent}}</text>
+    </view>
+
+    <!-- ★ 合规声明：答辩必讲的点 -->
+    <view class="asset-card__notice">
+      <text class="asset-card__notice-icon">ⓘ</text>
+      <text class="asset-card__notice-text">时间币不可充值、不可提现，只能通过帮助他人获得</text>
+    </view>
+  </view>
+
+  <!-- ============ 信用分入口小卡 ============ -->
+  <view class="card credit-entry" bindtap="goCredit">
+    <view class="credit-entry__badge">
+      <text class="credit-entry__num nums">{{creditScore}}</text>
+    </view>
+    <view class="flex-1">
+      <view class="row">
+        <text class="credit-entry__title">我的信用分</text>
+        <text class="tag tag--info credit-entry__level">{{creditLevelText}}</text>
+      </view>
+      <view class="credit-entry__track">
+        <view class="credit-entry__fill" style="width:{{creditPercent}}%"></view>
+      </view>
+    </view>
+    <text class="cell__arrow">›</text>
+  </view>
+
+  <!-- ============ 近 7 天收支（纯 WXSS 手绘柱子） ============ -->
+  <view class="card chart-card">
+    <view class="between">
+      <text class="chart-card__title">近 7 天收支</text>
+      <view class="row gap-s">
+        <view class="legend"><view class="legend__dot legend__dot--income"></view><text class="legend__text">收入</text></view>
+        <view class="legend"><view class="legend__dot legend__dot--expense"></view><text class="legend__text">支出</text></view>
+      </view>
+    </view>
+
+    <view wx:if="{{trend.length}}" class="chart">
+      <view wx:for="{{trend}}" wx:key="date" class="chart__col">
+        <view class="chart__bars">
+          <view class="chart__bar chart__bar--income" style="height:{{item.incomeH}}%">
+            <text class="chart__val">{{item.income}}</text>
+          </view>
+          <view class="chart__bar chart__bar--expense" style="height:{{item.expenseH}}%">
+            <text class="chart__val">{{item.expense}}</text>
+          </view>
+        </view>
+        <text class="chart__date">{{item.date}}</text>
+      </view>
+    </view>
+    <view wx:else class="chart-empty">暂无收支数据</view>
+  </view>
+
+  <!-- ============ 明细 ============ -->
+  <view class="sec-title">
+    <text class="sec-title__text">时间币明细</text>
+    <text class="sec-title__more" bindtap="goAbout">规则说明 ›</text>
+  </view>
+
+  <view class="tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tabs__item {{activeTab === item.key ? 'is-active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onTab"
+    >{{item.text}}</view>
+  </view>
+
+  <view wx:if="{{list.length}}" class="log-list">
+    <view
+      wx:for="{{list}}"
+      wx:key="_id"
+      class="log"
+      data-id="{{item.orderId}}"
+      bindtap="goOrder"
+    >
+      <view class="log__icon" style="color:{{item.typeColor}}">{{item.typeIcon}}</view>
+      <view class="flex-1">
+        <view class="log__type">{{item.typeText}}</view>
+        <view class="log__remark ellipsis">{{item.remark}}</view>
+        <view class="log__time">{{item.timeText}}</view>
+      </view>
+      <text class="log__amount nums {{item.isIncome ? 't-success' : 't-danger'}}">{{item.amountText}}</text>
+    </view>
+  </view>
+
+  <view wx:elif="{{!firstLoaded}}" class="card">
+    <view wx:for="{{[1,2,3]}}" wx:key="*this" class="sk log-sk"></view>
+  </view>
+
+  <empty
+    wx:else
+    icon="🪙"
+    text="还没有时间币记录"
+    desc="完成一次帮助或求助，这里就会出现流水"
+    compact="{{true}}"
+  />
+
+  <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+    {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+  </view>
+</view>

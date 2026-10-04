@@ -1,0 +1,38 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 技能审核与下架
+ * ================================================================== */
+
+/* 缩略封面 */
+.sk-cover {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  flex-shrink: 0;
+}
+.sk-cover--ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-primary-l);
+}
+.sk-cover__icon { font-size: 52rpx; line-height: 1; }
+
+/* 标题两行截断 + 行内标签 */
+.arow__title { line-height: 1.35; }
+
+/* 审核备注 */
+.sk-remark {
+  margin-top: 12rpx;
+  padding: 12rpx 16rpx;
+  border-radius: var(--r-s);
+  background: var(--c-danger-l);
+  color: var(--c-danger);
+  font-size: var(--fs-mini);
+  line-height: 1.5;
+}
+
+/* 操作按钮更紧凑 */
+.admin-actions .btn--xs { flex: none; }

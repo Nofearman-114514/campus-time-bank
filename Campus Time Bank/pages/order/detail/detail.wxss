@@ -1,0 +1,247 @@
+/* ==================================================================
+ * 订单详情
+ * 状态大卡用「语义色 + 深色主题色」做渐变（全部来自设计 token）
+ * ================================================================== */
+
+/* ---------------------------- 管理员查看提示 ---------------------------- */
+.admin-tip {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 20rpx;
+  padding: 22rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-info-l);
+}
+.admin-tip__icon { font-size: 34rpx; }
+.admin-tip__text {
+  flex: 1;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: var(--c-info);
+}
+
+/* ---------------------------- 1. 状态大卡 ---------------------------- */
+.status-card {
+  position: relative;
+  padding: 40rpx var(--sp);
+  border-radius: var(--r-l);
+  color: var(--c-inverse);
+  overflow: hidden;
+  box-shadow: var(--sh-2);
+}
+.status-card::after {
+  /* 装饰性光晕，纯白半透明，不引入新色值 */
+  content: '';
+  position: absolute;
+  right: -80rpx;
+  top: -80rpx;
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+}
+.status-card--waiting { background: linear-gradient(135deg, var(--c-warn), var(--c-accent)); }
+.status-card--ongoing { background: linear-gradient(135deg, var(--c-info), var(--c-primary)); }
+.status-card--confirming { background: linear-gradient(135deg, var(--c-accent), var(--c-accent-d)); }
+.status-card--finished { background: linear-gradient(135deg, var(--c-success), var(--c-primary-d)); }
+.status-card--canceled { background: linear-gradient(135deg, var(--c-t3), var(--c-t2)); }
+.status-card--closed { background: linear-gradient(135deg, var(--c-t3), var(--c-t2)); }
+
+.status-card__row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+.status-card__dot {
+  background: var(--c-inverse) !important;
+  width: 18rpx;
+  height: 18rpx;
+}
+.status-card__text {
+  font-size: 48rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+.status-card__desc {
+  display: block;
+  margin-top: 12rpx;
+  font-size: var(--fs-cap);
+  opacity: .9;
+}
+.status-card__badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 10rpx 20rpx;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, .22);
+  font-size: var(--fs-cap);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------- 去评价提示 ---------------------------- */
+.review-tip {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 20rpx;
+  padding: 24rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-accent-l);
+  border: 2rpx solid var(--c-accent);
+}
+.review-tip__icon { font-size: 44rpx; }
+.review-tip__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-accent);
+}
+.review-tip__desc {
+  margin-top: 6rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}
+.review-tip__arrow { color: var(--c-accent); font-size: 36rpx; }
+
+/* ---------------------------- 2. 时间轴 ---------------------------- */
+.timeline__item {
+  display: flex;
+  align-items: stretch;
+  gap: 20rpx;
+}
+.timeline__axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32rpx;
+  flex-shrink: 0;
+}
+.timeline__dot {
+  margin-top: 10rpx;
+  width: 20rpx;
+  height: 20rpx;
+  box-shadow: 0 0 0 6rpx var(--c-bg);
+}
+.timeline__line {
+  flex: 1;
+  width: 2rpx;
+  margin: 8rpx 0;
+  background: var(--c-line);
+}
+.timeline__body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 32rpx;
+}
+.timeline__item--last .timeline__body { padding-bottom: 0; }
+.timeline__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.timeline__title--waiting { color: var(--c-warn); }
+.timeline__title--ongoing { color: var(--c-info); }
+.timeline__title--confirming { color: var(--c-accent); }
+.timeline__title--finished { color: var(--c-success); }
+.timeline__title--canceled,
+.timeline__title--closed { color: var(--c-t3); }
+.timeline__time {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.timeline__remark {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: var(--c-t2);
+}
+
+/* ---------------------------- 3. 服务信息 ---------------------------- */
+.sv-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: var(--r-m);
+  background: var(--g-primary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sv-cover__img { width: 100%; height: 100%; }
+.sv-cover__icon { font-size: 64rpx; }
+.sv-title {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+  line-height: 1.4;
+}
+
+/* ---------------------------- 4. 对方信息 ---------------------------- */
+.cp-name {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+
+/* ---------------------------- 5. 订单信息 ---------------------------- */
+.kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 12rpx 0;
+}
+.kv--top { align-items: flex-start; }
+.kv__k {
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  flex-shrink: 0;
+}
+.kv__v {
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+.kv__hint {
+  display: block;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* ---------------------------- 6. 时间币流向 ---------------------------- */
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 14rpx 0;
+}
+.flow__icon { font-size: 34rpx; line-height: 1.4; }
+.flow__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.flow__text {
+  margin-top: 6rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: var(--c-t2);
+}
+
+/* ---------------------------- 底部操作条 ---------------------------- */
+.footer-bar__coin { align-items: flex-start; }
+.footer-bar__label {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.footer-bar__btn {
+  flex-shrink: 0;
+  min-width: 180rpx;
+}

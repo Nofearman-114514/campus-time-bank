@@ -1,0 +1,37 @@
+.empty {
+  padding: 140rpx 60rpx;
+  text-align: center;
+}
+
+.empty--compact {
+  padding: 60rpx 40rpx;
+}
+
+.empty__img {
+  font-size: 120rpx;
+  line-height: 1;
+  opacity: .9;
+}
+
+.empty--compact .empty__img {
+  font-size: 88rpx;
+}
+
+.empty__text {
+  margin-top: 24rpx;
+  font-size: var(--fs-body);
+  color: var(--c-t2);
+  font-weight: 500;
+}
+
+.empty__desc {
+  margin-top: 12rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  line-height: 1.6;
+}
+
+.empty__btn {
+  margin: 36rpx auto 0;
+  display: inline-flex;
+}

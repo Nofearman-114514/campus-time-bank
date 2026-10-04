@@ -1,0 +1,163 @@
+/* 聊天室 */
+
+.room-page {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------- 导航栏右侧「查看订单」 ---------------- */
+.nb-right { padding-right: 200rpx; }
+
+.nb-order-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: var(--r-full);
+  background: var(--c-primary-l);
+}
+.nb-order-btn:active { opacity: .7; }
+.nb-order-btn__text {
+  font-size: var(--fs-cap);
+  color: var(--c-primary);
+  font-weight: 500;
+}
+
+/* ---------------- 模式提示条 ---------------- */
+.mode-tip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+  padding: 12rpx var(--sp);
+  background: var(--c-warn-l);
+  color: var(--c-warn);
+  font-size: var(--fs-mini);
+  line-height: 1.4;
+}
+.mode-tip__icon { font-size: var(--fs-cap); }
+.mode-tip--warn {
+  background: var(--c-danger-l);
+  color: var(--c-danger);
+}
+
+/* ---------------- 消息区 ---------------- */
+.msg-scroll {
+  flex: 1;
+  background: var(--c-bg);
+}
+
+.msg-head { padding: 24rpx 0 8rpx; text-align: center; }
+.msg-head__text {
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+.msg-wrap { padding: 0 var(--sp); }
+
+/* 时间分隔 */
+.msg-time {
+  margin: 24rpx 0 16rpx;
+  text-align: center;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* 消息行 */
+.msg {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+.msg--other { justify-content: flex-start; }
+.msg--mine { justify-content: flex-end; }
+
+/* 气泡 */
+.msg__bubble {
+  max-width: 480rpx;
+  padding: 20rpx 24rpx;
+  border-radius: var(--r-m);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* 对方：白底 + 边框 */
+.msg--other .msg__bubble {
+  background: var(--c-card);
+  color: var(--c-t1);
+  border: 2rpx solid var(--c-line);
+  border-top-left-radius: 6rpx;
+}
+
+/* 自己：主色底 + 白字 */
+.msg--mine .msg__bubble {
+  background: var(--c-primary);
+  color: var(--c-inverse);
+  border-top-right-radius: 6rpx;
+}
+
+/* 图片消息 */
+.msg__img {
+  max-width: 420rpx;
+  border-radius: var(--r-m);
+  background: var(--c-line);
+}
+
+.msg-bottom { height: 24rpx; }
+
+/* ---------------- 底部输入栏 ---------------- */
+.input-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx var(--sp);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16rpx);
+  background: var(--c-card);
+  border-top: 2rpx solid var(--c-line);
+}
+
+.input-bar__plus {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  color: var(--c-t2);
+  font-size: 44rpx;
+  line-height: 64rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+.input-bar__plus:active { background: var(--c-line); }
+
+.input-bar__input {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  padding: 0 24rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+.input-bar__ph { color: var(--c-t4); }
+
+.input-bar__send {
+  height: 68rpx;
+  padding: 0 30rpx;
+  border-radius: var(--r-full);
+  background: var(--c-line);
+  color: var(--c-t3);
+  font-size: var(--fs-cap);
+  line-height: 68rpx;
+  flex-shrink: 0;
+}
+.input-bar__send.is-active {
+  background: var(--c-primary);
+  color: var(--c-inverse);
+}
+.input-bar__send.is-active:active { opacity: .85; }

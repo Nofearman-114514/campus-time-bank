@@ -1,0 +1,82 @@
+<!-- 系统通知 -->
+<view class="page">
+
+  <!-- ============ 筛选 + 全部已读 ============ -->
+  <view class="notice-head">
+    <scroll-view class="scroll-x" scroll-x enable-flex>
+      <view class="scroll-x__inner">
+        <view
+          wx:for="{{tabs}}"
+          wx:key="key"
+          class="filter-chip {{activeType === item.key ? 'is-active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTab"
+        >{{item.text}}</view>
+      </view>
+    </scroll-view>
+
+    <view class="notice-head__readall" bindtap="onReadAll">
+      <text>全部已读</text>
+      <view wx:if="{{unread > 0}}" class="unread-dot notice-head__dot">{{unread > 99 ? '99+' : unread}}</view>
+    </view>
+  </view>
+
+  <!-- ============ 通知列表 ============ -->
+  <view wx:if="{{list.length}}" class="notice-list">
+    <view
+      wx:for="{{list}}"
+      wx:key="_id"
+      class="notice {{item.read ? 'is-read' : ''}}"
+      data-id="{{item._id}}"
+      bindtap="onTapItem"
+    >
+      <!-- 未读左侧红点 -->
+      <view class="notice__flag">
+        <view wx:if="{{!item.read}}" class="notice__dot"></view>
+      </view>
+
+      <!-- 类型图标：圆底 + 彩色 emoji -->
+      <view class="notice__icon" style="background:{{item.typeColor}}1A;color:{{item.typeColor}}">
+        <text class="notice__icon-emoji">{{item.typeIcon}}</text>
+      </view>
+
+      <view class="flex-1">
+        <view class="between notice__top">
+          <text class="notice__title {{item.read ? '' : 'is-bold'}}">{{item.title}}</text>
+          <text class="notice__time">{{item.timeText}}</text>
+        </view>
+        <view class="notice__content {{item.open ? '' : 'ellipsis-2'}}">{{item.content}}</view>
+        <view class="notice__foot">
+          <text class="tag tag--outline">{{item.typeText}}</text>
+          <text wx:if="{{item.orderId !== ''}}" class="notice__action">查看订单 ›</text>
+          <text wx:elif="{{item.type === 'audit'}}" class="notice__action">前往认证 ›</text>
+          <text wx:elif="{{item.type === 'credit'}}" class="notice__action">查看信用分 ›</text>
+          <text wx:else class="notice__action">{{item.open ? '收起' : '展开全文'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载中骨架 -->
+  <view wx:elif="{{!firstLoaded}}" class="page-body">
+    <view wx:for="{{[1,2,3]}}" wx:key="*this" class="card notice-sk">
+      <view class="sk notice-sk__icon"></view>
+      <view class="flex-1">
+        <view class="sk notice-sk__line" style="width:50%"></view>
+        <view class="sk notice-sk__line" style="width:85%"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <empty
+    wx:else
+    icon="📭"
+    text="暂无通知"
+    desc="订单、认证、信用分的动态都会在这里提醒你"
+  />
+
+  <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+    {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+  </view>
+</view>

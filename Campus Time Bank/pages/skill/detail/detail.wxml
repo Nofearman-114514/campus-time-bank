@@ -1,0 +1,190 @@
+<!-- ==================================================================
+     技能详情：封面 → 价格卡 → 标题标签 → 作者卡 → 说明 / 地点 / 评价 / 保障
+     底部固定操作条
+     ================================================================== -->
+<view class="page">
+
+  <!-- 加载中 -->
+  <loading-skeleton wx:if="{{loading}}" type="detail" />
+
+  <!-- 加载失败 -->
+  <empty
+    wx:elif="{{loadError}}"
+    icon="😵"
+    text="技能不存在或加载失败"
+    desc="它可能已被作者下架，去广场看看别的吧"
+    btn="回技能广场"
+    bindaction="onGoSquare"
+  />
+
+  <block wx:else>
+    <!-- ---------------- 1. 大封面 ---------------- -->
+    <view class="cover" style="background:{{coverBg}}">
+      <image wx:if="{{hasImage}}" class="cover__img" src="{{skill.images[0]}}" mode="aspectFill" />
+      <text wx:else class="cover__icon">{{coverIcon}}</text>
+
+      <!-- 浮层返回按钮（无图片资源，用字符代替图标） -->
+      <view class="cover__back" bindtap="onBack">‹</view>
+      <view class="cover__cat">{{skill.categoryName || '技能'}}</view>
+      <!-- 收藏星标：只对他人技能显示（自己发布的不显示，后端也会拦） -->
+      <view
+        wx:if="{{!isOwner}}"
+        class="cover__fav {{isCollected ? 'is-on' : ''}}"
+        bindtap="onToggleCollect"
+      >{{isCollected ? '★' : '☆'}}</view>
+    </view>
+
+    <view class="page-body page-body--has-bar">
+
+      <!-- ---------------- 2. 价格卡 ---------------- -->
+      <view class="price-card">
+        <view class="price-card__left">
+          <view class="coin">
+            <view class="coin__icon coin__icon--lg">币</view>
+            <text class="price-card__num nums">{{skill.price || 0}}</text>
+          </view>
+          <text class="price-card__unit">时间币 / {{durationText}}</text>
+        </view>
+        <view class="price-card__right">
+          <text class="price-card__count nums">已有 {{skill.orderCount || 0}} 人约过</text>
+          <text class="price-card__view nums">👁 {{skill.viewCount || 0}} 次浏览</text>
+        </view>
+      </view>
+
+      <!-- ---------------- 3. 标题 + 标签 ---------------- -->
+      <view class="card">
+        <view class="title-row">
+          <view class="type-badge {{typeClass}}">[{{typeText}}]</view>
+          <text class="detail-title">{{skill.title || '未命名技能'}}</text>
+        </view>
+        <view wx:if="{{tags.length}}" class="tag-row">
+          <text wx:for="{{tags}}" wx:key="*this" class="tag tag--primary">{{item}}</text>
+        </view>
+        <text wx:if="{{createText}}" class="publish-time">发布于 {{createText}}</text>
+      </view>
+
+      <!-- ---------------- 4. 作者卡 ---------------- -->
+      <view class="card author-card" bindtap="onAuthor">
+        <user-avatar
+          size="m"
+          url="{{author.avatarUrl}}"
+          name="{{authorName}}"
+          verified="{{authorVerified}}"
+        />
+        <view class="author-card__info">
+          <view class="row gap-s">
+            <text class="author-card__name ellipsis">{{authorName}}</text>
+            <view wx:if="{{authorVerified}}" class="tag tag--success">已认证</view>
+          </view>
+          <view class="row gap-s mt-s">
+            <view wx:if="{{authorCredit}}" class="credit-chip">信用 {{authorCredit}}</view>
+            <text wx:if="{{authorReviewCount}}" class="author-card__reviews">{{authorReviewCount}} 条评价</text>
+          </view>
+        </view>
+        <view class="author-card__rate">
+          <star-rate value="{{authorRating}}" size="{{26}}" />
+          <text class="author-card__score nums">{{authorRating || '暂无'}}{{authorRating ? ' 分' : ''}}</text>
+        </view>
+        <text class="author-card__arrow">›</text>
+      </view>
+
+      <!-- ---------------- 5. 服务说明 ---------------- -->
+      <view class="sec-title">
+        <text class="sec-title__text">服务说明</text>
+      </view>
+      <view class="card">
+        <text class="desc-text">{{skill.desc || '作者还没有补充详细说明，可以直接预约后与 TA 沟通～'}}</text>
+      </view>
+
+      <!-- ---------------- 6. 服务地点 ---------------- -->
+      <view class="sec-title">
+        <text class="sec-title__text">服务地点</text>
+      </view>
+      <view class="card">
+        <view class="loc-row">
+          <text class="loc-row__icon">📍</text>
+          <view class="loc-row__body">
+            <text class="loc-row__name">{{locationName || '地点待商量'}}</text>
+            <text wx:if="{{address}}" class="loc-row__addr">{{address}}</text>
+          </view>
+        </view>
+        <view class="loc-actions">
+          <view wx:if="{{hasGeo}}" class="btn btn--sm btn--ghost" bindtap="onOpenMap">在地图中查看</view>
+          <view wx:else class="btn btn--sm btn--ghost" bindtap="onCopyAddress">复制地点</view>
+        </view>
+      </view>
+
+      <!-- ---------------- 7. TA 收到的评价 ---------------- -->
+      <view class="sec-title">
+        <text class="sec-title__text">TA 收到的评价</text>
+        <text wx:if="{{reviewTotal}}" class="sec-title__more" bindtap="onMoreReviews">查看全部 {{reviewTotal}} 条 ›</text>
+      </view>
+      <view class="card">
+        <block wx:if="{{reviews.length}}">
+          <view class="rv" wx:for="{{reviews}}" wx:key="_id">
+            <view class="rv__head">
+              <user-avatar size="s" url="{{item.fromAvatar}}" name="{{item.fromName}}" />
+              <view class="rv__who">
+                <text class="rv__name">{{item.fromName}}</text>
+                <star-rate value="{{item.score}}" size="{{24}}" />
+              </view>
+              <text class="rv__time">{{item.timeText}}</text>
+            </view>
+            <text class="rv__content">{{item.content}}</text>
+            <view wx:if="{{item.tags.length}}" class="rv__tags">
+              <text wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this" class="tag">{{t}}</text>
+            </view>
+            <view wx:if="{{item.replyText}}" class="rv__reply">作者回复：{{item.replyText}}</view>
+            <view class="divider"></view>
+          </view>
+        </block>
+        <view wx:else class="rv-empty">
+          <text class="rv-empty__icon">💬</text>
+          <text class="rv-empty__text">还没有收到评价，成为第一个吧</text>
+        </view>
+      </view>
+
+      <!-- ---------------- 8. 平台保障说明 ---------------- -->
+      <view class="sec-title">
+        <text class="sec-title__text">平台保障</text>
+      </view>
+      <view class="safety">
+        <view class="safety__title">
+          <text class="safety__icon">🛡️</text>
+          <text>时间币先冻结，服务确认后才结算</text>
+        </view>
+        <view class="safety__step">
+          <text class="safety__no">1</text>
+          <text class="safety__text">下单时，<text class="bold t-accent">{{skill.price || 0}} 时间币</text>从你的可用余额转入冻结，不直接给到对方。</text>
+        </view>
+        <view class="safety__step">
+          <text class="safety__no">2</text>
+          <text class="safety__text">服务者按约提供服务，完成后由你确认；若对方拒单、你取消订单或超时未处理，冻结的时间币会原路解冻退回。</text>
+        </view>
+        <view class="safety__step">
+          <text class="safety__no">3</text>
+          <text class="safety__text">你确认完成后，冻结的时间币才结算给服务者，双方各 +2 信用分。</text>
+        </view>
+        <view class="safety__foot">
+          <text>时间币不可充值、不可提现，只能通过帮助他人获得 —— 每一次帮助都被公平记录。</text>
+        </view>
+      </view>
+
+    </view>
+
+    <!-- ---------------- 底部固定操作条 ---------------- -->
+    <view class="footer-bar">
+      <block wx:if="{{isOwner}}">
+        <view class="btn btn--ghost flex-1" bindtap="onEdit">编辑</view>
+        <view class="btn btn--danger flex-1" bindtap="onRemove">下架</view>
+      </block>
+      <block wx:else>
+        <view class="btn btn--sm btn--gray" bindtap="onReport">举报</view>
+        <!-- 联系 TA：聊天空态文案一直指向这里，但技能详情页此前并没有这个入口，
+             新用户在下单前完全没法发起会话 -->
+        <view class="btn btn--sm btn--light {{chatting ? 'btn--disabled' : ''}}" bindtap="onChat">联系 TA</view>
+        <view class="btn btn--primary flex-1 {{submitting ? 'btn--disabled' : ''}}" bindtap="onOrder">立即预约</view>
+      </block>
+    </view>
+  </block>
+</view>

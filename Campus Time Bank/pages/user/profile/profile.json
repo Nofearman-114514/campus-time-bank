@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "user-avatar": "/components/user-avatar/index"
+  },
+  "navigationBarTitleText": "编辑资料"
+}

@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "管理端 · 分类管理",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

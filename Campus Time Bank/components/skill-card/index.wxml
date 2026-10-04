@@ -1,0 +1,44 @@
+<view class="sc" bindtap="onCard" hover-class="sc--hover" hover-stay-time="80">
+
+  <!-- 封面 -->
+  <view class="sc__cover" style="background:{{coverBg}}">
+    <image wx:if="{{hasImage}}" class="sc__cover-img" src="{{item.images[0]}}" mode="aspectFill" lazy-load />
+    <text wx:else class="sc__cover-icon">{{coverIcon}}</text>
+    <view class="sc__type {{typeClass}}">{{typeText}}</view>
+  </view>
+
+  <!-- 主体 -->
+  <view class="sc__main">
+    <view class="sc__title">{{item.title}}</view>
+
+    <view wx:if="{{!compact && tags.length}}" class="sc__tags">
+      <text wx:for="{{tags}}" wx:for-item="tag" wx:key="*this" class="sc__tag">{{tag}}</text>
+    </view>
+
+    <view class="sc__meta">
+      <view class="coin">
+        <view class="coin__icon">币</view>
+        <text class="coin__num">{{item.price}}</text>
+      </view>
+      <text wx:if="{{durationText}}" class="sc__meta-sep">/</text>
+      <text wx:if="{{durationText}}" class="sc__meta-text">{{durationText}}</text>
+      <view class="flex-1"></view>
+      <text wx:if="{{showDistance && distance}}" class="sc__distance">📍{{distance}}</text>
+    </view>
+  </view>
+</view>
+
+<!-- 作者信息（独立一行，避免与封面抢空间） -->
+<view wx:if="{{showAuthor}}" class="sc-author" bindtap="onAuthor">
+  <user-avatar
+    size="s"
+    url="{{item.authorInfo.avatarUrl}}"
+    name="{{item.authorInfo.nickName}}"
+    verified="{{item.authorInfo.authStatus === 2}}"
+  />
+  <text class="sc-author__name">{{item.authorInfo.nickName || '匿名同学'}}</text>
+  <view wx:if="{{item.authorInfo.creditScore}}" class="credit-chip">信用 {{item.authorInfo.creditScore}}</view>
+  <view class="flex-1"></view>
+  <text class="sc-author__stat">👁 {{item.viewCount || 0}}</text>
+  <text class="sc-author__stat">🤝 {{item.orderCount || 0}}</text>
+</view>

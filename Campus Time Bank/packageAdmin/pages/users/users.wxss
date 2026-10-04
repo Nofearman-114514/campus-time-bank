@@ -1,0 +1,57 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 用户管理（.popup-form / .popup-warn / .ph 已提到 admin.wxss 共享）
+ * ================================================================== */
+
+/* 「更多」按钮：紧凑、右对齐 */
+.more-btn {
+  min-width: 108rpx;
+  height: 56rpx;
+  padding: 0 18rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  color: var(--c-t2);
+  font-size: var(--fs-mini);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.more-btn:active { background: var(--c-line); }
+
+/* 列表行里的标签不换行挤压 */
+.arow__title { max-width: 320rpx; }
+
+/* ---------------- 详情弹层 ---------------- */
+.detail-scroll {
+  max-height: 62vh;
+}
+.detail-kv {
+  margin-top: 24rpx;
+}
+.detail-kv__i {
+  display: flex;
+  align-items: flex-start;
+  padding: 14rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+  font-size: var(--fs-mini);
+}
+.detail-kv__i .k {
+  width: 200rpx;
+  flex-shrink: 0;
+  color: var(--c-t3);
+}
+.detail-kv__i .v {
+  flex: 1;
+  min-width: 0;
+  color: var(--c-t1);
+  word-break: break-all;
+}
+.detail-imgs { margin-top: 24rpx; }
+.detail-imgs__i {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+}

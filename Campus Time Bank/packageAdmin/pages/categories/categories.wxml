@@ -1,0 +1,132 @@
+<!-- 管理端 · 技能分类管理 -->
+<view class="admin-page page-body--has-bar">
+
+  <!-- ==================== 标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">技能分类管理</view>
+      <view class="admin-bar__sub">增删改 · 上下箭头调整展示顺序</view>
+    </view>
+    <view class="admin-bar__side">
+      <view class="admin-bar__num">{{list.length}}</view>
+      <view class="admin-bar__label">个分类</view>
+    </view>
+  </view>
+
+  <!-- ==================== 列表 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">全部分类</text>
+      <text class="admin-panel__hint">按排序号升序</text>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="_id" class="arow">
+      <view class="cat-icon">{{item.icon}}</view>
+      <view class="arow__main">
+        <view class="row gap-s">
+          <text class="arow__title">{{item.name}}</text>
+          <text class="tag {{item.status ? 'tag--success' : 'tag--outline'}}">{{item.statusText}}</text>
+        </view>
+        <view class="agrid">
+          <text class="agrid__kv"><text class="k">排序号 </text><text class="v">{{item.sort}}</text></text>
+          <text wx:if="{{skillCountReady}}" class="agrid__kv"><text class="k">技能数 </text><text class="v">{{item.skillCount}}</text></text>
+        </view>
+        <view class="admin-actions">
+          <text class="mini-link" data-id="{{item._id}}" bindtap="onEdit">编辑</text>
+          <text class="mini-link mini-link--danger" data-id="{{item._id}}" bindtap="onDelete">删除</text>
+        </view>
+      </view>
+      <view class="cat-ops">
+        <view
+          class="icon-btn {{index === 0 ? 'icon-btn--disabled' : ''}}"
+          data-id="{{item._id}}"
+          data-dir="-1"
+          bindtap="onMove"
+        >↑</view>
+        <view
+          class="icon-btn {{index === list.length - 1 ? 'icon-btn--disabled' : ''}}"
+          data-id="{{item._id}}"
+          data-dir="1"
+          bindtap="onMove"
+        >↓</view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="page-body">
+      <loading-skeleton type="list" count="{{4}}" />
+    </view>
+
+    <empty
+      wx:elif="{{!list.length}}"
+      icon="🗂"
+      text="还没有技能分类"
+      desc="分类会显示在技能广场的分类栏，建议先建 6~10 个"
+      btn="新增分类"
+      bindaction="onAdd"
+    />
+  </view>
+
+  <view class="admin-footer">分类被技能引用时无法删除（后端返回 409）</view>
+
+  <!-- ==================== 底部新增按钮 ==================== -->
+  <view class="footer-bar">
+    <button class="btn btn--primary btn--block" bindtap="onAdd">＋ 新增分类</button>
+  </view>
+
+  <!-- ==================== 新增 / 编辑弹层 ==================== -->
+  <view wx:if="{{form.visible}}" class="mask" bindtap="closeForm"></view>
+  <view wx:if="{{form.visible}}" class="popup" catchtap="noop">
+    <view class="popup__title">{{form.id ? '编辑分类' : '新增分类'}}</view>
+    <view class="popup-form">
+      <view class="form-row">
+        <text class="form-row__label">分类名称</text>
+        <input
+          class="form-row__input"
+          type="text"
+          value="{{form.name}}"
+          maxlength="8"
+          placeholder="如：学业辅导"
+          placeholder-class="ph"
+          bindinput="onFormName"
+        />
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">图标 emoji</text>
+        <input
+          class="form-row__input"
+          type="text"
+          value="{{form.icon}}"
+          maxlength="4"
+          placeholder="如：📚"
+          placeholder-class="ph"
+          bindinput="onFormIcon"
+        />
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">排序号</text>
+        <input
+          class="form-row__input"
+          type="number"
+          value="{{form.sort}}"
+          placeholder="越小越靠前"
+          placeholder-class="ph"
+          bindinput="onFormSort"
+        />
+        <text class="form-row__unit">越小越靠前</text>
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">启用状态</text>
+        <view class="flex-1 end">
+          <switch checked="{{form.status === 1}}" bindchange="onFormStatus" />
+        </view>
+      </view>
+    </view>
+    <view class="popup-warn">停用的分类不会出现在用户端技能广场，已发布技能不受影响。</view>
+    <view class="row gap mt">
+      <button class="btn btn--gray flex-1" bindtap="closeForm">取消</button>
+      <button class="btn btn--primary flex-1" bindtap="submitForm">保存</button>
+    </view>
+  </view>
+</view>

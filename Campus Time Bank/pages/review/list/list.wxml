@@ -1,0 +1,124 @@
+<!-- 我的评价 -->
+<view class="page">
+
+  <!-- 顶部：综合评分 -->
+  <view class="score-head">
+    <view class="role-tabs">
+      <view
+        class="role-tabs__item {{role === 'received' ? 'role-tabs__item--on' : ''}}"
+        data-role="received"
+        bindtap="onSwitchRole"
+      >收到的评价</view>
+      <view
+        class="role-tabs__item {{role === 'sent' ? 'role-tabs__item--on' : ''}}"
+        data-role="sent"
+        bindtap="onSwitchRole"
+      >我发出的评价</view>
+    </view>
+
+    <view wx:if="{{role === 'received'}}" class="score">
+      <view class="score__left col">
+        <text class="score__num nums">{{avgScore || '—'}}</text>
+        <text class="score__label">综合评分</text>
+      </view>
+      <view class="score__right col">
+        <star-rate size="{{36}}" value="{{avgScore}}" />
+        <text class="score__count">共 {{scoreCount}} 条评价</text>
+        <text class="score__note">{{scoreSource === 'weighted' ? '按时间衰减加权：越近的评价权重越高' : '取全部评价的算术平均'}}</text>
+      </view>
+    </view>
+    <view wx:else class="score score--plain">
+      <text class="score__plain-text">你发出的评价共有 {{scoreCount}} 条</text>
+    </view>
+  </view>
+
+  <view class="page-body list-body">
+
+    <loading-skeleton wx:if="{{loading}}" type="list" count="{{3}}" />
+
+    <block wx:elif="{{list.length}}">
+      <view wx:for="{{list}}" wx:key="_id" class="rv-card">
+
+        <!-- 评价人 -->
+        <view class="rv-card__head">
+          <user-avatar
+            size="s"
+            url="{{item.fromAvatar}}"
+            name="{{item.fromName}}"
+            class="{{item.anonymous ? 'rv-avatar--anon' : ''}}"
+          />
+          <view class="flex-1 col" style="margin-left:16rpx;">
+            <view class="row gap-s">
+              <text class="rv-card__name">{{item.fromName}}</text>
+              <text wx:if="{{item.anonymous}}" class="tag">匿名</text>
+            </view>
+            <text class="rv-card__time nums">{{item.timeText}}</text>
+          </view>
+          <star-rate size="{{28}}" value="{{item.score}}" />
+        </view>
+
+        <!-- 标签 -->
+        <view wx:if="{{item.tags.length}}" class="rv-card__tags">
+          <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="tag tag--primary">{{tag}}</text>
+        </view>
+
+        <!-- 内容 -->
+        <view wx:if="{{item.content}}" class="rv-card__content">{{item.content}}</view>
+        <view wx:else class="rv-card__content t3">该用户没有填写文字评价</view>
+
+        <!-- 关联技能 -->
+        <view wx:if="{{item.skillName}}" class="rv-card__skill">关联技能：{{item.skillName}}</view>
+
+        <!-- 已回复：浅底引用块 -->
+        <view wx:if="{{item.replyContent}}" class="rv-reply">
+          <text class="rv-reply__title">我的回复</text>
+          <text class="rv-reply__content">{{item.replyContent}}</text>
+          <text wx:if="{{item.replyTimeText}}" class="rv-reply__time nums">{{item.replyTimeText}}</text>
+        </view>
+
+        <!-- 收到的评价可回复 -->
+        <view wx:if="{{role === 'received'}}" class="rv-card__foot">
+          <view class="btn btn--gray btn--xs" data-id="{{item._id}}" bindtap="onOpenReply">
+            {{item.replyContent ? '修改回复' : '回复'}}
+          </view>
+        </view>
+      </view>
+
+      <view class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+        <text wx:if="{{loadingMore}}">正在加载…</text>
+        <text wx:elif="{{hasMore}}">上拉加载更多</text>
+        <text wx:else>已经到底啦，共 {{total}} 条</text>
+      </view>
+    </block>
+
+    <empty
+      wx:else
+      icon="💬"
+      text="{{role === 'received' ? '还没有收到评价' : '还没有发出评价'}}"
+      desc="{{role === 'received' ? '完成订单后对方可以给你评价，好评分能提升信用分' : '订单完成后记得给同学一个评价'}}"
+    />
+  </view>
+
+  <!-- 回复弹层 -->
+  <view wx:if="{{replyVisible}}" class="mask" bindtap="onCloseReply"></view>
+  <view wx:if="{{replyVisible}}" class="popup" catchtap="noop">
+    <text class="popup__title">回复评价</text>
+    <view class="popup__quote">
+      <text class="popup__quote-name">{{replyTarget.fromName || '同学'}}</text>
+      <text class="popup__quote-text ellipsis-2">{{replyTarget.content || '（无文字评价）'}}</text>
+    </view>
+    <textarea
+      class="form-textarea popup__input"
+      value="{{replyContent}}"
+      maxlength="{{REPLY_MAX}}"
+      placeholder="友善回复，会让更多同学愿意找你～"
+      placeholder-class="form-item__ph"
+      bindinput="onReplyInput"
+    />
+    <text class="char-count">{{replyContent.length}}/{{REPLY_MAX}}</text>
+    <view class="row gap mt">
+      <view class="btn btn--gray flex-1" bindtap="onCloseReply">取消</view>
+      <view class="btn btn--primary flex-1" bindtap="onSubmitReply">提交回复</view>
+    </view>
+  </view>
+</view>

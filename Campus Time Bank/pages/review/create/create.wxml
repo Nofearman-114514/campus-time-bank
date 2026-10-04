@@ -1,0 +1,96 @@
+<!-- 发表评价 -->
+<view class="page">
+
+  <loading-skeleton wx:if="{{loading}}" type="list" count="{{2}}" />
+
+  <block wx:else>
+    <view class="page-body page-body--has-bar">
+
+      <!-- 1. 对方信息 -->
+      <view class="card">
+        <view class="row">
+          <user-avatar size="m" url="{{target.avatarUrl}}" name="{{target.nickName}}" />
+          <view class="flex-1 col" style="margin-left:20rpx;">
+            <text class="rv-name">{{targetTitle}} · {{target.nickName || '同学'}}</text>
+            <text class="rv-skill ellipsis">本次服务：{{skillTitle || '—'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 2. 大号星级评分 -->
+      <view class="card rate-card">
+        <text class="rate-card__label">本次服务体验如何？</text>
+        <view class="rate-card__stars">
+          <star-rate
+            editable
+            size="{{72}}"
+            value="{{score}}"
+            bindchange="onRate"
+          />
+        </view>
+        <text class="rate-card__text rate-card__text--{{score >= 4 ? 'good' : (score === 3 ? 'mid' : 'bad')}}">
+          {{scoreText}}
+        </text>
+        <text class="rate-card__hint">评分会影响对方的信用分：5 星 +1 / 4 星 0 / 3 星 -1 / 2 星 -2 / 1 星 -3</text>
+      </view>
+
+      <!-- 3. 标签多选（点选即写入评价内容） -->
+      <view class="sec-title">
+        <text class="sec-title__text">{{score >= 4 ? '满意的方面' : '可以改进的方面'}}</text>
+        <text class="sec-title__more">选填 · 点选即写入内容</text>
+      </view>
+      <view class="card">
+        <view class="tag-pick">
+          <view
+            wx:for="{{tags}}"
+            wx:key="*this"
+            class="tag-pick__item {{selectedTags.indexOf(item) > -1 ? 'tag-pick__item--on' : ''}}"
+            data-tag="{{item}}"
+            bindtap="onToggleTag"
+          >{{item}}</view>
+        </view>
+      </view>
+
+      <!-- 4. 文字评价 -->
+      <view class="sec-title">
+        <text class="sec-title__text">评价内容</text>
+        <text class="sec-title__more">选填 · 鼓励写具体一点</text>
+      </view>
+      <view class="card form-card">
+        <view class="form-item form-item--top">
+          <view class="flex-1 col">
+            <textarea
+              class="form-textarea"
+              value="{{content}}"
+              maxlength="{{CONTENT_MAX}}"
+              placeholder="说说对方的服务态度、专业程度、是否守时（可点上方标签快速填入）"
+              placeholder-class="form-item__ph"
+              bindinput="onContentInput"
+            />
+            <text class="char-count">{{content.length}}/{{CONTENT_MAX}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 5. 匿名评价 -->
+      <view class="card form-card mt">
+        <view class="form-item">
+          <view class="flex-1 col">
+            <text class="anon-title">匿名评价</text>
+            <text class="anon-desc">匿名后对方看不到你的昵称和头像</text>
+          </view>
+          <!-- switch 的 color 是组件属性、不支持 CSS 变量，故由 js 统一从设计 token 同源取值 -->
+          <switch checked="{{anonymous}}" color="{{switchColor}}" bindchange="onAnonymousChange" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部主按钮 -->
+    <view class="footer-bar">
+      <view
+        class="btn btn--lg btn--block {{submitting ? 'btn--disabled' : 'btn--primary'}}"
+        bindtap="onSubmit"
+      >{{submitting ? '提交中…' : '提交评价'}}</view>
+    </view>
+  </block>
+</view>

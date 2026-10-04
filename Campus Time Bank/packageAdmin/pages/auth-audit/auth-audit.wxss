@@ -1,0 +1,60 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 校园认证审核
+ * ================================================================== */
+/* 认证行是纵向结构，覆盖 .arow 的横向 flex */
+.audit-row {
+  display: block;
+}
+.audit-row__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+/* 证件缩略图 */
+.audit-imgs {
+  margin-top: 18rpx;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16rpx;
+}
+.audit-imgs__i {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  border: 2rpx solid var(--c-line);
+}
+.audit-imgs__tip {
+  width: 100%;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.audit-imgs__none {
+  width: 100%;
+  padding: 18rpx 22rpx;
+  border-radius: var(--r-s);
+  background: var(--c-warn-l);
+  border: 2rpx dashed var(--c-warn);
+  color: var(--c-warn);
+  font-size: var(--fs-mini);
+  box-sizing: border-box;
+}
+.audit-imgs__none-title {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-cap);
+  color: var(--c-warn);
+  margin-bottom: 6rpx;
+}
+.audit-imgs__none-desc {
+  display: block;
+  color: var(--c-t2);
+  line-height: 1.7;
+}
+
+/* 操作按钮组左对齐紧凑排列 */
+.admin-actions .btn { flex: none; }

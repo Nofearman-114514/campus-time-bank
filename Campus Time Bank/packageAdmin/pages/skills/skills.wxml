@@ -1,0 +1,122 @@
+<!-- 管理端 · 技能审核与下架 -->
+<view class="admin-page">
+
+  <!-- ==================== 标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">技能审核与下架</view>
+      <view class="admin-bar__sub">违规下架 / 恢复上架 / 查看详情</view>
+    </view>
+    <view class="admin-bar__side">
+      <view class="admin-bar__num">{{total}}</view>
+      <view class="admin-bar__label">个技能</view>
+    </view>
+  </view>
+
+  <!-- ==================== 筛选 ==================== -->
+  <view class="admin-toolbar">
+    <view class="admin-search">
+      <text class="admin-search__icon">🔍</text>
+      <input
+        class="admin-search__input"
+        type="text"
+        value="{{keyword}}"
+        placeholder="搜索技能标题"
+        placeholder-class="admin-search__ph"
+        confirm-type="search"
+        bindinput="onKeyword"
+      />
+      <text wx:if="{{keyword}}" class="admin-search__clear" bindtap="clearKeyword">✕</text>
+    </view>
+    <view class="admin-chips">
+      <view
+        wx:for="{{statusOptions}}"
+        wx:key="t"
+        class="chip {{status === item.v ? 'chip--on' : ''}} {{item.v === '3' ? 'chip--danger' : ''}}"
+        data-v="{{item.v}}"
+        bindtap="onStatusTab"
+      >{{item.t}}</view>
+    </view>
+  </view>
+
+  <!-- ==================== 列表 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">技能列表</text>
+      <text class="admin-panel__hint">共 {{total}} 条</text>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="_id" class="arow">
+      <!-- 封面：无图时用分类渐变 + emoji 兜底 -->
+      <image wx:if="{{item.cover}}" class="sk-cover" src="{{item.cover}}" mode="aspectFill" />
+      <view wx:else class="sk-cover sk-cover--ph">
+        <text class="sk-cover__icon">{{item.categoryIcon}}</text>
+      </view>
+
+      <view class="arow__main">
+        <view class="row gap-s">
+          <text class="arow__title ellipsis-2 flex-1">{{item.title}}</text>
+        </view>
+        <view class="row gap-s mt-s">
+          <text class="tag tag--{{item.statusTone === 'outline' ? 'outline' : item.statusTone}}">{{item.statusText}}</text>
+          <text wx:if="{{item.isTop}}" class="tag tag--accent">{{item.status === 1 ? '已置顶' : '已置顶 · 当前不展示'}}</text>
+          <text class="tag tag--outline">{{item.categoryName}}</text>
+        </view>
+        <view class="agrid">
+          <text class="agrid__kv"><text class="k">作者 </text><text class="v">{{item.authorName}}</text></text>
+          <text class="agrid__kv"><text class="k">价格 </text><text class="v">{{item.price}} 时间币</text></text>
+          <text class="agrid__kv"><text class="k">浏览 </text><text class="v">{{item.viewCount}}</text></text>
+          <text class="agrid__kv"><text class="k">成单 </text><text class="v">{{item.orderCount}}</text></text>
+          <text class="agrid__kv"><text class="k">发布于 </text><text class="v">{{item.createTimeText}}</text></text>
+        </view>
+        <view wx:if="{{item.auditRemark}}" class="sk-remark">审核备注：{{item.auditRemark}}</view>
+
+        <view class="admin-actions">
+          <button
+            wx:if="{{item.status === 3 || item.status === 0}}"
+            class="btn btn--xs btn--primary"
+            data-id="{{item._id}}"
+            bindtap="onRestore"
+          >恢复上架</button>
+          <button
+            wx:if="{{item.status !== 3}}"
+            class="btn btn--xs btn--danger"
+            data-id="{{item._id}}"
+            bindtap="onBan"
+          >违规下架</button>
+          <!-- 置顶是独立于 status 的运营标记：上架中/已下架/待审核都可预置顶；
+               违规下架(3)与已完成(2)语义上不该置顶，故隐藏按钮，
+               但若它已经是置顶态，仍保留按钮以便取消（不留死状态） -->
+          <button
+            wx:if="{{item.isTop || (item.status !== 3 && item.status !== 2)}}"
+            class="btn btn--xs {{item.isTop ? 'btn--gray' : 'btn--accent'}}"
+            data-id="{{item._id}}"
+            bindtap="onToggleTop"
+          >{{item.isTop ? '取消置顶' : '置顶'}}</button>
+          <button class="btn btn--xs btn--gray" data-id="{{item._id}}" bindtap="goDetail">查看详情</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="page-body">
+      <loading-skeleton type="list" count="{{4}}" />
+    </view>
+
+    <empty
+      wx:elif="{{!list.length}}"
+      icon="🧩"
+      text="没有符合条件的技能"
+      desc="换个关键词，或把状态筛选调回「全部」"
+    />
+
+    <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+      {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+    </view>
+  </view>
+
+  <view class="admin-footer">
+    下架会写入 auditRemark 并同步通知作者；置顶的技能在技能广场优先展示（仅对「上架中」的技能可见）
+  </view>
+</view>

@@ -1,0 +1,10 @@
+{
+  "name": "initdb",
+  "version": "1.0.0",
+  "description": "校园时间银行 · 一键初始化云函数（建集合 / 写种子数据 / 清库 / 设管理员）",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

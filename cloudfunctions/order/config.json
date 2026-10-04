@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "openapi": [
+      "subscribeMessage.send"
+    ]
+  },
+  "triggers": [
+    {
+      "name": "orderAutoTask",
+      "type": "timer",
+      "config": "0 */10 * * * * *"
+    }
+  ]
+}

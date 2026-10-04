@@ -1,0 +1,29 @@
+# ============================ 个人配置（隐私，绝不能提交） ============================
+# 云开发环境 ID / 腾讯位置服务 Key / 订阅消息模板 ID
+Campus Time Bank/envList.local.js
+**/envList.local.js
+
+# ============================ 依赖 ============================
+# 小程序端本身不依赖任何 npm 包（project.config.json 的 nodeModules = false）；
+# package.json 里只有开发期测试工具（miniprogram-automator）。
+node_modules/
+cloudfunctions/**/node_modules/
+
+# ============================ 微信开发者工具 ============================
+.idea/
+.vscode/
+project.private.config.json
+.DS_Store
+Thumbs.db
+*.log
+
+# ============================ 构建产物 ============================
+miniprogram_npm/
+dist/
+
+# ============================ 备份与临时文件 ============================
+*.bak
+*.zip
+*.tmp
+*.orig
+tools/_*.js

@@ -1,0 +1,237 @@
+<!-- 管理端 · 参数配置（全局参数 + 轮播图 + 危险操作） -->
+<view class="admin-page">
+
+  <!-- ==================== 标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">参数配置</view>
+      <view class="admin-bar__sub">全局参数 · 轮播图 · 危险操作</view>
+    </view>
+    <view wx:if="{{mockMode}}" class="admin-bar__btn">离线模式</view>
+  </view>
+
+  <!-- ==================== 全局参数 ==================== -->
+  <view class="form-block">
+    <view class="form-block__title">全局参数（config / global）</view>
+
+    <view wx:if="{{loading}}" class="page-body">
+      <loading-skeleton type="list" count="{{3}}" />
+    </view>
+
+    <block wx:else>
+      <view class="form-row">
+        <text class="form-row__label">注册赠送时间币</text>
+        <input class="form-row__input nums" type="number" value="{{config.registerBonus}}" data-key="registerBonus" bindinput="onField" />
+        <text class="form-row__unit">枚</text>
+      </view>
+      <view class="field-tip">新用户首次登录自动到账的时间币（写 wallet_logs 的 bonus 记录）。调高会降低新用户下单门槛，但会加快时间币总量膨胀。</view>
+
+      <view class="form-row">
+        <text class="form-row__label">待接单超时</text>
+        <input class="form-row__input nums" type="number" value="{{config.orderExpireHours}}" data-key="orderExpireHours" bindinput="onField" />
+        <text class="form-row__unit">小时</text>
+      </view>
+      <view class="field-tip">订单创建后超过该时长仍无人接单，系统自动取消并解冻买家时间币（对应 orders.expireTime）。</view>
+
+      <view class="form-row">
+        <text class="form-row__label">待确认超时</text>
+        <input class="form-row__input nums" type="number" value="{{config.confirmExpireHours}}" data-key="confirmExpireHours" bindinput="onField" />
+        <text class="form-row__unit">小时</text>
+      </view>
+      <view class="field-tip">服务者标记完成、买家迟迟不确认时，超过该时长系统自动确认并把时间币结算给服务者（相当于自动打款）。</view>
+
+      <view class="form-row">
+        <text class="form-row__label">最低下单信用分</text>
+        <input class="form-row__input nums" type="number" value="{{config.minCreditToOrder}}" data-key="minCreditToOrder" bindinput="onField" />
+        <text class="form-row__unit">分</text>
+      </view>
+      <view class="field-tip">信用分低于该值的用户不能下单（仅可浏览）。默认 60，对应信用等级「受限」；上限 150。</view>
+
+      <view class="form-row form-row--col">
+        <text class="form-row__label">关于我们文案</text>
+        <textarea
+          class="form-row__area"
+          value="{{config.aboutUs}}"
+          maxlength="300"
+          placeholder="展示在「关于」页，建议说明平台定位与时间币规则"
+          placeholder-class="ph"
+          bindinput="onField"
+          data-key="aboutUs"
+        />
+        <view class="field-tip">这段文案会出现在用户端「关于 / 平台规则」页面，长度建议 80~200 字。</view>
+      </view>
+
+      <button class="btn btn--primary btn--block mt" bindtap="saveConfig" disabled="{{saving}}">
+        {{saving ? '保存中…' : '保存全局参数'}}
+      </button>
+    </block>
+  </view>
+
+  <!-- ==================== 轮播图管理 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">首页轮播图</text>
+      <text class="admin-panel__hint">共 {{banners.length}} 张</text>
+    </view>
+
+    <view wx:for="{{banners}}" wx:key="_id" class="arow">
+      <image
+        wx:if="{{item.image}}"
+        class="bn-img"
+        src="{{item.image}}"
+        mode="aspectFill"
+        data-url="{{item.image}}"
+        bindtap="previewBanner"
+      />
+      <view wx:else class="bn-img bn-img--ph">🖼</view>
+
+      <view class="arow__main">
+        <view class="arow__title ellipsis">{{item.title}}</view>
+        <view class="agrid">
+          <text class="agrid__kv"><text class="k">排序 </text><text class="v">{{item.sort}}</text></text>
+          <text class="agrid__kv"><text class="k">状态 </text><text class="v">{{item.statusText}}</text></text>
+        </view>
+        <view class="arow__meta ellipsis">跳转：{{item.link || '（无跳转）'}}</view>
+        <view class="admin-actions">
+          <text class="mini-link" data-id="{{item._id}}" bindtap="onEditBanner">编辑</text>
+          <text class="mini-link mini-link--danger" data-id="{{item._id}}" bindtap="deleteBanner">删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{bannerLoading}}" class="page-body">
+      <loading-skeleton type="list" count="{{2}}" />
+    </view>
+
+    <empty
+      wx:elif="{{!banners.length}}"
+      icon="🖼"
+      text="还没有轮播图"
+      desc="轮播会展示在技能广场顶部，建议 1~5 张"
+      btn="新增轮播"
+      bindaction="onAddBanner"
+    />
+  </view>
+
+  <view class="row gap mt" style="padding:0 24rpx;">
+    <button class="btn btn--light btn--block" bindtap="onAddBanner">＋ 新增轮播图</button>
+  </view>
+
+  <!-- 轮播图表单弹层 -->
+  <view wx:if="{{bannerForm.visible}}" class="mask" bindtap="closeBannerForm"></view>
+  <view wx:if="{{bannerForm.visible}}" class="popup" catchtap="noop">
+    <view class="popup__title">{{bannerForm.id ? '编辑轮播' : '新增轮播'}}</view>
+
+    <view class="bn-upload" bindtap="chooseBannerImage">
+      <image wx:if="{{bannerForm.image}}" class="bn-upload__img" src="{{bannerForm.image}}" mode="aspectFill" />
+      <view wx:else class="bn-upload__ph">
+        <text class="bn-upload__icon">＋</text>
+        <text class="bn-upload__text">选择轮播图片（建议 750×360）</text>
+      </view>
+    </view>
+
+    <view class="popup-form">
+      <view class="form-row">
+        <text class="form-row__label">轮播文案</text>
+        <input
+          class="form-row__input"
+          type="text"
+          value="{{bannerForm.title}}"
+          maxlength="20"
+          placeholder="如：用技能换你需要的帮助"
+          placeholder-class="ph"
+          data-key="title"
+          bindinput="onBannerField"
+        />
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">跳转路径</text>
+        <input
+          class="form-row__input"
+          type="text"
+          value="{{bannerForm.link}}"
+          placeholder="选填，如 /pages/auth/campus/campus"
+          placeholder-class="ph"
+          data-key="link"
+          bindinput="onBannerField"
+        />
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">排序号</text>
+        <input
+          class="form-row__input"
+          type="number"
+          value="{{bannerForm.sort}}"
+          placeholder="越小越靠前"
+          placeholder-class="ph"
+          data-key="sort"
+          bindinput="onBannerField"
+        />
+        <text class="form-row__unit">越小越靠前</text>
+      </view>
+      <view class="form-row">
+        <text class="form-row__label">展示状态</text>
+        <view class="flex-1 end">
+          <switch checked="{{bannerForm.status === 1}}" bindchange="onBannerStatus" />
+        </view>
+      </view>
+    </view>
+
+    <view class="row gap mt">
+      <button class="btn btn--gray flex-1" bindtap="closeBannerForm">取消</button>
+      <button class="btn btn--primary flex-1" bindtap="submitBanner">{{uploading ? '上传中…' : '保存'}}</button>
+    </view>
+  </view>
+
+  <!-- ==================== 调试模式（仅管理员可见） ==================== -->
+  <view class="card mt">
+    <view class="sec-title">
+      <text class="sec-title__text">调试模式</text>
+      <text class="sec-title__more">仅管理员可见</text>
+    </view>
+
+    <view class="dbg-row">
+      <view class="dbg-row__body">
+        <text class="dbg-row__title">使用内置模拟数据</text>
+        <text class="dbg-row__desc">
+          开启后整个小程序改用本地模拟数据，**不连云端** —— 适合答辩演示、断网演示、排查“到底是前端问题还是后端问题”。
+          关闭后立即回到真实的云端数据，不会影响数据库里的任何内容。
+        </text>
+      </view>
+      <switch checked="{{debugMode}}" disabled="{{debugSwitching}}" bindchange="onToggleDebug" />
+    </view>
+
+    <view wx:if="{{debugMode}}" class="dbg-warn">
+      当前处于调试模式：你看到的全部数据都是本地模拟的，**不是真实数据**。
+    </view>
+  </view>
+
+  <!-- ==================== 危险操作区 ==================== -->
+  <view class="admin-danger">
+    <view class="admin-danger__title">⚠️ 危险操作区</view>
+    <view class="admin-danger__desc">
+      以下操作直接作用于云数据库，影响全站数据。执行前请确认已做好数据备份。
+    </view>
+
+    <view class="admin-danger__actions">
+      <button class="btn btn--sm btn--gray" bindtap="onInitDemo">初始化演示数据</button>
+    </view>
+    <view class="admin-danger__desc">
+      「初始化演示数据」会写入示例分类、全局配置、轮播图与演示用户 / 技能 / 订单（不删除已有数据），
+      适合首次部署或答辩彩排。对应云函数：<text class="mono">initdb.init</text>。
+    </view>
+
+    <view class="admin-danger__actions">
+      <button class="btn btn--sm btn--danger" bindtap="onClearData">清空业务数据</button>
+    </view>
+    <view class="admin-danger__desc">
+      「清空业务数据」会删除技能、订单、时间币流水、信用分流水、评价、举报、通知等全部业务集合
+      （仅保留管理员账号），<text class="bold">不可恢复</text>。需要连续通过三道确认（含手动输入「确认清空」）。
+      对应云函数：<text class="mono">initdb.clear</text>（api.js 未包装，通过 api.raw 逃生舱调用）。
+    </view>
+  </view>
+
+  <view class="admin-footer">参数保存后立即生效；轮播图存储在 banners 集合</view>
+</view>

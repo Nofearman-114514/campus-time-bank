@@ -1,0 +1,13 @@
+{
+  "usingComponents": {
+    "nav-bar": "/components/nav-bar/index",
+    "user-avatar": "/components/user-avatar/index",
+    "star-rate": "/components/star-rate/index",
+    "skill-card": "/components/skill-card/index",
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

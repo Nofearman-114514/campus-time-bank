@@ -1,0 +1,36 @@
+<!-- 徽章墙 -->
+<view class="page page-body">
+
+  <!-- ============ 顶部进度卡 ============ -->
+  <view class="badge-head">
+    <view class="between">
+      <view>
+        <text class="badge-head__num nums">{{ownedCount}}</text>
+        <text class="badge-head__total">/ {{total}} 已点亮</text>
+      </view>
+      <text class="badge-head__pct nums">{{percent}}%</text>
+    </view>
+
+    <view class="badge-head__track">
+      <view class="badge-head__fill" style="width:{{percent}}%"></view>
+    </view>
+
+    <view class="badge-head__tip">完成更多互助，点亮属于你的荣誉吧～</view>
+  </view>
+
+  <!-- ============ 徽章墙（2 列卡片式，带条件说明） ============ -->
+  <view class="bw-page">
+    <badge-wall
+      list="{{all}}"
+      ownedList="{{owned}}"
+      cols="{{2}}"
+      showDesc="{{true}}"
+      bindtap="onBadge"
+    />
+  </view>
+
+  <!-- ============ 底部 ============ -->
+  <view class="badge-foot" bindtap="goSquare">
+    <text>去技能广场赚徽章 ›</text>
+  </view>
+</view>

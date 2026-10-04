@@ -1,0 +1,237 @@
+<!-- 管理端 · 数据看板（§4.8 admin.stats 直接绑定） -->
+<view class="admin-page">
+
+  <!-- ==================== 管理员标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">数据看板</view>
+      <view class="admin-bar__sub">数据范围：{{range}} 天 · 下拉可刷新</view>
+    </view>
+    <view class="admin-bar__btn" bindtap="onBack">返回</view>
+  </view>
+
+  <!-- ==================== 待办提醒条 ==================== -->
+  <view wx:if="{{todoCount > 0}}" class="todo">
+    <view class="todo__head">
+      <text class="todo__icon">⚠️</text>
+      <text class="todo__title">你有 {{todoCount}} 项待处理</text>
+    </view>
+    <view
+      wx:if="{{overview.authPending > 0}}"
+      class="todo__row"
+      data-url="/packageAdmin/pages/auth-audit/auth-audit"
+      bindtap="goTodo"
+    >
+      <text class="todo__row-text">校园认证待审核</text>
+      <text class="todo__row-num">{{overview.authPending}} 条</text>
+      <text class="todo__row-arrow">›</text>
+    </view>
+    <view
+      wx:if="{{overview.reportPending > 0}}"
+      class="todo__row"
+      data-url="/packageAdmin/pages/reports/reports"
+      bindtap="goTodo"
+    >
+      <text class="todo__row-text">用户举报待处理</text>
+      <text class="todo__row-num">{{overview.reportPending}} 条</text>
+      <text class="todo__row-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- ==================== 概览 ==================== -->
+  <view class="ov">
+    <!-- 用户 -->
+    <view class="ov-big ov-big--user">
+      <view class="ov-big__head">
+        <text class="ov-big__label">用户总数</text>
+        <text class="ov-big__badge">USER</text>
+      </view>
+      <view class="ov-big__num nums">{{overview.userTotal}}</view>
+      <view class="ov-big__foot">
+        <text>今日新增 {{overview.userToday}}</text>
+        <!-- ★ 用 <view> 而不是 <text>：<text> 是行内元素，height 的生效依赖
+             WebView 对 inline-flex 的支持，真机上不够可靠；
+             另外插值必须紧贴标签写，换行/缩进会成为文本内容、把胶囊撑高 -->
+        <view class="growth growth--{{userGrowth.dir}}">{{userGrowth.dir === 'up' ? '▲' : (userGrowth.dir === 'down' ? '▼' : '—')}} {{userGrowth.text}}</view>
+      </view>
+    </view>
+    <!-- 订单 -->
+    <view class="ov-big ov-big--order">
+      <view class="ov-big__head">
+        <text class="ov-big__label">订单总量</text>
+        <text class="ov-big__badge">ORDER</text>
+      </view>
+      <view class="ov-big__num nums">{{overview.orderTotal}}</view>
+      <view class="ov-big__foot">
+        <text>今日新增 {{overview.orderToday}}</text>
+        <view class="growth growth--{{orderGrowth.dir}}">{{orderGrowth.dir === 'up' ? '▲' : (orderGrowth.dir === 'down' ? '▼' : '—')}} {{orderGrowth.text}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 4 个小卡 -->
+  <view class="ov-mini">
+    <view class="ov-mini__item">
+      <view class="ov-mini__label">时间币流通量</view>
+      <view class="ov-mini__num nums t-accent">{{overview.coinCirculation}}</view>
+      <view class="ov-mini__cap">累计产生 {{overview.coinEarned}}</view>
+    </view>
+    <view class="ov-mini__item">
+      <view class="ov-mini__label">冻结总量</view>
+      <view class="ov-mini__num nums t-warn">{{overview.coinFrozen}}</view>
+      <view class="ov-mini__cap">进行中订单占用</view>
+    </view>
+    <view class="ov-mini__item">
+      <view class="ov-mini__label">订单完成率</view>
+      <view class="ov-mini__num nums t-success">{{finishRateText}}</view>
+      <view class="ov-mini__cap">已完成 / 全部订单</view>
+    </view>
+    <view class="ov-mini__item">
+      <view class="ov-mini__label">平均评分</view>
+      <view class="ov-mini__num nums t-primary">{{avgRatingText}}</view>
+      <view class="ov-mini__cap">满分 5.0</view>
+    </view>
+  </view>
+
+  <!-- ==================== 图表区 ==================== -->
+  <!-- 1. 趋势折线 -->
+  <view class="chart-card">
+    <view class="chart-card__hd">
+      <text class="chart-card__t">近 {{range}} 天趋势</text>
+      <view class="range">
+        <view
+          wx:for="{{ranges}}"
+          wx:key="v"
+          class="range__i {{range === item.v ? 'range__i--on' : ''}}"
+          data-v="{{item.v}}"
+          bindtap="onRange"
+        >{{item.t}}</view>
+      </view>
+    </view>
+    <view class="chart-box chart-box--tall">
+      <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{2}}" />
+      <ec-canvas wx:elif="{{show.trend}}" id="chart-trend" canvas-id="chart-trend" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      <view wx:else class="chart-none">暂无趋势数据</view>
+    </view>
+    <view wx:if="{{trendLoading}}" class="chart-tip">正在按新的时间范围重新统计…</view>
+  </view>
+
+  <!-- 2. 分类分布 -->
+  <view class="chart-card">
+    <view class="chart-card__hd"><text class="chart-card__t">技能分类分布</text></view>
+    <view class="chart-box">
+      <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{2}}" />
+      <ec-canvas wx:elif="{{show.category}}" id="chart-category" canvas-id="chart-category" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      <view wx:else class="chart-none">暂无分类数据</view>
+    </view>
+  </view>
+
+  <!-- 3. 热门技能 TOP8 -->
+  <view class="chart-card">
+    <view class="chart-card__hd">
+      <text class="chart-card__t">热门技能 TOP8</text>
+      <text class="admin-panel__hint">按成单数</text>
+    </view>
+    <view class="chart-box chart-box--tall">
+      <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{2}}" />
+      <ec-canvas wx:elif="{{show.hot}}" id="chart-hot" canvas-id="chart-hot" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      <view wx:else class="chart-none">暂无成单数据</view>
+    </view>
+  </view>
+
+  <!-- 4. 订单状态分布 -->
+  <view class="chart-card">
+    <view class="chart-card__hd"><text class="chart-card__t">订单状态分布</text></view>
+    <view class="chart-box">
+      <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{2}}" />
+      <ec-canvas wx:elif="{{show.orderStatus}}" id="chart-order-status" canvas-id="chart-order-status" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      <view wx:else class="chart-none">暂无订单数据</view>
+    </view>
+  </view>
+
+  <!-- 5. 信用分区间 -->
+  <view class="chart-card">
+    <view class="chart-card__hd">
+      <text class="chart-card__t">信用分区间分布</text>
+      <text class="admin-panel__hint">单位：人</text>
+    </view>
+    <view class="chart-box">
+      <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{2}}" />
+      <ec-canvas wx:elif="{{show.credit}}" id="chart-credit" canvas-id="chart-credit" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      <view wx:else class="chart-none">暂无信用分数据</view>
+    </view>
+  </view>
+
+  <!-- 6. 平台健康度雷达 + 完成率仪表盘 -->
+  <view class="chart-card">
+    <view class="chart-card__hd">
+      <text class="chart-card__t">平台健康度</text>
+      <text class="admin-panel__hint">由概览指标派生</text>
+    </view>
+    <view class="chart-duo">
+      <view class="chart-box chart-box--half">
+        <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{1}}" />
+        <ec-canvas wx:else id="chart-radar" canvas-id="chart-radar" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      </view>
+      <view class="chart-box chart-box--half">
+        <loading-skeleton wx:if="{{!loaded}}" type="list" count="{{1}}" />
+        <ec-canvas wx:else id="chart-gauge" canvas-id="chart-gauge" ec="{{ec}}" class="chart-canvas"></ec-canvas>
+      </view>
+    </view>
+  </view>
+
+  <!-- ==================== 活跃用户 TOP5 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">活跃用户 TOP5</text>
+      <text class="admin-panel__hint">按完成服务单数</text>
+    </view>
+    <view
+      wx:for="{{topUsers}}"
+      wx:key="openid"
+      class="arow arow--tap"
+      data-openid="{{item.openid}}"
+      bindtap="goUser"
+    >
+      <user-avatar url="{{item.avatarUrl}}" name="{{item.nickName}}" size="s" showCredit credit="{{item.creditScore}}" />
+      <view class="arow__main">
+        <view class="arow__title ellipsis">{{item.nickName}}</view>
+        <view class="arow__meta">完成 {{item.serveCount}} 单 · 平均评分 {{item.avgRating || '—'}}</view>
+      </view>
+      <view class="arow__side">
+        <view class="arow__side-num">{{item.creditScore}}</view>
+        <view class="arow__side-cap">信用分</view>
+      </view>
+    </view>
+    <empty
+      wx:if="{{loaded && !topUsers.length}}"
+      icon="👥"
+      text="暂无活跃用户数据"
+      desc="还没有用户完成过服务"
+      compact
+    />
+  </view>
+
+  <!-- ==================== 管理入口 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">管理入口</text>
+    </view>
+    <view class="entries">
+      <view
+        wx:for="{{entries}}"
+        wx:key="url"
+        class="entries__i"
+        data-url="{{item.url}}"
+        bindtap="goEntry"
+      >
+        <view class="entries__icon">{{item.icon}}</view>
+        <view class="entries__name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="admin-footer">校园时间银行 · 管理端 · 数据每次进入实时拉取</view>
+</view>

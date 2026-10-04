@@ -1,0 +1,240 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 数据看板
+ * ================================================================== */
+
+/* ---------------- 待办提醒条（醒目黄色） ---------------- */
+.todo {
+  margin: var(--sp) var(--sp) 0;
+  padding: 20rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-warn-l);
+  border: 2rpx solid var(--c-warn);
+}
+.todo__head {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.todo__icon { font-size: 30rpx; line-height: 1; }
+.todo__title {
+  font-size: var(--fs-cap);
+  font-weight: 700;
+  color: var(--c-warn);
+}
+.todo__row {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 2rpx dashed var(--c-warn);
+}
+.todo__row-text {
+  flex: 1;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+}
+.todo__row-num {
+  font-size: var(--fs-mini);
+  color: var(--c-warn);
+  font-weight: 600;
+  margin-right: 8rpx;
+}
+.todo__row-arrow { color: var(--c-warn); font-size: 26rpx; }
+
+/* ---------------- 概览大卡 ---------------- */
+.ov {
+  display: flex;
+  gap: 20rpx;
+  padding: var(--sp) var(--sp) 0;
+}
+.ov-big {
+  flex: 1;
+  min-width: 0;
+  padding: 24rpx;
+  border-radius: var(--r-m);
+  color: var(--c-inverse);
+  box-sizing: border-box;
+}
+.ov-big--user { background: var(--g-primary); box-shadow: var(--sh-primary); }
+.ov-big--order { background: var(--g-wallet); box-shadow: var(--sh-accent); }
+.ov-big__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ov-big__label { font-size: var(--fs-mini); opacity: .92; }
+.ov-big__badge {
+  font-size: 18rpx;
+  letter-spacing: 1rpx;
+  opacity: .8;
+}
+.ov-big__num {
+  font-size: 56rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 8rpx;
+}
+.ov-big__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-mini);
+  opacity: .95;
+  margin-top: 4rpx;
+}
+/* 左侧文字收紧行盒：CJK 字形在 1.6 行高里视觉重心偏上，
+   不收紧的话右边的胶囊看起来会「比文字低一截」 */
+.ov-big__foot > text:first-child {
+  line-height: 1;
+}
+/* 增长率胶囊：白底 + 语义色文字，正绿负红（只用 CSS 变量）
+   ★ 三个要点，缺一个真机上就会偏移：
+     1. 元素用 <view> 而不是 <text> —— <text> 是行内元素，
+        height 的生效依赖 WebView 对 inline-flex 的支持，真机不可靠
+     2. 固定 height + line-height 设成同一个值，不依赖字体度量
+     3. wxml 里的插值必须紧贴标签写在一行，否则换行/缩进会成为文本内容把盒子撑高 */
+.growth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 36rpx;
+  padding: 0 12rpx;
+  box-sizing: border-box;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 36rpx;
+  background: var(--c-inverse);
+  border-radius: var(--r-full);
+}
+.growth--up { color: var(--c-success); }
+.growth--down { color: var(--c-danger); }
+.growth--flat { color: var(--c-t2); }
+
+/* ---------------- 4 个小卡 ---------------- */
+.ov-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  padding: var(--sp) var(--sp) 0;
+}
+.ov-mini__item {
+  width: calc(50% - 10rpx);
+  padding: 20rpx;
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  box-shadow: var(--sh-1);
+  box-sizing: border-box;
+}
+.ov-mini__label { font-size: var(--fs-mini); color: var(--c-t3); }
+.ov-mini__num {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 6rpx;
+}
+.ov-mini__cap { font-size: var(--fs-mini); color: var(--c-t4); }
+
+/* ---------------- 图表卡 ---------------- */
+.chart-card {
+  margin: var(--sp) var(--sp) 0;
+  padding: 20rpx var(--sp) var(--sp);
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  box-shadow: var(--sh-1);
+  box-sizing: border-box;
+}
+.chart-card__hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56rpx;
+}
+.chart-card__t {
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+/* 时间范围切换 */
+.range {
+  display: flex;
+  align-items: center;
+  padding: 3rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+}
+.range__i {
+  padding: 0 18rpx;
+  height: 48rpx;
+  line-height: 48rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  border-radius: var(--r-full);
+}
+.range__i--on {
+  background: var(--c-primary);
+  color: var(--c-inverse);
+  font-weight: 600;
+}
+/* ★ 容器必须有确定高度，否则 ec-canvas 高度为 0，图表不显示 */
+.chart-box {
+  position: relative;
+  width: 100%;
+  height: 460rpx;
+  margin-top: 12rpx;
+}
+.chart-box--tall { height: 520rpx; }
+.chart-duo {
+  display: flex;
+  gap: 12rpx;
+}
+.chart-box--half {
+  width: calc(50% - 6rpx);
+  height: 440rpx;
+}
+/* ec-canvas 宿主节点必须撑满容器：类名 + 标签选择器双保险 */
+.chart-canvas,
+ec-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.chart-none {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+  padding: 60rpx 0;
+}
+.chart-tip {
+  text-align: center;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  padding-top: 10rpx;
+}
+
+/* ---------------- 管理入口宫格 ---------------- */
+.entries {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12rpx 0;
+}
+.entries__i {
+  width: 25%;
+  padding: 22rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  box-sizing: border-box;
+}
+.entries__i:active { background: var(--c-bg); }
+.entries__icon { font-size: 44rpx; line-height: 1; }
+.entries__name {
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}

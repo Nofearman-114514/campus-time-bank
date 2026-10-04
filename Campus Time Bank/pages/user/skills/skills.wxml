@@ -1,0 +1,125 @@
+<!-- ==================================================================
+     我的发布 / 我的接单
+     publish：状态 tab + 提供/求助 子筛选 + 技能卡（编辑/上下架/删除）
+     accept ：状态 tab + 接单统计 + 订单卡（接单/拒单/完成/聊天）
+     ================================================================== -->
+<view class="page">
+
+  <!-- ---------------- 1. 筛选区 ---------------- -->
+  <view class="filter-bar">
+    <!-- 状态筛选 -->
+    <scroll-view class="scroll-x" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="scroll-x__inner">
+        <view
+          wx:for="{{statusTabs}}"
+          wx:key="key"
+          class="tab {{status === item.key ? 'tab--on' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onStatus"
+        >{{item.text}}</view>
+      </view>
+    </scroll-view>
+
+    <!-- 我的发布：提供技能 / 我要求助 子筛选 -->
+    <view wx:if="{{mode === 'publish'}}" class="sub-filter">
+      <view
+        wx:for="{{typeTabs}}"
+        wx:key="key"
+        class="chip {{skillType === item.key ? 'chip--on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onSkillType"
+      >{{item.text}}</view>
+    </view>
+
+    <!-- 我的接单：接单统计 -->
+    <view wx:if="{{mode === 'accept'}}" class="order-stats">
+      <view class="order-stats__item">
+        <text class="order-stats__num nums">{{orderCounts.waiting}}</text>
+        <text class="order-stats__label">待接单</text>
+      </view>
+      <view class="order-stats__item">
+        <text class="order-stats__num nums">{{orderCounts.ongoing}}</text>
+        <text class="order-stats__label">服务中</text>
+      </view>
+      <view class="order-stats__item">
+        <text class="order-stats__num nums">{{orderCounts.confirming}}</text>
+        <text class="order-stats__label">待确认</text>
+      </view>
+      <view class="order-stats__item">
+        <text class="order-stats__num nums">{{orderCounts.finished}}</text>
+        <text class="order-stats__label">已完成</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ---------------- 2. 列表 ---------------- -->
+  <view class="page-body">
+
+    <!-- 2.1 骨架屏 -->
+    <block wx:if="{{!firstLoaded}}">
+      <loading-skeleton type="skill" count="{{3}}" />
+    </block>
+
+    <!-- 2.2 有数据 -->
+    <block wx:elif="{{list.length}}">
+
+      <!-- 我的发布 -->
+      <block wx:if="{{mode === 'publish'}}">
+        <view wx:for="{{list}}" wx:key="_id" class="list-item">
+          <skill-card
+            item="{{item}}"
+            showAuthor="{{false}}"
+            showDistance="{{false}}"
+            bindcard="onCard"
+          />
+
+          <view class="ops">
+            <view class="tag tag--{{item.statusTone}}">{{item.statusText}}</view>
+            <view class="flex-1"></view>
+
+            <view class="btn btn--xs btn--gray" data-id="{{item._id}}" bindtap="onEdit">编辑</view>
+
+            <view
+              wx:if="{{item.canToggle}}"
+              class="btn btn--xs btn--light"
+              data-id="{{item._id}}"
+              data-status="{{item.status}}"
+              bindtap="onToggle"
+            >{{item.toggleText}}</view>
+
+            <view class="btn btn--xs btn--ghost" data-id="{{item._id}}" bindtap="onDelete">删除</view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 我的接单 -->
+      <block wx:else>
+        <view wx:for="{{list}}" wx:key="_id" class="list-item">
+          <order-card
+            item="{{item}}"
+            showActions="{{true}}"
+            showRoleTag="{{false}}"
+            bindcard="onOrderCard"
+            bindaction="onOrderAction"
+          />
+        </view>
+      </block>
+
+      <!-- 2.3 加载更多 -->
+      <view class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+        {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+      </view>
+    </block>
+
+    <!-- 2.4 空态 -->
+    <block wx:else>
+      <empty
+        icon="{{emptyIcon}}"
+        text="{{emptyText}}"
+        desc="{{emptyDesc}}"
+        btn="{{emptyBtn}}"
+        bindaction="onEmptyAction"
+      />
+    </block>
+  </view>
+</view>

@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "badge-wall": "/components/badge-wall/index"
+  },
+  "navigationBarTitleText": "徽章墙",
+  "backgroundTextStyle": "dark"
+}

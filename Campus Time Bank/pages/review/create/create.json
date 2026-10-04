@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "发表评价",
+  "usingComponents": {
+    "user-avatar": "/components/user-avatar/index",
+    "star-rate": "/components/star-rate/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  }
+}

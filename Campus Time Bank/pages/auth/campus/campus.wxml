@@ -1,0 +1,223 @@
+<!-- ==================================================================
+     校园认证
+     说明条 → 状态卡（已通过/审核中/已驳回）→ 三步时间轴 → 表单 → 底部提交
+     ================================================================== -->
+<view class="page">
+  <view class="page-body {{showForm ? 'page-body--has-bar' : ''}}">
+
+    <!-- ---------------- 1. 顶部说明 ---------------- -->
+    <view class="notice-bar">
+      <text class="notice-bar__icon">🔒</text>
+      <text class="notice-bar__text">校园认证用于确保平台用户都是本校学生，认证信息仅管理员可见</text>
+    </view>
+
+    <!-- ---------------- 2. 认证成功卡（status = 2） ---------------- -->
+    <view wx:if="{{status === 2}}" class="status-card status-card--ok">
+      <view class="status-card__icon">✓</view>
+      <text class="status-card__title">已通过校园认证</text>
+      <text class="status-card__desc">已于 {{authTime || '——'}} 通过认证</text>
+
+      <view class="status-card__body">
+        <view class="kv">
+          <text class="kv__k">学校</text>
+          <text class="kv__v">{{userInfo.campus || '——'}}</text>
+        </view>
+        <view class="kv">
+          <text class="kv__k">学院</text>
+          <text class="kv__v">{{userInfo.college || '——'}}</text>
+        </view>
+        <view class="kv">
+          <text class="kv__k">专业</text>
+          <text class="kv__v">{{userInfo.major || '——'}}</text>
+        </view>
+        <view class="kv">
+          <text class="kv__k">学号</text>
+          <text class="kv__v nums">{{studentNoMask}}</text>
+        </view>
+      </view>
+
+      <view class="fold" bindtap="onToggleDetail">
+        <text class="fold__text">{{showDetail ? '收起认证信息' : '查看认证信息'}}</text>
+        <text class="fold__arrow {{showDetail ? 'is-open' : ''}}">›</text>
+      </view>
+
+      <view wx:if="{{showDetail}}" class="fold__body">
+        <view wx:if="{{storedImages.length}}" class="img-grid">
+          <image
+            wx:for="{{storedImages}}"
+            wx:key="*this"
+            class="img-grid__img"
+            src="{{item}}"
+            mode="aspectFill"
+            data-index="{{index}}"
+            data-source="stored"
+            bindtap="onPreview"
+          />
+        </view>
+        <text wx:else class="form-tip">暂无认证凭证图片</text>
+      </view>
+    </view>
+
+    <!-- ---------------- 3. 审核中卡（status = 1） ---------------- -->
+    <view wx:elif="{{status === 1 && !showForm}}" class="status-card status-card--info">
+      <view class="status-card__icon status-card__icon--plain">⏳</view>
+      <text class="status-card__title">资料审核中</text>
+      <text class="status-card__desc">管理员将在 1 个工作日内完成审核</text>
+      <text class="status-card__desc">审核结果会通过系统通知告知你</text>
+
+      <view class="status-card__ops">
+        <view class="btn btn--sm btn--ghost" bindtap="onWithdraw">撤回并重新填写</view>
+      </view>
+    </view>
+
+    <!-- ---------------- 4. 驳回卡（status = 3） ---------------- -->
+    <view wx:elif="{{status === 3}}" class="status-card status-card--danger">
+      <view class="status-card__icon status-card__icon--plain">❗</view>
+      <text class="status-card__title">认证未通过</text>
+      <view class="remark">
+        <text class="remark__label">驳回原因</text>
+        <text class="remark__text">{{authRemark || '管理员未填写驳回原因，请核对资料后重新提交'}}</text>
+      </view>
+      <text class="status-card__desc">请按上述原因修改后重新提交</text>
+    </view>
+
+    <!-- ---------------- 5. 三步时间轴 ---------------- -->
+    <view class="card steps">
+      <view wx:for="{{steps}}" wx:key="text" class="steps__item">
+        <view class="steps__rail">
+          <view class="steps__dot steps__dot--{{item.state}}"></view>
+          <view wx:if="{{index < steps.length - 1}}" class="steps__line"></view>
+        </view>
+        <view class="steps__body">
+          <text class="steps__text steps__text--{{item.state}}">{{item.text}}</text>
+          <text class="steps__desc">{{item.state === 'done' ? '已完成' : (item.state === 'current' ? '进行中' : '待处理')}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ---------------- 6. 表单（未提交 / 已驳回 / 撤回后） ---------------- -->
+    <block wx:if="{{showForm}}">
+      <view class="sec-title">
+        <text class="sec-title__text">认证资料</text>
+      </view>
+
+      <view class="cell-group">
+        <!-- 真实姓名 -->
+        <view class="form-item">
+          <text class="form-item__label form-item__label--required">真实姓名</text>
+          <input
+            class="form-item__input"
+            value="{{form.realName}}"
+            maxlength="10"
+            placeholder="与学生证一致"
+            placeholder-class="form-item__ph"
+            data-field="realName"
+            bindinput="onInput"
+          />
+        </view>
+
+        <!-- 学号 -->
+        <view class="form-item">
+          <text class="form-item__label form-item__label--required">学号</text>
+          <input
+            class="form-item__input"
+            value="{{form.studentNo}}"
+            maxlength="20"
+            placeholder="4~20 位数字或字母"
+            placeholder-class="form-item__ph"
+            data-field="studentNo"
+            bindinput="onInput"
+          />
+        </view>
+
+        <!-- 学校 -->
+        <view class="form-item">
+          <text class="form-item__label form-item__label--required">学校</text>
+          <input
+            class="form-item__input"
+            value="{{form.campus}}"
+            maxlength="20"
+            placeholder="如：广东职业技术学院"
+            placeholder-class="form-item__ph"
+            data-field="campus"
+            bindinput="onInput"
+          />
+        </view>
+
+        <!-- 学院 -->
+        <view class="form-item">
+          <text class="form-item__label form-item__label--required">学院</text>
+          <input
+            class="form-item__input"
+            value="{{form.college}}"
+            maxlength="20"
+            placeholder="如：计算机与信息学院"
+            placeholder-class="form-item__ph"
+            data-field="college"
+            bindinput="onInput"
+          />
+        </view>
+
+        <!-- 专业 -->
+        <view class="form-item">
+          <text class="form-item__label form-item__label--required">专业</text>
+          <input
+            class="form-item__input"
+            value="{{form.major}}"
+            maxlength="20"
+            placeholder="如：移动应用开发"
+            placeholder-class="form-item__ph"
+            data-field="major"
+            bindinput="onInput"
+          />
+        </view>
+
+        <!-- 学生证 / 校园卡照片 -->
+        <view class="form-item form-item--top">
+          <text class="form-item__label form-item__label--required">证件照片</text>
+          <view class="flex-1">
+            <view class="img-grid">
+              <view wx:for="{{images}}" wx:key="*this" class="img-grid__cell">
+                <image
+                  class="img-grid__img"
+                  src="{{item}}"
+                  mode="aspectFill"
+                  data-index="{{index}}"
+                  bindtap="onPreview"
+                />
+                <view class="img-grid__del" data-index="{{index}}" catchtap="onDeleteImage">×</view>
+              </view>
+
+              <view
+                wx:if="{{images.length < maxImages}}"
+                class="img-grid__add"
+                bindtap="onChooseImages"
+              >
+                <text class="img-grid__add-icon">＋</text>
+                <text class="img-grid__add-text">上传</text>
+              </view>
+            </view>
+
+            <text class="form-tip">请确保学号、姓名、有效期清晰可见，请勿上传他人证件（1~3 张）</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 协议 -->
+      <checkbox-group class="agree" bindchange="onAgree">
+        <label class="agree__label">
+          <checkbox value="1" checked="{{agree}}" />
+          <text class="agree__text">我承诺所填信息真实有效，同意平台在审核范围内使用上述资料</text>
+        </label>
+      </checkbox-group>
+    </block>
+  </view>
+
+  <!-- ---------------- 7. 底部固定提交（仅表单态） ---------------- -->
+  <view wx:if="{{showForm}}" class="footer-bar">
+    <view
+      class="btn btn--primary btn--block {{submitting ? 'btn--disabled' : ''}}"
+      bindtap="onSubmit"
+    >{{submitting ? '提交中…' : '提交认证'}}</view>
+  </view>
+</view>

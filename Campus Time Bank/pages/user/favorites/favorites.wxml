@@ -1,0 +1,50 @@
+<!-- ==================================================================
+     我的收藏：按收藏时间倒序的技能卡列表，可就地取消收藏
+     ================================================================== -->
+<view class="page">
+
+  <view class="page-body">
+
+    <!-- 1. 骨架屏 -->
+    <block wx:if="{{!firstLoaded}}">
+      <loading-skeleton type="skill" count="{{3}}" />
+    </block>
+
+    <!-- 2. 有数据 -->
+    <block wx:elif="{{list.length}}">
+      <view class="count-bar">共收藏 {{total}} 个技能</view>
+
+      <view wx:for="{{list}}" wx:key="_id" class="list-item">
+        <skill-card
+          item="{{item}}"
+          showAuthor="{{false}}"
+          showDistance="{{false}}"
+          bindcard="onCard"
+        />
+        <view class="ops">
+          <text class="ops__time">{{item.collectedText}}</text>
+          <view
+            class="btn btn--xs btn--gray ops__btn"
+            data-id="{{item._id}}"
+            bindtap="onRemove"
+          >取消收藏</view>
+        </view>
+      </view>
+
+      <view class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+        {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+      </view>
+    </block>
+
+    <!-- 3. 空态 -->
+    <block wx:else>
+      <empty
+        icon="⭐"
+        text="还没有收藏任何技能"
+        desc="在技能详情页点右上角的星标，就能收藏喜欢的技能"
+        btn="去技能广场"
+        bindaction="onEmptyAction"
+      />
+    </block>
+  </view>
+</view>

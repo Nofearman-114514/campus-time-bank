@@ -1,0 +1,26 @@
+@import "styles/theme.wxss";
+@import "styles/common.wxss";
+
+/* 全局兜底 */
+page {
+  background: var(--c-bg);
+  color: var(--c-t1);
+  font-size: var(--fs-body);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+    "Microsoft YaHei", sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+view, text, button, input, textarea, image, scroll-view {
+  box-sizing: border-box;
+}
+
+image { display: block; }
+
+/* 隐藏 scroll-view 滚动条 */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  color: transparent;
+}

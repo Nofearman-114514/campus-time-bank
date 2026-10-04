@@ -1,0 +1,116 @@
+/* 徽章墙 */
+
+/* ---------------- 顶部进度卡 ---------------- */
+.badge-head {
+  padding: var(--sp-l);
+  border-radius: var(--r-l);
+  background: var(--g-primary);
+  box-shadow: var(--sh-primary);
+  color: var(--c-inverse);
+}
+
+.badge-head__num {
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.badge-head__total {
+  margin-left: 12rpx;
+  font-size: var(--fs-body);
+  opacity: .95;
+}
+.badge-head__pct {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+}
+
+.badge-head__track {
+  margin-top: 24rpx;
+  height: 16rpx;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, .3);
+  overflow: hidden;
+}
+.badge-head__fill {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: var(--c-inverse);
+  transition: width .3s;
+}
+
+.badge-head__tip {
+  margin-top: 16rpx;
+  font-size: var(--fs-cap);
+  opacity: .92;
+}
+
+/* ---------------- 徽章墙容器 ----------------
+ * badge-wall 组件内部固定 .bw__item { width: 25% }（4 列）。
+ * 这里从页面侧覆盖成 2 列卡片式，并放大图标，
+ * 不修改 components/ 下的任何文件。
+ * -------------------------------------------- */
+.bw-page {
+  margin-top: 24rpx;
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  padding: 20rpx 12rpx;
+  box-shadow: var(--sh-1);
+}
+
+.bw-page .bw {
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+.bw-page .bw__item {
+  /* 两列：宽度留出中间间距，由父容器 space-between 分配 */
+  width: calc(50% - 8rpx);
+  align-items: flex-start;
+  padding: 16rpx;
+  border-radius: var(--r-m);
+  border: 2rpx solid var(--c-line);
+  box-sizing: border-box;
+}
+
+/* 已获得：彩色底 + 彩色描边强调 */
+.bw-page .bw__item:not(.is-locked) {
+  background: var(--c-primary-l);
+  border-color: var(--c-primary);
+}
+
+/* 未获得：置灰 */
+.bw-page .bw__item.is-locked {
+  background: var(--c-bg);
+  border-color: var(--c-line);
+}
+
+.bw-page .bw__icon {
+  width: 104rpx;
+  height: 104rpx;
+}
+
+.bw-page .bw__emoji { font-size: 56rpx; }
+
+.bw-page .bw__name {
+  margin-top: 16rpx;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-align: left;
+}
+
+.bw-page .bw__desc {
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  text-align: left;
+  line-height: 1.5;
+  color: var(--c-t3);
+}
+
+/* ---------------- 底部 ---------------- */
+.badge-foot {
+  margin-top: 40rpx;
+  text-align: center;
+  font-size: var(--fs-cap);
+  color: var(--c-primary);
+}
+.badge-foot:active { opacity: .7; }

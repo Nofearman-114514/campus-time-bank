@@ -1,0 +1,13 @@
+<view class="sr">
+  <view
+    wx:for="{{list}}"
+    wx:key="index"
+    class="sr__item {{editable ? 'sr__item--edit' : ''}}"
+    style="font-size:{{size}}rpx;"
+    data-i="{{index + 1}}"
+    bindtap="onTap"
+  >
+    <text class="{{item ? 'sr__on' : 'sr__off'}}">{{item ? '★' : emptyIcon}}</text>
+  </view>
+  <text wx:if="{{showValue}}" class="sr__val" style="font-size:{{size * 0.7}}rpx;">{{value}}</text>
+</view>

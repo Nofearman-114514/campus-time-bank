@@ -1,0 +1,10 @@
+{
+  "name": "skill",
+  "version": "1.0.0",
+  "description": "校园时间银行 · 技能域云函数（广场/详情/发布/编辑/下架/我的发布/分类/轮播/举报）",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

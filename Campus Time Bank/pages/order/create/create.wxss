@@ -1,0 +1,167 @@
+/* ==================================================================
+ * 下单确认页
+ * ================================================================== */
+
+/* ---------------------------- 信用分警告 ---------------------------- */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+  padding: 24rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-danger-l);
+  border: 2rpx solid var(--c-danger);
+}
+.alert__icon { font-size: 40rpx; }
+.alert__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-danger);
+}
+.alert__desc {
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: var(--c-t2);
+}
+
+/* ---------------------------- 服务信息 ---------------------------- */
+.sv-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: var(--r-m);
+  background: var(--g-primary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sv-cover__img { width: 100%; height: 100%; }
+.sv-cover__icon { font-size: 64rpx; }
+.sv-title {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+  line-height: 1.4;
+}
+.sv-author {
+  margin-top: 12rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+
+/* ---------------------------- 时间币结算卡 ---------------------------- */
+.settle { margin-top: 20rpx; }
+.settle--bad { background: var(--c-danger-l); }
+.settle__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+}
+.settle__k {
+  font-size: var(--fs-body);
+  color: var(--c-t2);
+}
+.settle__k--strong {
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.settle__v {
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+.settle__v--strong {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-accent);
+}
+.settle__warn {
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-card);
+  font-size: var(--fs-cap);
+  color: var(--c-danger);
+  line-height: 1.6;
+}
+.settle__note {
+  margin-top: 16rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  line-height: 1.6;
+}
+
+/* ---------------------------- 冻结说明卡 ---------------------------- */
+.freeze {
+  margin-top: 20rpx;
+  background: var(--c-primary-l);
+  box-shadow: none;
+}
+.freeze__icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+.freeze__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-primary-d);
+}
+.freeze__body {
+  margin-top: 14rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.7;
+  color: var(--c-t2);
+}
+.freeze__flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-card);
+}
+.freeze__step {
+  font-size: var(--fs-mini);
+  color: var(--c-warn);
+  font-weight: 600;
+}
+.freeze__step--mid { color: var(--c-info); }
+.freeze__step--end { color: var(--c-success); }
+.freeze__arrow { color: var(--c-t4); font-size: var(--fs-mini); }
+
+/* ---------------------------- 表单 ---------------------------- */
+.form-card {
+  padding: 0;
+  overflow: hidden;
+}
+.form-card .form-item:last-child { padding-bottom: 8rpx; }
+.form-item__arrow {
+  margin-left: 8rpx;
+  color: var(--c-t4);
+  font-size: 32rpx;
+  line-height: 1;
+}
+.picker-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.form-textarea--sm { min-height: 120rpx; }
+
+/* ---------------------------- 底部固定条 ---------------------------- */
+.footer-bar__left { align-items: flex-start; }
+.footer-bar__label {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.footer-bar__btn {
+  flex-shrink: 0;
+  min-width: 280rpx;
+}

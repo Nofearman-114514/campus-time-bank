@@ -1,0 +1,205 @@
+<!-- ==================================================================
+     编辑资料
+     首次完善（?first=1）提示条 → 表单 → 校园认证入口 → 底部固定保存
+     ================================================================== -->
+<view class="page">
+  <view class="page-body page-body--has-bar">
+
+    <!-- ---------------- 0. 首次完善引导 ---------------- -->
+    <view wx:if="{{first}}" class="guide-bar">
+      <text class="guide-bar__icon">💡</text>
+      <text class="guide-bar__text">完善资料后才能发布技能与下单</text>
+    </view>
+
+    <!-- ---------------- 1. 表单 ---------------- -->
+    <view class="cell-group">
+
+      <!-- 1.1 头像 -->
+      <view class="form-item form-item--top">
+        <text class="form-item__label form-item__label--required">头像</text>
+        <view class="flex-1 row avatar-row">
+          <user-avatar size="l" url="{{form.avatarUrl}}" name="{{form.nickName}}" />
+          <view class="avatar-row__ops">
+            <button
+              class="btn btn--sm btn--light"
+              open-type="chooseAvatar"
+              bindchooseavatar="onChooseAvatar"
+            >用微信头像</button>
+            <!-- 两个按钮都设成实心变体（--light / --gray）：
+                 一个实心一个描边会让描边那条显得像多余的杂线 -->
+            <view class="btn btn--sm btn--gray mt-s" bindtap="onPickAlbum">从相册选择</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 1.2 昵称（官方昵称填写能力） -->
+      <view class="form-item">
+        <text class="form-item__label form-item__label--required">昵称</text>
+        <input
+          class="form-item__input"
+          type="nickname"
+          value="{{form.nickName}}"
+          maxlength="12"
+          placeholder="点击使用微信昵称"
+          placeholder-class="form-item__ph"
+          bindinput="onNickname"
+          bindblur="onNickname"
+        />
+      </view>
+
+      <!-- 1.3 性别 -->
+      <view class="form-item">
+        <text class="form-item__label">性别</text>
+        <picker class="flex-1" range="{{genderRange}}" value="{{genderIndex}}" bindchange="onGender">
+          <view class="picker-text">{{genderRange[genderIndex]}}</view>
+        </picker>
+      </view>
+
+      <!-- 1.4 学校 -->
+      <view class="form-item">
+        <text class="form-item__label">学校</text>
+        <input
+          class="form-item__input"
+          value="{{form.campus}}"
+          maxlength="20"
+          placeholder="如：广东职业技术学院"
+          placeholder-class="form-item__ph"
+          data-field="campus"
+          bindinput="onInput"
+        />
+      </view>
+
+      <!-- 1.5 学院 -->
+      <view class="form-item">
+        <text class="form-item__label">学院</text>
+        <input
+          class="form-item__input"
+          value="{{form.college}}"
+          maxlength="20"
+          placeholder="如：计算机与信息学院"
+          placeholder-class="form-item__ph"
+          data-field="college"
+          bindinput="onInput"
+        />
+      </view>
+
+      <!-- 1.6 专业 -->
+      <view class="form-item">
+        <text class="form-item__label">专业</text>
+        <input
+          class="form-item__input"
+          value="{{form.major}}"
+          maxlength="20"
+          placeholder="如：移动应用开发"
+          placeholder-class="form-item__ph"
+          data-field="major"
+          bindinput="onInput"
+        />
+      </view>
+
+      <!-- 1.7 年级 -->
+      <view class="form-item">
+        <text class="form-item__label">年级</text>
+        <picker
+          class="flex-1"
+          range="{{gradeRange}}"
+          value="{{gradeIndex < 0 ? 0 : gradeIndex}}"
+          bindchange="onGrade"
+        >
+          <view class="picker-text {{form.grade ? '' : 'form-item__ph'}}">{{form.grade || '请选择年级'}}</view>
+        </picker>
+      </view>
+
+      <!-- 1.8 个人简介 -->
+      <view class="form-item form-item--top">
+        <text class="form-item__label">个人简介</text>
+        <textarea
+          class="form-textarea flex-1"
+          value="{{form.bio}}"
+          maxlength="100"
+          placeholder="介绍一下自己，比如擅长的技能、空闲时间"
+          placeholder-class="form-item__ph"
+          bindinput="onBio"
+        />
+      </view>
+      <view class="char-count">{{bioLen}}/100</view>
+
+      <!-- 1.9 技能标签 -->
+      <view class="form-item form-item--top">
+        <text class="form-item__label">技能标签</text>
+        <view class="flex-1">
+          <view wx:if="{{form.tags.length}}" class="tag-list">
+            <view
+              wx:for="{{form.tags}}"
+              wx:key="*this"
+              class="tag tag--primary tag-list__item"
+              data-index="{{index}}"
+              bindtap="onDeleteTag"
+            >
+              <text>{{item}}</text>
+              <text class="tag-list__x">×</text>
+            </view>
+          </view>
+
+          <view class="row tag-add">
+            <input
+              class="tag-input flex-1"
+              value="{{tagInput}}"
+              maxlength="8"
+              confirm-type="done"
+              disabled="{{form.tags.length >= maxTags}}"
+              placeholder="{{form.tags.length >= maxTags ? '已达上限 5 个' : '输入标签后回车添加'}}"
+              placeholder-class="form-item__ph"
+              bindinput="onTagInput"
+              bindconfirm="onAddTag"
+            />
+            <view
+              class="btn btn--xs btn--light {{form.tags.length >= maxTags ? 'btn--disabled' : ''}}"
+              bindtap="onAddTag"
+            >添加</view>
+          </view>
+
+          <text class="form-tip">最多 5 个，如「吉他」「高数辅导」「简历排版」</text>
+        </view>
+      </view>
+
+      <!-- 1.10 手机号（可选） -->
+      <view class="form-item">
+        <text class="form-item__label">手机号</text>
+        <view class="flex-1 row end">
+          <text wx:if="{{form.phone}}" class="form-item__input">{{form.phone}}</text>
+          <button
+            wx:else
+            class="btn btn--xs btn--light"
+            open-type="getPhoneNumber"
+            bindgetphonenumber="onGetPhone"
+          >绑定手机号</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- ---------------- 2. 校园认证入口 ---------------- -->
+    <view class="card card--flat auth-card mt" bindtap="goAuth">
+      <view class="row">
+        <text class="auth-card__icon">{{authStatus === 2 ? '🛡️' : '🪪'}}</text>
+        <view class="flex-1">
+          <view class="row gap-s">
+            <text class="auth-card__title">校园认证</text>
+            <view class="tag tag--{{auth.tone}}">{{auth.text}}</view>
+          </view>
+          <text class="auth-card__desc">{{auth.desc}}</text>
+        </view>
+        <view wx:if="{{authStatus === 0 || authStatus === 3}}" class="btn btn--xs btn--accent">去认证</view>
+        <text wx:else class="cell__arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ---------------- 3. 底部固定保存 ---------------- -->
+  <view class="footer-bar">
+    <view
+      class="btn btn--primary btn--block {{saving ? 'btn--disabled' : ''}}"
+      bindtap="onSave"
+    >{{saving ? '保存中…' : '保存'}}</view>
+  </view>
+</view>

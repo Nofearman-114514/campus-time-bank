@@ -1,0 +1,188 @@
+/* ==================================================================
+ * 我的评价
+ * ================================================================== */
+
+/* ---------------------------- 顶部综合评分 ---------------------------- */
+.score-head {
+  background: var(--c-card);
+  padding-bottom: 24rpx;
+  box-shadow: var(--sh-1);
+}
+.role-tabs {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx var(--sp) 0;
+}
+.role-tabs__item {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  text-align: center;
+  border-radius: var(--r-full);
+  font-size: var(--fs-body);
+  color: var(--c-t2);
+  background: var(--c-bg);
+  transition: all .18s;
+}
+.role-tabs__item--on {
+  background: var(--c-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.score {
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+  margin: 24rpx var(--sp) 0;
+  padding: 28rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-primary-l);
+}
+.score--plain {
+  justify-content: center;
+  background: var(--c-bg);
+}
+.score__plain-text {
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+.score__left {
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 160rpx;
+}
+.score__num {
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--c-accent);
+}
+.score__label {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}
+.score__right {
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+}
+.score__count {
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+}
+.score__note {
+  margin-top: 6rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  line-height: 1.5;
+}
+
+/* ---------------------------- 列表 ---------------------------- */
+.list-body { padding-top: 20rpx; }
+
+.rv-card {
+  position: relative;
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  padding: var(--sp);
+  box-shadow: var(--sh-1);
+  margin-bottom: 20rpx;
+}
+.rv-card__head {
+  display: flex;
+  align-items: center;
+}
+.rv-card__name {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.rv-card__time {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.rv-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+.rv-card__content {
+  margin-top: 18rpx;
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  color: var(--c-t1);
+}
+.rv-card__skill {
+  margin-top: 14rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.rv-card__foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+}
+
+/* 匿名评价的灰色默认头像 */
+.rv-avatar--anon { filter: grayscale(1); opacity: .55; }
+
+/* ---------------------------- 已回复（浅底引用块） ---------------------------- */
+.rv-reply {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  border-left: 6rpx solid var(--c-primary);
+}
+.rv-reply__title {
+  display: block;
+  font-size: var(--fs-mini);
+  font-weight: 600;
+  color: var(--c-primary);
+}
+.rv-reply__content {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.7;
+  color: var(--c-t2);
+}
+.rv-reply__time {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* ---------------------------- 回复弹层 ---------------------------- */
+.popup__quote {
+  padding: 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  margin-bottom: 20rpx;
+}
+.popup__quote-name {
+  display: block;
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--c-t2);
+}
+.popup__quote-text {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  line-height: 1.6;
+}
+.popup__input {
+  min-height: 200rpx;
+  padding: 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+}

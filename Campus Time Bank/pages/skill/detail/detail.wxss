@@ -1,0 +1,408 @@
+/* ==================================================================
+ * 技能详情
+ * 只使用 theme.wxss 的 CSS 变量；封面降级用页面注入的渐变。
+ * ================================================================== */
+
+/* ---------------- 1. 大封面 ---------------- */
+.cover {
+  position: relative;
+  width: 100%;
+  height: 420rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cover__img {
+  width: 100%;
+  height: 100%;
+}
+
+.cover__icon {
+  font-size: 180rpx;
+  line-height: 1;
+  opacity: .95;
+}
+
+/* 浮层返回按钮（无图片资源，用字符） */
+.cover__back {
+  position: absolute;
+  left: var(--sp);
+  top: 32rpx;
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: rgba(16, 24, 40, 0.32);
+  color: var(--c-inverse);
+  font-size: 46rpx;
+  line-height: 60rpx;
+  text-align: center;
+  padding-right: 4rpx;
+}
+
+/* 浮层收藏星标（仅他人技能渲染；自己发布的由后端拦截，且前端也不显示） */
+.cover__fav {
+  position: absolute;
+  right: var(--sp);
+  top: 32rpx;
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: rgba(16, 24, 40, 0.32);
+  color: var(--c-inverse);
+  font-size: 38rpx;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover__fav.is-on {
+  color: var(--c-accent);
+}
+
+.cover__cat {
+  position: absolute;
+  right: var(--sp);
+  bottom: 28rpx;
+  height: 52rpx;
+  padding: 0 24rpx;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--c-t1);
+  font-size: var(--fs-cap);
+  line-height: 52rpx;
+}
+
+/* ---------------- 2. 价格卡 ---------------- */
+.price-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -52rpx;
+  position: relative;
+  z-index: 2;
+  padding: 28rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-card);
+  box-shadow: var(--sh-2);
+}
+
+.price-card__left {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.price-card__num {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--c-accent);
+  line-height: 1;
+}
+
+.price-card__unit {
+  margin-left: 10rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+
+.price-card__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.price-card__count {
+  font-size: var(--fs-cap);
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+.price-card__view {
+  margin-top: 6rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* ---------------- 3. 标题 + 标签 ---------------- */
+.title-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.type-badge {
+  flex-shrink: 0;
+  height: 40rpx;
+  padding: 0 12rpx;
+  margin-right: 12rpx;
+  border-radius: 8rpx;
+  font-size: var(--fs-mini);
+  line-height: 40rpx;
+}
+
+.type-badge.is-offer {
+  background: var(--c-primary-l);
+  color: var(--c-primary);
+}
+
+.type-badge.is-need {
+  background: var(--c-info-l);
+  color: var(--c-info);
+}
+
+.detail-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-t1);
+  line-height: 1.4;
+}
+
+.tag-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.publish-time {
+  display: block;
+  margin-top: 16rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* ---------------- 4. 作者卡 ---------------- */
+.author-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.author-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-card__name {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+  max-width: 300rpx;
+}
+
+.author-card__reviews {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+.author-card__rate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.author-card__score {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+.author-card__arrow {
+  font-size: 40rpx;
+  color: var(--c-t4);
+  flex-shrink: 0;
+}
+
+/* ---------------- 5. 服务说明（保留换行） ---------------- */
+.desc-text {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ---------------- 6. 服务地点 ---------------- */
+.loc-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.loc-row__icon {
+  font-size: var(--fs-h3);
+  margin-right: 14rpx;
+  line-height: 1.4;
+}
+
+.loc-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.loc-row__name {
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+  font-weight: 500;
+}
+
+.loc-row__addr {
+  margin-top: 6rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+
+.loc-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+}
+
+/* ---------------- 7. 评价 ---------------- */
+.rv__head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.rv__who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.rv__name {
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  font-weight: 500;
+}
+
+.rv__time {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  flex-shrink: 0;
+}
+
+.rv__content {
+  display: block;
+  margin-top: 14rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.7;
+}
+
+.rv__tags {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 12rpx;
+}
+
+.rv__reply {
+  margin-top: 14rpx;
+  padding: 14rpx 18rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  line-height: 1.6;
+}
+
+/* 最后一条评价不要分割线 */
+.rv:last-child .divider {
+  display: none;
+}
+
+.rv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32rpx 0;
+}
+
+.rv-empty__icon {
+  font-size: 72rpx;
+  line-height: 1;
+}
+
+.rv-empty__text {
+  margin-top: 16rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+
+/* ---------------- 8. 平台保障 ---------------- */
+.safety {
+  padding: var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-primary-l);
+}
+
+.safety__title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-primary);
+}
+
+.safety__icon {
+  margin-right: 10rpx;
+  font-size: 34rpx;
+}
+
+.safety__step {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-top: 20rpx;
+}
+
+.safety__no {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 14rpx;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-inverse);
+  font-size: var(--fs-mini);
+  line-height: 36rpx;
+  text-align: center;
+}
+
+.safety__text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  line-height: 1.7;
+}
+
+.safety__foot {
+  margin-top: 22rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx dashed var(--c-primary);
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  line-height: 1.6;
+}

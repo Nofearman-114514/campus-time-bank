@@ -1,0 +1,10 @@
+{
+  "name": "wallet",
+  "version": "1.0.0",
+  "description": "校园时间银行 · 时间币钱包云函数（余额概览 / 流水明细 / 收支统计）",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

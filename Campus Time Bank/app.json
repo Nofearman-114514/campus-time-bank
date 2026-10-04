@@ -1,0 +1,81 @@
+{
+  "pages": [
+    "pages/square/square",
+    "pages/search/search",
+    "pages/skill/detail/detail",
+    "pages/publish/publish",
+    "pages/map/picker/picker",
+    "pages/order/list/list",
+    "pages/order/detail/detail",
+    "pages/order/create/create",
+    "pages/wallet/wallet",
+    "pages/mine/mine",
+    "pages/user/profile/profile",
+    "pages/user/home/home",
+    "pages/user/skills/skills",
+    "pages/user/favorites/favorites",
+    "pages/auth/campus/campus",
+    "pages/review/create/create",
+    "pages/review/list/list",
+    "pages/chat/list/list",
+    "pages/chat/room/room",
+    "pages/notice/list/list",
+    "pages/credit/detail/detail",
+    "pages/badge/badge",
+    "pages/report/report",
+    "pages/about/about"
+  ],
+  "subpackages": [
+    {
+      "root": "packageAdmin",
+      "name": "admin",
+      "pages": [
+        "pages/dashboard/dashboard",
+        "pages/users/users",
+        "pages/auth-audit/auth-audit",
+        "pages/categories/categories",
+        "pages/skills/skills",
+        "pages/orders/orders",
+        "pages/reports/reports",
+        "pages/settings/settings"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/mine/mine": {
+      "network": "all",
+      "packages": ["admin"]
+    }
+  },
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "校园时间银行",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F7F9",
+    "enablePullDownRefresh": false
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#9CA3AF",
+    "selectedColor": "#0EA47A",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/square/square", "text": "广场" },
+      { "pagePath": "pages/order/list/list", "text": "订单" },
+      { "pagePath": "pages/wallet/wallet", "text": "时间币" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于为你展示附近的技能服务，以及发布时在地图上选择服务地点"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation", "chooseLocation"],
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2",
+  "debug": false
+}

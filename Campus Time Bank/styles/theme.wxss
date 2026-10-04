@@ -1,0 +1,71 @@
+/* ==================================================================
+ * 设计 Token —— 校园时间银行
+ * 所有页面样式必须使用这里的变量，禁止硬编码色值。
+ * ================================================================== */
+page {
+  /* ---------- 主色：青绿，代表「时间 / 生长」 ---------- */
+  --c-primary: #0EA47A;
+  --c-primary-d: #0B8A66;
+  --c-primary-l: #E8F7F1;
+
+  /* ---------- 强调色：时间币橙 ---------- */
+  --c-accent: #FF8B3D;
+  --c-accent-d: #E8721F;
+  --c-accent-l: #FFF1E6;
+
+  /* ---------- 语义色 ---------- */
+  --c-danger: #F5483B;
+  --c-danger-l: #FEECEA;
+  --c-warn: #FF9F0A;
+  --c-warn-l: #FFF6E5;
+  --c-success: #0EA47A;
+  --c-success-l: #E8F7F1;
+  --c-info: #3B82F6;
+  --c-info-l: #EAF2FE;
+
+  /* ---------- 文字 ---------- */
+  --c-t1: #1A1D1F;
+  --c-t2: #6B7280;
+  --c-t3: #9CA3AF;
+  --c-t4: #C4C9D0;
+  --c-inverse: #FFFFFF;
+
+  /* ---------- 背景与线条 ---------- */
+  --c-bg: #F5F7F9;
+  --c-card: #FFFFFF;
+  --c-line: #EDEFF2;
+  --c-mask: rgba(16, 24, 40, 0.45);
+
+  /* ---------- 渐变 ---------- */
+  --g-primary: linear-gradient(135deg, #12B98A 0%, #0EA47A 55%, #0B8A66 100%);
+  --g-accent: linear-gradient(135deg, #FFA05C 0%, #FF8B3D 100%);
+  --g-wallet: linear-gradient(135deg, #FFB067 0%, #FF8B3D 45%, #F2701F 100%);
+  --g-credit: linear-gradient(135deg, #4FA8FF 0%, #3B82F6 100%);
+
+  /* ---------- 圆角 ---------- */
+  --r-s: 12rpx;
+  --r-m: 20rpx;
+  --r-l: 32rpx;
+  --r-xl: 40rpx;
+  --r-full: 999rpx;
+
+  /* ---------- 阴影 ---------- */
+  --sh-1: 0 2rpx 12rpx rgba(16, 24, 40, 0.06);
+  --sh-2: 0 8rpx 32rpx rgba(16, 24, 40, 0.10);
+  --sh-primary: 0 8rpx 24rpx rgba(14, 164, 122, 0.28);
+  --sh-accent: 0 8rpx 24rpx rgba(255, 139, 61, 0.30);
+
+  /* ---------- 字号 ---------- */
+  --fs-h1: 44rpx;
+  --fs-h2: 36rpx;
+  --fs-h3: 32rpx;
+  --fs-body: 28rpx;
+  --fs-sm: 26rpx;
+  --fs-cap: 24rpx;
+  --fs-mini: 22rpx;
+
+  /* ---------- 间距 ---------- */
+  --sp: 24rpx;
+  --sp-s: 16rpx;
+  --sp-l: 32rpx;
+}

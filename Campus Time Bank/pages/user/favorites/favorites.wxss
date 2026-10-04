@@ -1,0 +1,41 @@
+/* ==================================================================
+   我的收藏
+   ================================================================== */
+
+.count-bar {
+  padding-bottom: 16rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+.list-item {
+  margin-bottom: var(--sp);
+}
+
+.ops {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx 0;
+}
+
+.ops__time {
+  flex: 1;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+.ops__btn {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.loading-more {
+  padding: 32rpx 0;
+  text-align: center;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+.loading-more--nomore {
+  color: var(--c-t4);
+}

@@ -1,0 +1,108 @@
+<!-- 信用分详情 -->
+<view class="page page-body">
+
+  <!-- ============ 蓝色渐变卡 ============ -->
+  <view class="score-card">
+    <view class="score-card__label">当前信用分</view>
+    <view class="score-card__row">
+      <text class="score-card__num nums">{{score}}</text>
+      <view class="score-card__level">
+        <text class="score-card__level-text">{{levelText}}</text>
+      </view>
+    </view>
+    <view class="score-card__desc">{{levelDesc}}</view>
+
+    <!-- 进度条 -->
+    <view class="score-card__track">
+      <view class="score-card__fill" style="width:{{percent}}%"></view>
+    </view>
+    <view class="score-card__scale">
+      <text>{{minText}}</text>
+      <text>{{maxText}}</text>
+    </view>
+
+    <view class="score-card__next">{{nextText}}</view>
+  </view>
+
+  <!-- ============ 权益说明（5 档，当前档高亮） ============ -->
+  <view class="sec-title">
+    <text class="sec-title__text">等级权益</text>
+    <text class="sec-title__more">共 {{levels.length}} 档</text>
+  </view>
+
+  <view class="card level-card">
+    <view
+      wx:for="{{levels}}"
+      wx:key="key"
+      class="level {{item.current ? 'is-current' : ''}}"
+      style="{{item.current ? 'background:' + item.bg + ';border-color:' + item.color : ''}}"
+    >
+      <view class="level__badge" style="background:{{item.color}}">{{item.limit}}</view>
+      <view class="flex-1">
+        <view class="row">
+          <text class="level__name" style="{{item.current ? 'color:' + item.color : ''}}">{{item.text}}</text>
+          <text wx:if="{{item.current}}" class="tag tag--primary level__now">当前等级</text>
+        </view>
+        <view class="level__desc">{{item.desc}}</view>
+      </view>
+      <text class="level__range nums">{{item.min}} - {{item.max}}</text>
+    </view>
+  </view>
+
+  <!-- ============ 加减分规则 ============ -->
+  <view class="sec-title">
+    <text class="sec-title__text">加减分规则</text>
+  </view>
+
+  <view class="card rules">
+    <view wx:for="{{rules}}" wx:key="key" class="rule">
+      <view class="rule__dot"></view>
+      <text class="rule__text flex-1">{{item.text}}</text>
+      <text
+        class="rule__change nums {{item.isUp ? 't-success' : (item.isZero ? 't3' : 't-danger')}}"
+      >{{item.changeText}}</text>
+    </view>
+  </view>
+
+  <!-- ============ 变动明细 ============ -->
+  <view class="sec-title">
+    <text class="sec-title__text">信用分明细</text>
+  </view>
+
+  <view wx:if="{{list.length}}" class="card logs">
+    <view
+      wx:for="{{list}}"
+      wx:key="_id"
+      class="log"
+      data-id="{{item.orderId}}"
+      bindtap="goOrder"
+    >
+      <view class="flex-1">
+        <view class="log__reason">{{item.reasonText}}</view>
+        <view class="log__time">{{item.timeText}} · 变动后 {{item.score}} 分</view>
+      </view>
+      <text
+        class="log__change nums {{item.isUp ? 't-success' : (item.isZero ? 't3' : 't-danger')}}"
+      >{{item.changeText}}</text>
+    </view>
+  </view>
+
+  <view wx:elif="{{!firstLoaded}}" class="card">
+    <view wx:for="{{[1,2,3]}}" wx:key="*this" class="sk log-sk"></view>
+  </view>
+
+  <empty
+    wx:else
+    icon="📊"
+    text="还没有信用分变动"
+    desc="完成订单、收到好评都会影响信用分"
+    compact="{{true}}"
+  />
+
+  <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+    {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+  </view>
+
+  <!-- ============ 底部说明 ============ -->
+  <view class="credit-foot">信用分影响下单权限，请珍惜每一次互助</view>
+</view>

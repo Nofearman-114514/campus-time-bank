@@ -1,0 +1,30 @@
+<!-- 自定义 tabBar：4 个 tab + 中间凸起发布按钮 -->
+<view class="tabbar">
+  <!-- 凸起的发布按钮（绝对定位于正中） -->
+  <view class="tabbar__publish" catchtap="onPublish" hover-class="tabbar__publish--hover">
+    <view class="tabbar__publish-inner">
+      <text class="tabbar__publish-icon">＋</text>
+    </view>
+    <text class="tabbar__publish-text">发布</text>
+  </view>
+
+  <view class="tabbar__inner">
+    <block wx:for="{{list}}" wx:key="index">
+      <view
+        class="tabbar__item {{selected === item.index ? 'is-active' : ''}}"
+        data-index="{{item.index}}"
+        data-path="{{item.pagePath}}"
+        bindtap="onTab"
+      >
+        <view class="tabbar__icon-wrap">
+          <text class="tabbar__icon">{{item.icon}}</text>
+          <view wx:if="{{badge[item.index] > 0}}" class="tabbar__badge">{{badge[item.index] > 99 ? '99+' : badge[item.index]}}</view>
+        </view>
+        <text class="tabbar__text">{{item.text}}</text>
+      </view>
+
+      <!-- 在「订单」与「时间币」之间留出发布按钮的位置 -->
+      <view wx:if="{{item.index === 1}}" class="tabbar__gap"></view>
+    </block>
+  </view>
+</view>

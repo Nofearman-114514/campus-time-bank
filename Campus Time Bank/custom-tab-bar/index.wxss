@@ -1,0 +1,135 @@
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  background: #FFFFFF;
+  box-shadow: 0 -2rpx 16rpx rgba(16, 24, 40, 0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar__inner {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  height: 108rpx;
+}
+
+.tabbar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 108rpx;
+  position: relative;
+}
+
+.tabbar__gap {
+  width: 130rpx;
+  flex-shrink: 0;
+}
+
+.tabbar__icon-wrap {
+  position: relative;
+  height: 46rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  transition: background-color .18s;
+}
+
+.tabbar__icon {
+  font-size: 38rpx;
+  line-height: 1;
+  filter: grayscale(100%) opacity(.45);
+  transition: filter .18s;
+}
+
+.tabbar__item.is-active .tabbar__icon-wrap {
+  background: var(--c-primary-l);
+}
+
+.tabbar__item.is-active .tabbar__icon {
+  filter: none;
+}
+
+.tabbar__text {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: var(--c-t3);
+  line-height: 1.2;
+  transition: color .18s;
+}
+
+.tabbar__item.is-active .tabbar__text {
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+.tabbar__badge {
+  position: absolute;
+  top: -6rpx;
+  right: 4rpx;
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 7rpx;
+  border-radius: 999rpx;
+  background: var(--c-danger);
+  color: #fff;
+  font-size: 19rpx;
+  line-height: 30rpx;
+  text-align: center;
+  box-sizing: border-box;
+  border: 2rpx solid #fff;
+}
+
+/* ---------------- 中间凸起发布按钮 ---------------- */
+.tabbar__publish {
+  position: absolute;
+  left: 50%;
+  top: -34rpx;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 130rpx;
+}
+
+.tabbar__publish-inner {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: var(--g-primary);
+  box-shadow: 0 8rpx 24rpx rgba(14, 164, 122, 0.36);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 6rpx solid #fff;
+  box-sizing: border-box;
+  transition: transform .12s;
+}
+
+.tabbar__publish--hover .tabbar__publish-inner {
+  transform: scale(0.94);
+}
+
+.tabbar__publish-icon {
+  color: #fff;
+  font-size: 52rpx;
+  font-weight: 300;
+  line-height: 1;
+  margin-top: -4rpx;
+}
+
+.tabbar__publish-text {
+  margin-top: 2rpx;
+  font-size: 20rpx;
+  color: var(--c-primary);
+  font-weight: 600;
+  line-height: 1.2;
+}

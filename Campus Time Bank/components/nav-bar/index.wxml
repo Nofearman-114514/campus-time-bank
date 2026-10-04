@@ -1,0 +1,20 @@
+<view class="nb {{fixed ? 'nb--fixed' : ''}}" style="background:{{bg}};color:{{color}};">
+  <view class="nb__status" style="height:{{statusBarHeight}}px;"></view>
+  <view class="nb__bar" style="height:{{navBarHeight}}px;">
+    <view class="nb__left">
+      <view wx:if="{{showBack}}" class="nb__back" bindtap="onBack">
+        <text class="nb__back-icon" style="color:{{color}};">{{backIcon}}</text>
+      </view>
+      <slot name="left"></slot>
+    </view>
+
+    <view class="nb__title" style="color:{{color}};">{{title}}</view>
+
+    <view class="nb__right">
+      <slot name="right"></slot>
+    </view>
+  </view>
+</view>
+
+<!-- 占位，避免固定定位遮挡内容 -->
+<view wx:if="{{fixed && placeholder}}" style="height:{{totalHeight}}px;"></view>

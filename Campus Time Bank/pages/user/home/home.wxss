@@ -1,0 +1,141 @@
+/* ==================================================================
+ * 他人主页
+ * 只用 styles/theme.wxss 的 CSS 变量，原子类来自 styles/common.wxss
+ * ================================================================== */
+
+/* ---------------- 1. 渐变头图 ---------------- */
+.head {
+  position: relative;
+  height: 420rpx;
+  background: var(--g-primary);
+  border-radius: 0 0 var(--r-l) var(--r-l);
+  overflow: hidden;
+}
+.head__deco {
+  position: absolute;
+  right: 48rpx;
+  bottom: 100rpx;
+  opacity: .18;
+}
+.head__deco-icon { font-size: 160rpx; line-height: 1; }
+
+/* ---------------- 2. 头像压在头图下沿 ---------------- */
+.head-avatar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  margin-top: -80rpx;
+}
+
+/* ---------------- 3. 简介卡 ---------------- */
+.intro-card { padding: var(--sp-l) var(--sp) var(--sp); }
+.intro-card__name {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-t1);
+  max-width: 420rpx;
+}
+.intro-card__verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-inverse);
+  font-size: 22rpx;
+  line-height: 1;
+}
+.intro-card__school {
+  display: block;
+  margin-top: 12rpx;
+  text-align: center;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+.intro-card__bio {
+  display: block;
+  margin-top: 16rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.6;
+}
+.intro-card__meta {
+  margin-top: 20rpx;
+  gap: 20rpx;
+}
+.intro-card__score {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* ---------------- 4. 数据行 ---------------- */
+.stat-row {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+}
+.stat-row__item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.stat-row__item + .stat-row__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rpx;
+  height: 52rpx;
+  background: var(--c-line);
+}
+.stat-row__num {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--c-primary);
+  line-height: 1.2;
+}
+.stat-row__label {
+  display: block;
+  margin-top: 6rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}
+
+/* ---------------- 5. 评价卡 ---------------- */
+.review-card { padding: 24rpx var(--sp); }
+.review-card + .review-card { margin-top: 20rpx; }
+.review-card__head {
+  margin-left: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.review-card__name {
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--c-t1);
+  max-width: 300rpx;
+}
+.review-card__time {
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+.review-card__content {
+  display: block;
+  margin-top: 16rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.6;
+}
+
+/* ---------------- 6. 底部固定条 ---------------- */
+.footer-bar__self {
+  flex: 1;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}

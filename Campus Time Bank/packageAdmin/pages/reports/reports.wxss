@@ -1,0 +1,71 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 举报处理
+ * ================================================================== */
+/* 举报行是纵向结构，覆盖 .arow 的横向 flex */
+.rp-row { display: block; }
+
+.rp-row__hd {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.rp-row__time {
+  flex: 1;
+  text-align: right;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* 键值对 */
+.rp-kv {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-top: 10rpx;
+  font-size: var(--fs-mini);
+}
+.rp-kv .k {
+  width: 150rpx;
+  flex-shrink: 0;
+  color: var(--c-t3);
+}
+.rp-kv .v {
+  flex: 1;
+  min-width: 0;
+  color: var(--c-t1);
+  line-height: 1.5;
+  word-break: break-all;
+}
+.rp-link { color: var(--c-primary); }
+
+/* 凭证图 */
+.rp-imgs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+.rp-imgs__i {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  border: 2rpx solid var(--c-line);
+}
+.rp-noimg {
+  margin-top: 12rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* 已处理区域 */
+.rp-handled {
+  margin-top: 14rpx;
+  padding: 12rpx 16rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+}
+
+.admin-actions .btn { flex: none; }

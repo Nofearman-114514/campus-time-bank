@@ -1,0 +1,118 @@
+<!-- ==================================================================
+     搜索：未输入 → 历史 + 热门标签；输入后 → 结果列表（关键词高亮）
+     ================================================================== -->
+<view class="page">
+
+  <!-- ---------------- 顶部搜索框 ---------------- -->
+  <view class="search-head">
+    <view class="search-box">
+      <text class="search-box__icon">🔍</text>
+      <input
+        class="search-box__input"
+        value="{{keyword}}"
+        focus="{{inputFocus}}"
+        confirm-type="search"
+        placeholder="搜技能、课程、跑腿…"
+        placeholder-class="search-box__ph"
+        bindinput="onInput"
+        bindconfirm="onConfirm"
+      />
+      <view wx:if="{{keyword}}" class="search-box__clear" bindtap="onClear">✕</view>
+    </view>
+    <text class="search-head__btn" bindtap="onConfirm">搜索</text>
+  </view>
+
+  <!-- ---------------- 未输入：历史 + 热门 ---------------- -->
+  <view wx:if="{{!searched && !keyword}}" class="page-body">
+    <!-- 搜索历史 -->
+    <block wx:if="{{history.length}}">
+      <view class="sec-title">
+        <text class="sec-title__text">搜索历史</text>
+        <text class="sec-title__more" bindtap="onClearHistory">清空全部</text>
+      </view>
+      <view class="tag-wrap">
+        <view class="h-tag" wx:for="{{history}}" wx:key="*this">
+          <text class="h-tag__text" data-kw="{{item}}" bindtap="onTagTap">{{item}}</text>
+          <text class="h-tag__del" data-kw="{{item}}" catchtap="onDeleteHistory">✕</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 热门分类（数据来自 config.hotCategories，此前种了但没有任何页面读取） -->
+    <block wx:if="{{hotCats.length}}">
+      <view class="sec-title">
+        <text class="sec-title__text">热门分类</text>
+        <text class="sec-title__more">按分类快速找</text>
+      </view>
+      <view class="tag-wrap">
+        <view class="hot-tag" wx:for="{{hotCats}}" wx:key="_id" data-kw="{{item.name}}" bindtap="onTagTap">
+          <text class="hot-tag__flame">{{item.icon}}</text>
+          <text>{{item.name}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 热门标签 -->
+    <view class="sec-title">
+      <text class="sec-title__text">热门搜索</text>
+      <text class="sec-title__more">同学们搜得最多</text>
+    </view>
+    <view class="tag-wrap">
+      <view class="hot-tag" wx:for="{{hotTags}}" wx:key="*this" data-kw="{{item}}" bindtap="onTagTap">
+        <text class="hot-tag__flame">🔥</text>
+        <text>{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ---------------- 结果列表 ---------------- -->
+  <view wx:else class="page-body">
+    <!-- 搜索中的骨架 -->
+    <loading-skeleton wx:if="{{searching}}" type="skill" count="{{3}}" />
+
+    <block wx:elif="{{list.length}}">
+      <view class="result-tip">共找到 <text class="t-primary bold">{{total}}</text> 条相关技能</view>
+
+      <view class="card-list">
+        <view class="card-list__item" wx:for="{{list}}" wx:key="_id">
+          <skill-card item="{{item}}" bindcard="onCard" />
+          <!-- 高亮补充行：关键词命中处（列表卡片内部不可改，故在下方给出命中上下文） -->
+          <view class="hl-note" data-id="{{item._id}}" bindtap="onCard">
+            <text class="hl-note__label">匹配</text>
+            <view class="hl-note__body">
+              <text wx:for="{{item.titleParts}}" wx:for-item="seg" wx:key="index" class="{{seg.hit ? 'hl' : ''}}">{{seg.t}}</text>
+              <text wx:if="{{item.descParts.length}}" class="hl-note__desc">
+                <text wx:for="{{item.descParts}}" wx:for-item="seg" wx:key="index" class="{{seg.hit ? 'hl' : ''}}">{{seg.t}}</text>
+              </text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{loadingMore}}" class="loading-more">加载中…</view>
+      <view wx:elif="{{!hasMore}}" class="loading-more loading-more--nomore">— 已经到底啦 —</view>
+    </block>
+
+    <!-- 空态 / 失败态 -->
+    <block wx:else>
+      <empty
+        wx:if="{{loadError}}"
+        icon="😵"
+        text="搜索失败了"
+        desc="网络不太稳定，点一下重新搜索"
+        btn="重新搜索"
+        bindaction="onRetry"
+      />
+      <empty
+        wx:else
+        icon="🔍"
+        text="没有找到相关技能"
+        desc="换个关键词试试，或去发布一条求助"
+        btn="去发布求助"
+        bindaction="onGoPublish"
+      />
+    </block>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

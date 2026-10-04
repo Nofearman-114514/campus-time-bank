@@ -1,0 +1,89 @@
+/* ==================================================================
+ * 编辑资料
+ * 只用 styles/theme.wxss 的 CSS 变量，原子类来自 styles/common.wxss
+ * ================================================================== */
+
+/* ---------------- 0. 首次完善引导条 ---------------- */
+.guide-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  padding: 20rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-accent-l);
+}
+.guide-bar__icon { font-size: 32rpx; }
+.guide-bar__text {
+  flex: 1;
+  font-size: var(--fs-cap);
+  color: var(--c-accent);
+  font-weight: 500;
+}
+
+/* ---------------- 1. 头像行 ---------------- */
+.avatar-row { justify-content: flex-end; }
+.avatar-row__ops {
+  margin-left: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.avatar-row__ops .btn { margin: 0; }
+
+/* ---------------- 2. picker 显示 ---------------- */
+.picker-text {
+  width: 100%;
+  text-align: right;
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+
+/* ---------------- 3. 技能标签 ---------------- */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.tag-list__item { margin: 0; }
+.tag-list__x {
+  margin-left: 8rpx;
+  font-size: var(--fs-cap);
+  line-height: 1;
+}
+.tag-add {
+  margin-top: 20rpx;
+  gap: 16rpx;
+}
+.tag-input {
+  height: 64rpx;
+  padding: 0 20rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+}
+.form-tip {
+  display: block;
+  margin-top: 12rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* ---------------- 4. 校园认证入口卡 ---------------- */
+.auth-card__icon {
+  margin-right: 20rpx;
+  font-size: 40rpx;
+}
+.auth-card__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.auth-card__desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.5;
+}

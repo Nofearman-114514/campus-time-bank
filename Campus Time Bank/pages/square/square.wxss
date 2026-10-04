@@ -1,0 +1,264 @@
+/* ==================================================================
+ * 技能广场（首页）
+ * 只使用 theme.wxss 的 CSS 变量，不硬编码色值（emoji/图片降级渐变除外）。
+ * ================================================================== */
+
+.page {
+  background: var(--c-bg);
+}
+
+/* ---------------- 1. 渐变头部 ---------------- */
+.hero {
+  padding: var(--sp) var(--sp) 40rpx;
+  background: var(--g-primary);
+  border-radius: 0 0 var(--r-l) var(--r-l);
+}
+
+.hero__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+/* 位置 chip */
+.loc-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 420rpx;
+  height: 56rpx;
+  padding: 0 22rpx;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--c-inverse);
+}
+
+.loc-chip:active { opacity: .8; }
+
+.loc-chip__icon {
+  font-size: var(--fs-cap);
+  margin-right: 8rpx;
+}
+
+.loc-chip__text {
+  font-size: var(--fs-cap);
+  max-width: 300rpx;
+  color: var(--c-inverse);
+}
+
+.loc-chip__arrow {
+  font-size: var(--fs-body);
+  margin-left: 8rpx;
+  opacity: .9;
+}
+
+/* 假搜索框 */
+.search-fake {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 80rpx;
+  padding: 0 10rpx 0 24rpx;
+  border-radius: var(--r-full);
+  background: var(--c-card);
+  box-shadow: var(--sh-1);
+}
+
+.search-fake--hover { opacity: .92; }
+
+.search-fake__icon {
+  font-size: var(--fs-body);
+  margin-right: 12rpx;
+}
+
+.search-fake__ph {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.search-fake__btn {
+  height: 60rpx;
+  padding: 0 30rpx;
+  border-radius: var(--r-full);
+  background: var(--g-primary);
+  color: var(--c-inverse);
+  font-size: var(--fs-cap);
+  line-height: 60rpx;
+}
+
+/* ---------------- 2. 轮播 ---------------- */
+/* 上提以便压在渐变头部的圆角上，左右留出页面安全边距 */
+.banner-wrap {
+  padding: 0 var(--sp);
+  margin-top: -40rpx;
+}
+
+.banner {
+  height: 240rpx;
+  border-radius: var(--r-m);
+  overflow: hidden;
+  box-shadow: var(--sh-1);
+}
+
+.banner__item {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 var(--sp-l);
+  box-sizing: border-box;
+}
+
+/* 三种渐变色块，无图也有完整视觉 */
+.banner__item--0 { background: var(--g-primary); }
+.banner__item--1 { background: var(--g-wallet); }
+.banner__item--2 { background: var(--g-credit); }
+
+.banner__img {
+  width: 100%;
+  height: 100%;
+}
+
+.banner__icon {
+  font-size: 96rpx;
+  line-height: 1;
+  margin-right: var(--sp);
+}
+
+.banner__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.banner__title {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--c-inverse);
+  line-height: 1.4;
+}
+
+.banner__sub {
+  margin-top: 10rpx;
+  font-size: var(--fs-mini);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------------- 3. 分类横滑 ---------------- */
+.cat-bar { margin-top: var(--sp); }
+
+.cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 132rpx;
+  padding: 16rpx 0;
+  border-radius: var(--r-m);
+  background: var(--c-card);
+  box-shadow: var(--sh-1);
+  flex-shrink: 0;
+}
+
+.cat--on {
+  background: var(--c-primary-l);
+}
+
+.cat__icon { font-size: 40rpx; line-height: 1.1; }
+
+.cat__name {
+  margin-top: 6rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}
+
+.cat--on .cat__name {
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+/* ---------------- 4. 筛选行（自定义吸顶） ---------------- */
+.filter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--c-bg);
+  padding: 16rpx var(--sp) 12rpx;
+}
+
+.filter-bar__types {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.ftab {
+  height: 56rpx;
+  padding: 0 26rpx;
+  margin-right: 14rpx;
+  border-radius: var(--r-full);
+  background: var(--c-card);
+  color: var(--c-t2);
+  font-size: var(--fs-cap);
+  line-height: 56rpx;
+}
+
+.ftab--on {
+  background: var(--c-primary);
+  color: var(--c-inverse);
+  font-weight: 600;
+  box-shadow: var(--sh-primary);
+}
+
+.filter-bar__sorts { width: 100%; }
+
+.filter-bar__sorts-inner {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 22rpx;
+  padding-right: var(--sp);
+}
+
+.stab {
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  padding: 6rpx 0;
+  white-space: nowrap;
+  position: relative;
+}
+
+.stab--on {
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+.stab--on::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 32rpx;
+  height: 6rpx;
+  border-radius: var(--r-full);
+  background: var(--c-primary);
+}
+
+/* 定位被拒时「离我最近」置灰 */
+.stab--off { color: var(--c-t4); }
+
+/* ---------------- 5. 列表 ---------------- */
+.list-wrap { padding-top: 8rpx; }
+
+.card-list__item + .card-list__item {
+  margin-top: 20rpx;
+}

@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "订单详情",
+  "usingComponents": {
+    "user-avatar": "/components/user-avatar/index",
+    "loading-skeleton": "/components/loading-skeleton/index",
+    "empty": "/components/empty/index"
+  }
+}

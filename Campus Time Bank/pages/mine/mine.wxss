@@ -1,0 +1,180 @@
+/* ==================================================================
+ * 个人中心（tab ④）
+ * 只用 styles/theme.wxss 的 CSS 变量，原子类来自 styles/common.wxss
+ * ================================================================== */
+
+/* ---------------- 1. 顶部渐变背景 ---------------- */
+.hero-bg {
+  height: 300rpx;
+  background: var(--g-primary);
+  border-radius: 0 0 var(--r-l) var(--r-l);
+}
+
+/* ---------------- 2. 压在渐变上的个人卡 ---------------- */
+.mine-card {
+  position: relative;
+  z-index: 2;
+  margin: -180rpx var(--sp) 20rpx;
+  box-shadow: var(--sh-2);
+}
+.mine-card__info {
+  margin-left: 20rpx;
+  padding-top: 4rpx;
+}
+.mine-card__name {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-t1);
+  max-width: 260rpx;
+}
+.mine-card__school {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+.mine-card__bio {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+  line-height: 1.5;
+}
+.mine-card__credit {
+  margin-top: 12rpx;
+}
+.mine-card__edit {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 8rpx 18rpx;
+  border-radius: var(--r-full);
+  background: var(--c-primary-l);
+  color: var(--c-primary);
+  font-size: var(--fs-mini);
+}
+
+/* ---------------- 3. 认证状态条 ---------------- */
+.auth-strip {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin: 0 var(--sp) 20rpx;
+  padding: 20rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-accent-l);
+}
+.auth-strip--1 { background: var(--c-info-l); }
+.auth-strip--3 { background: var(--c-danger-l); }
+.auth-strip__icon { font-size: 36rpx; }
+.auth-strip__title {
+  display: block;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-accent);
+}
+.auth-strip--1 .auth-strip__title { color: var(--c-info); }
+.auth-strip--3 .auth-strip__title { color: var(--c-danger); }
+.auth-strip__desc {
+  display: block;
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  line-height: 1.4;
+}
+
+/* ---------------- 4. 数据三宫格 ---------------- */
+.nums-grid {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+}
+.nums-grid__item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.nums-grid__item + .nums-grid__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rpx;
+  height: 56rpx;
+  background: var(--c-line);
+}
+.nums-grid__num {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-t1);
+}
+.nums-grid__num--coin { color: var(--c-accent); }
+.nums-grid__num--credit { color: var(--c-info); }
+.nums-grid__label {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}
+
+/* ---------------- 5. 徽章条 ---------------- */
+.badge-strip { padding: 24rpx var(--sp); }
+.badge-strip__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.badge-strip__count {
+  font-size: var(--fs-mini);
+  font-weight: 400;
+  color: var(--c-t3);
+}
+.badge-strip__empty {
+  margin-top: 20rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t3);
+}
+.badge-row {
+  margin-top: 20rpx;
+  width: 100%;
+}
+.badge-row__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 24rpx;
+}
+.badge-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 118rpx;
+}
+.badge-chip__icon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: var(--c-primary-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.badge-chip__emoji {
+  font-size: 44rpx;
+  line-height: 1;
+}
+.badge-chip__name {
+  margin-top: 10rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+}
+
+/* ---------------- 6. 底部免责小字 ---------------- */
+.mine-note {
+  margin: 48rpx 0 20rpx;
+  text-align: center;
+  font-size: 20rpx;
+  color: var(--c-t4);
+  line-height: 1.6;
+}

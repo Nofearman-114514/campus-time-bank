@@ -1,0 +1,206 @@
+<!-- 订单详情 -->
+<view class="page">
+
+  <loading-skeleton wx:if="{{loading}}" type="detail" />
+
+  <block wx:else>
+    <view class="page-body {{actions.length ? 'page-body--has-bar' : ''}}">
+
+      <!-- 管理员（非参与方）查看：不能代替买卖双方操作 -->
+      <view wx:if="{{isAdminView}}" class="admin-tip">
+        <text class="admin-tip__icon">🛡️</text>
+        <text class="admin-tip__text">你正在以管理员身份查看此订单，无法执行操作</text>
+      </view>
+
+      <!-- 1. 状态大卡（渐变背景随状态变化） -->
+      <view class="status-card status-card--{{statusKey}}">
+        <view class="status-card__row">
+          <view class="dot dot--{{statusKey}} status-card__dot"></view>
+          <text class="status-card__text">{{statusText}}</text>
+        </view>
+        <text class="status-card__desc">{{statusDesc}}</text>
+
+        <view wx:if="{{canCountdown}}" class="status-card__badge">
+          <text>⏳ {{expireText}}</text>
+        </view>
+        <view wx:elif="{{showAutoConfirm}}" class="status-card__badge">
+          <text>⏰ {{autoConfirmText}}</text>
+        </view>
+      </view>
+
+      <!-- 已完成且我未评价：醒目提示 -->
+      <view wx:if="{{needReview}}" class="review-tip" bindtap="onGoReview">
+        <text class="review-tip__icon">✍️</text>
+        <view class="flex-1 col">
+          <text class="review-tip__title">快去评价 TA</text>
+          <text class="review-tip__desc">你的评价会影响对方的信用分，也是给同学的参考</text>
+        </view>
+        <text class="review-tip__arrow">›</text>
+      </view>
+
+      <!-- 2. 订单时间轴（订单状态机可视化） -->
+      <view class="sec-title">
+        <text class="sec-title__text">订单进度</text>
+        <text class="sec-title__more">{{timeline.length}} 条记录</text>
+      </view>
+      <view class="card">
+        <view class="timeline">
+          <view
+            wx:for="{{timeline}}"
+            wx:key="key"
+            class="timeline__item {{item.isLast ? 'timeline__item--last' : ''}}"
+          >
+            <view class="timeline__axis">
+              <view class="dot dot--{{item.dot}} timeline__dot"></view>
+              <view wx:if="{{!item.isLast}}" class="timeline__line"></view>
+            </view>
+            <view class="timeline__body">
+              <view class="between">
+                <text class="timeline__title timeline__title--{{item.status}}">{{item.title}}</text>
+                <text class="timeline__time nums">{{item.timeText}}</text>
+              </view>
+              <text wx:if="{{item.remark}}" class="timeline__remark">{{item.remark}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 3. 服务信息卡 -->
+      <view class="sec-title">
+        <text class="sec-title__text">服务信息</text>
+      </view>
+      <view class="card">
+        <view class="row start gap">
+          <view class="sv-cover">
+            <image
+              wx:if="{{order.skillSnapshot.images.length}}"
+              class="sv-cover__img"
+              src="{{order.skillSnapshot.images[0]}}"
+              mode="aspectFill"
+            />
+            <text wx:else class="sv-cover__icon">{{coverIcon}}</text>
+          </view>
+          <view class="flex-1 col">
+            <text class="sv-title ellipsis-2">{{order.skillSnapshot.title || '—'}}</text>
+            <view class="row gap-s mt-s">
+              <text class="tag tag--info">{{order.skillSnapshot.categoryName || '未分类'}}</text>
+              <text class="tag">{{durationText}}</text>
+            </view>
+            <view class="row mt-s">
+              <view class="coin">
+                <view class="coin__icon">币</view>
+                <text class="coin__num nums">{{order.amount}}</text>
+              </view>
+              <text class="t3 fs-cap" style="margin-left:8rpx;">枚 / 次</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 4. 对方信息卡（仅参与方可见；管理员查看时不展示，避免推出错误的对家） -->
+      <block wx:if="{{isParty}}">
+        <view class="sec-title">
+          <text class="sec-title__text">{{counterpartTitle}}</text>
+        </view>
+        <view class="card">
+          <view class="row">
+            <user-avatar
+              size="m"
+              url="{{counterpart.avatarUrl}}"
+              name="{{counterpart.nickName}}"
+              showCredit
+              credit="{{counterpart.creditScore}}"
+            />
+            <view class="flex-1 col" style="margin-left:20rpx;" bindtap="onTapCounterpart">
+              <text class="cp-name">{{counterpart.nickName || '同学'}}</text>
+              <view class="row gap-s mt-s">
+                <text class="credit-chip">信用分 {{counterpart.creditScore || '—'}}</text>
+                <text class="t3 fs-mini">点击查看主页</text>
+              </view>
+            </view>
+            <view class="btn btn--ghost btn--sm" catchtap="onContact">联系 TA</view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 5. 订单信息卡 -->
+      <view class="sec-title">
+        <text class="sec-title__text">订单信息</text>
+      </view>
+      <view class="card">
+        <view class="kv" bindlongpress="onCopyOrderNo">
+          <text class="kv__k">订单号</text>
+          <text class="kv__v nums">{{order.orderNo || '—'}}</text>
+        </view>
+        <text class="kv__hint">长按可复制订单号</text>
+        <view class="divider"></view>
+        <view class="kv">
+          <text class="kv__k">下单时间</text>
+          <text class="kv__v nums">{{createTimeText}}</text>
+        </view>
+        <view class="kv">
+          <text class="kv__k">接单时间</text>
+          <text class="kv__v nums">{{acceptTimeText}}</text>
+        </view>
+        <view class="kv">
+          <text class="kv__k">完成时间</text>
+          <text class="kv__v nums">{{finishTimeText}}</text>
+        </view>
+        <view class="kv">
+          <text class="kv__k">确认时间</text>
+          <text class="kv__v nums">{{confirmTimeText}}</text>
+        </view>
+        <view class="kv kv--top">
+          <text class="kv__k">期望时间</text>
+          <text class="kv__v">{{order.expectTime || '未填写'}}</text>
+        </view>
+        <view class="kv kv--top">
+          <text class="kv__k">买家留言</text>
+          <text class="kv__v">{{order.remark || '未填写'}}</text>
+        </view>
+        <view wx:if="{{order.contact}}" class="kv">
+          <text class="kv__k">联系方式</text>
+          <text class="kv__v">{{order.contact}}</text>
+        </view>
+        <view wx:if="{{order.cancelReason}}" class="kv kv--top">
+          <text class="kv__k">取消原因</text>
+          <text class="kv__v t-danger">{{order.cancelReason}}</text>
+        </view>
+      </view>
+
+      <!-- 6. 时间币流水卡 -->
+      <view class="sec-title">
+        <text class="sec-title__text">时间币流向</text>
+        <text class="sec-title__more">冻结 → 解冻 / 结算</text>
+      </view>
+      <view class="card">
+        <view wx:for="{{coinFlow}}" wx:key="title" class="flow">
+          <text class="flow__icon">{{item.icon}}</text>
+          <view class="flex-1 col">
+            <text class="flow__title">{{item.title}}</text>
+            <text class="flow__text">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部固定操作条（按钮规则同 order-card；管理员等非参与方无操作按钮，整条隐藏） -->
+    <view wx:if="{{actions.length}}" class="footer-bar">
+      <view class="footer-bar__coin col">
+        <view class="coin">
+          <view class="coin__icon">币</view>
+          <text class="coin__num nums">{{order.amount}}</text>
+        </view>
+        <text class="footer-bar__label">本次消耗</text>
+      </view>
+      <view class="flex-1"></view>
+      <view
+        wx:for="{{actions}}"
+        wx:key="key"
+        class="btn btn--{{item.type}} btn--sm footer-bar__btn"
+        data-action="{{item.key}}"
+        bindtap="onAction"
+      >{{item.text}}</view>
+    </view>
+  </block>
+</view>

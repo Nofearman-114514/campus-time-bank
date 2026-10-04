@@ -1,0 +1,417 @@
+/* ==================================================================
+ * 管理端共享样式（分包内私有，由 8 个页面 @import 引入）
+ * ------------------------------------------------------------------
+ * 视觉策略：与用户端刻意区分
+ *   · 顶部深色「🛡 管理员控制台」标识条
+ *   · 信息密度更高、表格化紧凑列表（.arow）
+ *   · 全部颜色只用 styles/theme.wxss 的 CSS 变量
+ * 通用原子类（.card / .btn / .tag / .mask / .popup / .form-item …）
+ * 由 app.wxss 全局提供，此处不重复定义。
+ * ================================================================== */
+
+/* ------------------------------------------------------------------
+ * 1. 页面容器
+ * ------------------------------------------------------------------ */
+.admin-page {
+  min-height: 100vh;
+  background: var(--c-bg);
+  box-sizing: border-box;
+  padding-bottom: 60rpx;
+}
+
+/* ------------------------------------------------------------------
+ * 2. 顶部标识条
+ * ------------------------------------------------------------------ */
+.admin-bar {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx var(--sp) 32rpx;
+  background: linear-gradient(135deg, var(--c-t1) 0%, var(--c-t1) 45%, var(--c-primary-d) 100%);
+  color: var(--c-inverse);
+}
+.admin-bar__shield {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--r-s);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38rpx;
+  line-height: 1;
+  background: var(--c-t2);
+  flex-shrink: 0;
+}
+.admin-bar__main { flex: 1; min-width: 0; }
+.admin-bar__kicker {
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+  letter-spacing: 2rpx;
+}
+.admin-bar__title {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--c-inverse);
+  line-height: 1.35;
+}
+.admin-bar__sub {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  margin-top: 4rpx;
+}
+.admin-bar__side { flex-shrink: 0; text-align: right; }
+.admin-bar__num {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-inverse);
+  line-height: 1.1;
+}
+.admin-bar__label {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+/* 标识条内的胶囊按钮（返回 / 刷新） */
+.admin-bar__btn {
+  height: 56rpx;
+  padding: 0 22rpx;
+  border-radius: var(--r-full);
+  border: 2rpx solid var(--c-t3);
+  color: var(--c-inverse);
+  font-size: var(--fs-mini);
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------
+ * 3. 工具条（搜索 + 状态筛选）
+ * ------------------------------------------------------------------ */
+.admin-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 16rpx var(--sp);
+  background: var(--c-card);
+  border-bottom: 2rpx solid var(--c-line);
+}
+.admin-search {
+  display: flex;
+  align-items: center;
+  height: 68rpx;
+  padding: 0 22rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+}
+.admin-search__icon {
+  font-size: 26rpx;
+  color: var(--c-t3);
+  margin-right: 12rpx;
+}
+.admin-search__input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  height: 68rpx;
+}
+.admin-search__clear {
+  font-size: 26rpx;
+  color: var(--c-t3);
+  padding: 0 4rpx 0 16rpx;
+}
+
+/* 筛选胶囊 */
+.admin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  height: 52rpx;
+  padding: 0 22rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  color: var(--c-t2);
+  font-size: var(--fs-mini);
+  border: 2rpx solid transparent;
+  line-height: 1;
+}
+.chip--on {
+  background: var(--c-primary-l);
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+  font-weight: 600;
+}
+.chip--on.chip--danger {
+  background: var(--c-danger-l);
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+.chip--on.chip--warn {
+  background: var(--c-warn-l);
+  color: var(--c-warn);
+  border-color: var(--c-warn);
+}
+.chip--on.chip--info {
+  background: var(--c-info-l);
+  color: var(--c-info);
+  border-color: var(--c-info);
+}
+
+/* ------------------------------------------------------------------
+ * 4. 面板与紧凑表格行
+ * ------------------------------------------------------------------ */
+.admin-panel {
+  margin: var(--sp) var(--sp) 0;
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  box-shadow: var(--sh-1);
+  overflow: hidden;
+}
+.admin-panel--flush { margin-left: 0; margin-right: 0; border-radius: 0; box-shadow: none; }
+.admin-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx var(--sp);
+  border-bottom: 2rpx solid var(--c-line);
+}
+.admin-panel__title {
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--c-t1);
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.admin-panel__title::before {
+  content: '';
+  width: 6rpx;
+  height: 22rpx;
+  border-radius: 3rpx;
+  background: var(--c-primary);
+}
+.admin-panel__hint {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* 表格化行：左侧主体 + 右侧信息 + 操作区 */
+.arow {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 22rpx var(--sp);
+  position: relative;
+}
+.arow + .arow::before {
+  content: '';
+  position: absolute;
+  left: var(--sp);
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+.arow--tap:active { background: var(--c-bg); }
+.arow__main { flex: 1; min-width: 0; }
+.arow__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+  line-height: 1.4;
+}
+.arow__meta {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  margin-top: 6rpx;
+  line-height: 1.5;
+}
+.arow__meta--t2 { color: var(--c-t2); }
+.arow__side {
+  flex-shrink: 0;
+  text-align: right;
+  max-width: 240rpx;
+}
+.arow__side-num {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--c-accent);
+}
+.arow__side-cap {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+/* 行内键值对（紧凑表格化展示） */
+.agrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx 24rpx;
+  margin-top: 10rpx;
+}
+.agrid__kv {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+.agrid__kv .k { color: var(--c-t4); }
+.agrid__kv .v { color: var(--c-t2); }
+
+/* 行内操作按钮组 */
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+.admin-actions .btn { flex: none; }
+/* 圆形小图标按钮（分类排序用） */
+.icon-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+  color: var(--c-t2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  line-height: 1;
+}
+.icon-btn:active { background: var(--c-line); }
+.icon-btn--disabled { color: var(--c-t4); background: var(--c-bg); }
+
+/* ------------------------------------------------------------------
+ * 5. 底部提示 / 页脚
+ * ------------------------------------------------------------------ */
+.admin-footer {
+  text-align: center;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+  padding: 32rpx var(--sp) 20rpx;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------------
+ * 6. 骨架占位（图表区等固定高度容器）
+ * ------------------------------------------------------------------ */
+.admin-sk {
+  height: 100%;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------
+ * 7. 危险操作区
+ * ------------------------------------------------------------------ */
+.admin-danger {
+  margin: var(--sp);
+  padding: var(--sp);
+  border: 2rpx solid var(--c-danger);
+  border-radius: var(--r-m);
+  background: var(--c-danger-l);
+}
+.admin-danger__title {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--c-danger);
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.admin-danger__desc {
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+.admin-danger__actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+/* ------------------------------------------------------------------
+ * 8. 表单说明小字
+ * ------------------------------------------------------------------ */
+.field-tip {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  line-height: 1.6;
+  padding: 6rpx 0 18rpx;
+}
+.form-block {
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  box-shadow: var(--sh-1);
+  margin: var(--sp) var(--sp) 0;
+  padding: 8rpx var(--sp) var(--sp);
+  box-sizing: border-box;
+}
+.form-block__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+  padding: 22rpx 0 6rpx;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 18rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+  position: relative;
+}
+.form-row:last-child { border-bottom: none; }
+.form-row__label {
+  width: 240rpx;
+  flex-shrink: 0;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+}
+.form-row__input {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  height: 56rpx;
+}
+.form-row__unit {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  flex-shrink: 0;
+}
+.form-row__area {
+  width: 100%;
+  min-height: 160rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  line-height: 1.7;
+}
+
+/* ------------------------------------------------------------------
+ * 9. 弹层内表单（配合 common.wxss 的 .popup / .mask）
+ * ------------------------------------------------------------------ */
+.popup-form {
+  border: 2rpx solid var(--c-line);
+  border-radius: var(--r-s);
+  padding: 0 20rpx;
+}
+.popup-cur {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  margin-top: 16rpx;
+}
+.popup-warn {
+  margin-top: 12rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-s);
+  background: var(--c-warn-l);
+  color: var(--c-warn);
+  font-size: var(--fs-mini);
+  line-height: 1.6;
+}
+.ph { color: var(--c-t4); }

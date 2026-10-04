@@ -1,0 +1,10 @@
+{
+  "name": "message",
+  "version": "1.0.0",
+  "description": "校园时间银行 · 聊天 / 通知 / 订阅消息云函数",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

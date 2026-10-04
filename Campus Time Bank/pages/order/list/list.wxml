@@ -1,0 +1,73 @@
+<!-- 订单列表（tab 页） -->
+<view class="page">
+
+  <!-- 顶部：待办统计 + 一级 tab + 二级筛选 -->
+  <view class="topbar">
+    <view class="todo">
+      <text class="todo__icon">📋</text>
+      <text wx:if="{{todo > 0}}" class="todo__text">
+        你有 <text class="todo__num nums">{{todo}}</text> 个待处理订单
+      </text>
+      <text wx:else class="todo__text todo__text--calm">暂时没有待处理的订单，休息一下吧</text>
+    </view>
+
+    <view class="role-tabs">
+      <view
+        class="role-tabs__item {{role === 'buyer' ? 'role-tabs__item--on' : ''}}"
+        data-role="buyer"
+        bindtap="onRoleTab"
+      >我买到的</view>
+      <view
+        class="role-tabs__item {{role === 'seller' ? 'role-tabs__item--on' : ''}}"
+        data-role="seller"
+        bindtap="onRoleTab"
+      >我接的单</view>
+    </view>
+
+    <scroll-view class="scroll-x status-scroll" scroll-x enable-flex>
+      <view class="scroll-x__inner">
+        <view
+          wx:for="{{tabs}}"
+          wx:key="key"
+          class="status-tab {{status === item.key ? 'status-tab--on' : ''}}"
+          data-status="{{item.key}}"
+          bindtap="onStatusTab"
+        >
+          <text>{{item.text}}</text>
+          <view wx:if="{{status === item.key}}" class="status-tab__line"></view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 列表主体（tab 页：自定义 tabBar 是浮层，必须用 has-tabbar 留出底部空间） -->
+  <view class="page-body list-body has-tabbar">
+
+    <loading-skeleton wx:if="{{loading}}" type="order" count="{{3}}" />
+
+    <block wx:elif="{{list.length}}">
+      <order-card
+        wx:for="{{list}}"
+        wx:key="_id"
+        class="oc-item"
+        item="{{item}}"
+        showRoleTag
+        bindcard="onCard"
+        bindaction="onAction"
+      />
+
+      <view class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+        <text wx:if="{{loadingMore}}">正在加载…</text>
+        <text wx:elif="{{hasMore}}">上拉加载更多</text>
+        <text wx:else>已经到底啦，共 {{total}} 单</text>
+      </view>
+    </block>
+
+    <empty
+      wx:else
+      icon="{{role === 'buyer' ? '🧾' : '🛠️'}}"
+      text="{{role === 'buyer' ? '还没有买到过服务' : '还没有接到过订单'}}"
+      desc="{{role === 'buyer' ? '去技能广场看看同学们能提供什么' : '完善你的技能发布，让更多同学找到你'}}"
+    />
+  </view>
+</view>

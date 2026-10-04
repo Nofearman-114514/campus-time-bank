@@ -1,0 +1,114 @@
+<!-- 管理端 · 举报处理 -->
+<view class="admin-page">
+
+  <!-- ==================== 标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">举报处理</view>
+      <view class="admin-bar__sub">核实成立将扣除被举报人 10 点信用分</view>
+    </view>
+    <view class="admin-bar__side">
+      <view class="admin-bar__num">{{pendingCount}}</view>
+      <view class="admin-bar__label">待处理</view>
+    </view>
+  </view>
+
+  <!-- ==================== 筛选 ==================== -->
+  <view class="admin-toolbar">
+    <view class="admin-chips">
+      <view
+        wx:for="{{statusOptions}}"
+        wx:key="v"
+        class="chip {{status === item.v ? 'chip--on' : ''}}"
+        data-v="{{item.v}}"
+        bindtap="onStatusTab"
+      >{{item.t}}</view>
+    </view>
+  </view>
+
+  <!-- ==================== 列表 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">举报单</text>
+      <text class="admin-panel__hint">共 {{total}} 条</text>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="_id" class="arow rp-row">
+      <view class="rp-row__hd">
+        <text class="tag tag--{{item.statusTone}}">{{item.statusText}}</text>
+        <text class="tag tag--outline">{{item.targetTypeText}}</text>
+        <text class="rp-row__time">{{item.createTimeText}}</text>
+      </view>
+
+      <view class="rp-kv">
+        <text class="k">举报人</text>
+        <text class="v">{{item.reporterName || '加载中…'}}</text>
+      </view>
+      <view class="rp-kv">
+        <text class="k">被举报对象</text>
+        <text class="v rp-link" data-id="{{item._id}}" bindtap="goTarget">{{item.targetTitle}} ›</text>
+      </view>
+      <view class="rp-kv">
+        <text class="k">举报原因</text>
+        <text class="v">{{item.reason}}</text>
+      </view>
+      <view wx:if="{{item.desc}}" class="rp-kv">
+        <text class="k">补充说明</text>
+        <text class="v">{{item.desc}}</text>
+      </view>
+
+      <!-- 凭证图 -->
+      <view wx:if="{{item.images.length}}" class="rp-imgs">
+        <image
+          wx:for="{{item.images}}"
+          wx:for-item="img"
+          wx:key="*this"
+          class="rp-imgs__i"
+          src="{{img}}"
+          mode="aspectFill"
+          data-id="{{item._id}}"
+          data-url="{{img}}"
+          bindtap="previewImages"
+        />
+      </view>
+      <view wx:else class="rp-noimg">举报人未上传凭证图</view>
+
+      <!-- 已处理：展示备注与时间 -->
+      <view wx:if="{{item.status !== 0}}" class="rp-handled">
+        <view class="rp-kv">
+          <text class="k">处理备注</text>
+          <text class="v">{{item.handleRemark || '—'}}</text>
+        </view>
+        <view class="rp-kv">
+          <text class="k">处理时间</text>
+          <text class="v">{{item.handleTimeText || '—'}}</text>
+        </view>
+      </view>
+
+      <!-- 待处理：两个按钮 -->
+      <view wx:if="{{item.status === 0}}" class="admin-actions">
+        <button class="btn btn--sm btn--primary" data-id="{{item._id}}" bindtap="onValid">核实成立</button>
+        <button class="btn btn--sm btn--gray" data-id="{{item._id}}" bindtap="onReject">驳回</button>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="page-body">
+      <loading-skeleton type="list" count="{{3}}" />
+    </view>
+
+    <empty
+      wx:elif="{{!list.length}}"
+      icon="🚨"
+      text="没有符合条件的举报"
+      desc="没有待处理的举报，社区很健康～"
+    />
+
+    <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+      {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+    </view>
+  </view>
+
+  <view class="admin-footer">信用分规则见 constants.CREDIT_RULES：举报核实成立 −10 分</view>
+</view>

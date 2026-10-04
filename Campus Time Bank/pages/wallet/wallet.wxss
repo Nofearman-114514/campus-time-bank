@@ -1,0 +1,320 @@
+/* 时间币钱包 */
+
+/* ---------------- 橙色渐变资产卡 ---------------- */
+.asset-card {
+  padding: var(--sp-l);
+  border-radius: var(--r-l);
+  background: var(--g-wallet);
+  box-shadow: var(--sh-accent);
+  color: var(--c-inverse);
+}
+
+.asset-card__label {
+  font-size: var(--fs-cap);
+  opacity: .9;
+}
+
+.asset-card__balance {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 12rpx;
+  margin-top: 8rpx;
+}
+.asset-card__num {
+  font-size: 84rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.asset-card__unit {
+  font-size: var(--fs-body);
+  opacity: .95;
+}
+
+/* 冻结 / 总资产 两格 */
+.asset-card__grid {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 28rpx;
+  padding: 20rpx 0;
+  border-radius: var(--r-m);
+  background: rgba(255, 255, 255, .18);
+}
+.asset-card__cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.asset-card__cell-num {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.asset-card__cell-label {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  opacity: .9;
+}
+.asset-card__cell-line {
+  width: 2rpx;
+  height: 56rpx;
+  background: rgba(255, 255, 255, .35);
+}
+
+.asset-card__sub {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  font-size: var(--fs-mini);
+  opacity: .92;
+}
+.asset-card__sub-item { font-size: var(--fs-mini); }
+
+/* ★ 合规声明行：卡片底部醒目说明 */
+.asset-card__notice {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10rpx;
+  margin-top: 24rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-s);
+  background: rgba(255, 255, 255, .95);
+}
+.asset-card__notice-icon {
+  color: var(--c-accent);
+  font-size: var(--fs-cap);
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+.asset-card__notice-text {
+  flex: 1;
+  font-size: var(--fs-mini);
+  font-weight: 600;
+  color: var(--c-accent);
+  line-height: 1.5;
+}
+
+/* ---------------- 信用分入口小卡 ---------------- */
+.credit-entry {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+.credit-entry:active { background: var(--c-bg); }
+
+.credit-entry__badge {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: var(--r-m);
+  background: var(--c-info-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.credit-entry__num {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-info);
+}
+
+.credit-entry__title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.credit-entry__level { margin-left: 12rpx; }
+
+.credit-entry__track {
+  margin-top: 14rpx;
+  height: 12rpx;
+  border-radius: var(--r-full);
+  background: var(--c-line);
+  overflow: hidden;
+}
+.credit-entry__fill {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: var(--g-credit);
+  transition: width .3s;
+}
+
+/* ---------------- 近 7 天柱图（纯 WXSS 手绘） ---------------- */
+.chart-card { margin-top: 20rpx; }
+.chart-card__title {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+
+.legend {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+}
+.legend__dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 4rpx;
+}
+.legend__dot--income { background: var(--c-success); }
+.legend__dot--expense { background: var(--c-accent); }
+.legend__text {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+.chart {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 300rpx;
+  margin-top: 28rpx;
+}
+
+.chart__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+/* 柱体容器：铺满可用高度，柱子从底部往上长 */
+.chart__bars {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6rpx;
+}
+
+.chart__bar {
+  width: 26rpx;
+  min-height: 8rpx;
+  border-radius: 6rpx 6rpx 0 0;
+  position: relative;
+  transition: height .3s;
+}
+.chart__bar--income { background: var(--c-success); }
+.chart__bar--expense { background: var(--c-accent); }
+
+.chart__val {
+  position: absolute;
+  top: -30rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18rpx;
+  color: var(--c-t3);
+}
+
+.chart__date {
+  margin-top: 12rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+.chart-empty {
+  padding: 60rpx 0;
+  text-align: center;
+  font-size: var(--fs-cap);
+  color: var(--c-t4);
+}
+
+/* ---------------- 明细 tab ---------------- */
+.tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+.tabs__item {
+  height: 60rpx;
+  padding: 0 28rpx;
+  border-radius: var(--r-full);
+  background: var(--c-card);
+  color: var(--c-t2);
+  font-size: var(--fs-cap);
+  line-height: 60rpx;
+  box-shadow: var(--sh-1);
+}
+.tabs__item.is-active {
+  background: var(--c-primary);
+  color: var(--c-inverse);
+  font-weight: 500;
+  box-shadow: var(--sh-primary);
+}
+
+/* ---------------- 明细列表 ---------------- */
+.log-list {
+  background: var(--c-card);
+  border-radius: var(--r-m);
+  overflow: hidden;
+  box-shadow: var(--sh-1);
+}
+
+.log {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  position: relative;
+}
+.log:active { background: var(--c-bg); }
+.log + .log::before {
+  content: '';
+  position: absolute;
+  left: 96rpx;
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+
+.log__icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  font-size: 28rpx;
+  line-height: 56rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.log__type {
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+  font-weight: 500;
+}
+.log__remark {
+  margin-top: 4rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  max-width: 420rpx;
+}
+.log__time {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+.log__amount {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 骨架屏 */
+.log-sk { height: 40rpx; margin: 20rpx 0; border-radius: 8rpx; }

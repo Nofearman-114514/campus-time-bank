@@ -1,0 +1,131 @@
+<!-- ==================================================================
+     他人主页
+     透明自定义导航 → 渐变头图（头像压在下沿）→ 简介/信用/评分
+     → 数据行 → TA 的技能 → TA 收到的评价 → 底部「打招呼 / 举报」
+     ================================================================== -->
+<view class="page">
+
+  <!-- 透明导航栏：不输出占位块，让渐变头图从屏幕顶部开始 -->
+  <nav-bar title="" bg="transparent" color="#fff" placeholder="{{false}}" />
+
+  <!-- ---------------- 1. 渐变头图（圆角只在底部） ---------------- -->
+  <view class="head">
+    <view class="head__deco">
+      <text class="head__deco-icon">🎓</text>
+    </view>
+  </view>
+
+  <!-- ---------------- 2. 头像压在头图下沿 ---------------- -->
+  <view class="head-avatar">
+    <user-avatar
+      size="xl"
+      ring
+      url="{{user.avatarUrl}}"
+      name="{{user.nickName}}"
+      verified="{{user.authStatus === 2}}"
+    />
+  </view>
+
+  <!-- ---------------- 3. 骨架屏 ---------------- -->
+  <view wx:if="{{loading}}" class="page-body page-body--has-bar">
+    <loading-skeleton type="list" count="{{2}}" />
+  </view>
+
+  <!-- ---------------- 4. 主体 ---------------- -->
+  <view wx:else class="page-body page-body--has-bar">
+
+    <!-- 4.1 简介卡 -->
+    <view class="card intro-card">
+      <view class="row center gap-s">
+        <text class="intro-card__name ellipsis">{{user.nickName || '同学'}}</text>
+        <text wx:if="{{user.authStatus === 2}}" class="intro-card__verified">✓</text>
+      </view>
+
+      <text class="intro-card__school">{{schoolLine || '暂未填写学校信息'}}</text>
+
+      <text class="intro-card__bio ellipsis-2">{{user.bio || '这位同学还没有填写简介'}}</text>
+
+      <view class="row center intro-card__meta">
+        <view wx:if="{{creditLevel}}" class="credit-chip">{{creditLevel.text}} · 信用 {{user.creditScore === undefined ? 100 : user.creditScore}}</view>
+        <view class="row gap-s">
+          <star-rate value="{{stats.avgRating}}" size="{{28}}" />
+          <text class="intro-card__score">{{stats.avgRating ? stats.avgRating + ' 分' : '暂无评分'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 4.2 数据行 -->
+    <view class="card stat-row">
+      <view class="stat-row__item">
+        <text class="stat-row__num nums">{{stats.publishCount || 0}}</text>
+        <text class="stat-row__label">发布</text>
+      </view>
+      <view class="stat-row__item">
+        <text class="stat-row__num nums">{{doneCount}}</text>
+        <text class="stat-row__label">完成</text>
+      </view>
+      <view class="stat-row__item">
+        <text class="stat-row__num nums">{{goodRate}}</text>
+        <text class="stat-row__label">好评率</text>
+      </view>
+    </view>
+
+    <!-- 4.3 TA 的技能 -->
+    <view class="sec-title">
+      <text class="sec-title__text">TA 的技能</text>
+      <text class="sec-title__more">{{skills.length}} 条</text>
+    </view>
+
+    <block wx:if="{{skills.length}}">
+      <skill-card
+        wx:for="{{skills}}"
+        wx:key="_id"
+        item="{{item}}"
+        showAuthor="{{false}}"
+        showDistance="{{false}}"
+        bindcard="onSkill"
+      />
+    </block>
+    <view wx:else class="card card--flat">
+      <empty compact icon="✨" text="TA 还没有上架的技能" />
+    </view>
+
+    <!-- 4.4 TA 收到的评价 -->
+    <view class="sec-title">
+      <text class="sec-title__text">收到的评价</text>
+      <text class="sec-title__more">{{stats.reviewCount || 0}} 条</text>
+    </view>
+
+    <block wx:if="{{reviews.length}}">
+      <view wx:for="{{reviews}}" wx:key="_id" class="card review-card">
+        <view class="row">
+          <user-avatar size="s" url="{{item.fromInfo.avatarUrl}}" name="{{item.fromInfo.nickName}}" />
+          <view class="flex-1 review-card__head">
+            <text class="review-card__name ellipsis">{{item.fromInfo.nickName}}</text>
+            <star-rate value="{{item.score}}" size="{{24}}" />
+          </view>
+          <text class="review-card__time">{{item.timeText}}</text>
+        </view>
+        <text class="review-card__content ellipsis-3">{{item.content || '该同学没有填写评价内容'}}</text>
+      </view>
+    </block>
+    <view wx:else class="card card--flat">
+      <empty compact icon="💬" text="还没有收到评价" />
+    </view>
+  </view>
+
+  <!-- ---------------- 5. 底部固定条 ---------------- -->
+  <view class="footer-bar">
+    <block wx:if="{{isSelf}}">
+      <text class="footer-bar__self">这是你自己</text>
+      <view class="btn btn--gray btn--sm" bindtap="onReport">举报</view>
+    </block>
+    <block wx:else>
+      <view class="btn btn--gray btn--sm" bindtap="onReport">举报</view>
+      <view
+        class="btn btn--primary flex-1 {{chatLoading ? 'btn--disabled' : ''}}"
+        bindtap="onGreet"
+      >{{chatLoading ? '正在打开…' : '打招呼'}}</view>
+    </block>
+  </view>
+</view>

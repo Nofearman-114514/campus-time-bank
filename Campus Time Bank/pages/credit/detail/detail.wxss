@@ -1,0 +1,206 @@
+/* 信用分详情 */
+
+/* ---------------- 顶部蓝色渐变卡 ---------------- */
+.score-card {
+  padding: var(--sp-l);
+  border-radius: var(--r-l);
+  background: var(--g-credit);
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, .28);
+  color: var(--c-inverse);
+}
+
+.score-card__label {
+  font-size: var(--fs-cap);
+  opacity: .9;
+}
+
+.score-card__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 8rpx;
+}
+.score-card__num {
+  font-size: 96rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.score-card__level {
+  padding: 8rpx 24rpx;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, .24);
+}
+.score-card__level-text {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+}
+
+.score-card__desc {
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  opacity: .92;
+}
+
+/* 进度条 */
+.score-card__track {
+  margin-top: 28rpx;
+  height: 16rpx;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, .3);
+  overflow: hidden;
+}
+.score-card__fill {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: var(--c-inverse);
+  transition: width .3s;
+}
+.score-card__scale {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  opacity: .85;
+}
+
+.score-card__next {
+  margin-top: 24rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--r-s);
+  background: rgba(255, 255, 255, .95);
+  color: var(--c-info);
+  font-size: var(--fs-cap);
+  font-weight: 600;
+}
+
+/* ---------------- 等级权益 ---------------- */
+.level-card { padding: 12rpx; }
+
+.level {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx;
+  border-radius: var(--r-m);
+  border: 2rpx solid transparent;
+}
+.level + .level { margin-top: 8rpx; }
+.level.is-current { font-weight: 500; }
+
+.level__badge {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--r-full);
+  color: var(--c-inverse);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  line-height: 64rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.level__name {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-t1);
+}
+.level__now { margin-left: 12rpx; }
+.level__desc {
+  margin-top: 4rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+.level__range {
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  flex-shrink: 0;
+}
+
+/* ---------------- 规则表 ---------------- */
+.rules { padding: 8rpx var(--sp); }
+
+.rule {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  min-height: 88rpx;
+  position: relative;
+}
+.rule + .rule::before {
+  content: '';
+  position: absolute;
+  left: 34rpx;
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+
+.rule__dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--c-primary);
+  flex-shrink: 0;
+}
+
+.rule__text {
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+}
+
+.rule__change {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ---------------- 明细 ---------------- */
+.logs { padding: 8rpx var(--sp); }
+
+.log {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 108rpx;
+  position: relative;
+}
+.log + .log::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2rpx;
+  background: var(--c-line);
+}
+
+.log__reason {
+  font-size: var(--fs-body);
+  color: var(--c-t1);
+}
+.log__time {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+.log__change {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.log-sk { height: 40rpx; margin: 20rpx 0; border-radius: 8rpx; }
+
+/* ---------------- 底部说明 ---------------- */
+.credit-foot {
+  margin: 40rpx 0 20rpx;
+  text-align: center;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+  line-height: 1.6;
+}

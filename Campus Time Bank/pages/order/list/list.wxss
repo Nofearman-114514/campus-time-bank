@@ -1,0 +1,92 @@
+/* ==================================================================
+ * 订单列表（tab 页）
+ * 顶部吸顶：待办统计 + 一级 tab + 二级横向筛选
+ * ================================================================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--c-card);
+  box-shadow: var(--sh-1);
+}
+
+/* ---------------------------- 待办统计 ---------------------------- */
+.todo {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin: var(--sp) var(--sp) 0;
+  padding: 18rpx 20rpx;
+  border-radius: var(--r-m);
+  background: var(--c-warn-l);
+}
+.todo__icon { font-size: 30rpx; }
+.todo__text {
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+.todo__text--calm { color: var(--c-t3); }
+.todo__num {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--c-warn);
+  margin: 0 4rpx;
+}
+
+/* ---------------------------- 一级 tab ---------------------------- */
+.role-tabs {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx var(--sp) 0;
+}
+.role-tabs__item {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  text-align: center;
+  border-radius: var(--r-full);
+  font-size: var(--fs-body);
+  color: var(--c-t2);
+  background: var(--c-bg);
+  transition: all .18s;
+}
+.role-tabs__item--on {
+  background: var(--c-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ---------------------------- 二级筛选 ---------------------------- */
+.status-scroll { margin-top: 8rpx; }
+.status-tab {
+  position: relative;
+  flex-shrink: 0;
+  padding: 24rpx 6rpx 20rpx;
+  font-size: var(--fs-body);
+  color: var(--c-t2);
+}
+.status-tab--on {
+  color: var(--c-primary);
+  font-weight: 600;
+}
+.status-tab__line {
+  position: absolute;
+  left: 50%;
+  bottom: 8rpx;
+  width: 44rpx;
+  height: 6rpx;
+  margin-left: -22rpx;
+  border-radius: var(--r-full);
+  background: var(--c-primary);
+}
+
+/* ---------------------------- 列表 ---------------------------- */
+.list-body { padding-top: 20rpx; }
+
+/* order-card 自带卡片样式，这里只控制外部间距 */
+.oc-item {
+  display: block;
+  margin-bottom: 20rpx;
+}

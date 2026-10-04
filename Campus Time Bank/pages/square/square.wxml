@@ -1,0 +1,143 @@
+<!-- ==================================================================
+     技能广场（首页 · tab 页）
+     渐变头部（定位 + 搜索）→ 轮播 → 分类横滑 → 吸顶筛选行 → 列表
+     注意：自定义 tabBar 是浮层，根容器必须带 has-tabbar，否则最后一条被遮住。
+     ================================================================== -->
+<view class="page has-tabbar">
+
+  <!-- ---------------- 1. 渐变头部 ---------------- -->
+  <view class="hero">
+    <view class="hero__row">
+      <!-- 位置 chip：点击重新定位 -->
+      <view class="loc-chip" bindtap="onRelocate">
+        <text class="loc-chip__icon">📍</text>
+        <text class="loc-chip__text ellipsis">{{locationName || (located ? '校园内' : (locating ? '正在定位…' : '未开启定位'))}}</text>
+        <text class="loc-chip__arrow">{{locating ? '…' : '›'}}</text>
+      </view>
+    </view>
+
+    <!-- 假输入框：点击跳搜索页 -->
+    <view class="search-fake" bindtap="onSearch" hover-class="search-fake--hover">
+      <text class="search-fake__icon">🔍</text>
+      <text class="search-fake__ph">搜技能、课程、跑腿…试试「吉他」</text>
+      <view class="search-fake__btn">搜索</view>
+    </view>
+  </view>
+
+  <!-- ---------------- 2. 轮播 ---------------- -->
+  <view class="banner-wrap">
+    <swiper
+      wx:if="{{banners.length}}"
+      class="banner"
+      indicator-dots="{{true}}"
+      indicator-color="rgba(255,255,255,.45)"
+      indicator-active-color="#FFFFFF"
+      autoplay="{{true}}"
+      interval="4000"
+      duration="400"
+      circular="{{true}}"
+    >
+      <swiper-item wx:for="{{banners}}" wx:key="_id">
+        <view class="banner__item banner__item--{{index % 3}}" data-link="{{item.link}}" bindtap="onBanner">
+          <image wx:if="{{item.image}}" class="banner__img" src="{{item.image}}" mode="aspectFill" />
+          <block wx:else>
+            <text class="banner__icon">{{index % 3 === 0 ? '🤝' : (index % 3 === 1 ? '🪙' : '🎓')}}</text>
+            <view class="banner__text">
+              <text class="banner__title">{{item.title || '校园时间银行'}}</text>
+              <text class="banner__sub">1 次服务 = 若干时间币</text>
+            </view>
+          </block>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- ---------------- 3. 分类横滑 ---------------- -->
+  <scroll-view class="scroll-x cat-bar" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view class="scroll-x__inner">
+      <view
+        class="cat {{activeCategoryId === '' ? 'cat--on' : ''}}"
+        data-id=""
+        bindtap="onCategory"
+      >
+        <text class="cat__icon">🎯</text>
+        <text class="cat__name">全部</text>
+      </view>
+      <view
+        wx:for="{{categories}}"
+        wx:key="_id"
+        class="cat {{activeCategoryId === item._id ? 'cat--on' : ''}}"
+        data-id="{{item._id}}"
+        bindtap="onCategory"
+      >
+        <text class="cat__icon">{{item.icon || '✨'}}</text>
+        <text class="cat__name">{{item.name}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- ---------------- 4. 筛选行（自定义吸顶） ---------------- -->
+  <view class="filter-bar">
+    <view class="filter-bar__types">
+      <text
+        wx:for="{{typeFilters}}"
+        wx:key="key"
+        class="ftab {{type === item.key ? 'ftab--on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onType"
+      >{{item.text}}</text>
+    </view>
+
+    <scroll-view class="filter-bar__sorts" scroll-x show-scrollbar="{{false}}">
+      <view class="filter-bar__sorts-inner">
+        <text
+          wx:for="{{sorts}}"
+          wx:key="key"
+          class="stab {{sort === item.key ? 'stab--on' : ''}} {{item.key === 'near' && locationDenied ? 'stab--off' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onSort"
+        >{{item.text}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ---------------- 5. 列表 ---------------- -->
+  <view class="page-body list-wrap">
+    <!-- 首屏骨架屏 -->
+    <loading-skeleton wx:if="{{!firstLoaded}}" type="skill" count="{{4}}" />
+
+    <block wx:elif="{{list.length}}">
+      <view class="card-list">
+        <view class="card-list__item" wx:for="{{list}}" wx:key="_id">
+          <skill-card item="{{item}}" bindcard="onCard" />
+        </view>
+      </view>
+
+      <!-- 加载中 / 没有更多 -->
+      <view wx:if="{{loadingMore}}" class="loading-more">加载中…</view>
+      <view wx:elif="{{!hasMore}}" class="loading-more loading-more--nomore">— 已经到底啦 —</view>
+    </block>
+
+    <!-- 空态 -->
+    <block wx:else>
+      <empty
+        wx:if="{{loadError}}"
+        icon="😵"
+        text="加载失败了"
+        desc="网络不太稳定，点一下重新加载"
+        btn="重新加载"
+        bindaction="onRetry"
+      />
+      <empty
+        wx:else
+        icon="🌱"
+        text="这里还没有技能"
+        desc="换个分类看看，或者发布一条你的技能 / 求助"
+        btn="去发布"
+        bindaction="onGoPublish"
+      />
+    </block>
+  </view>
+
+  <!-- 底部留白由 .has-tabbar 的 padding-bottom 提供 -->
+</view>

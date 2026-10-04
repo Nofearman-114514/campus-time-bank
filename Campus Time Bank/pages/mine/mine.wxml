@@ -1,0 +1,159 @@
+<!-- ==================================================================
+     个人中心（tab ④）
+     渐变顶部 → 压在顶部的个人卡 → 认证状态条 → 数据三宫格
+     → 徽章条 → 功能列表 → 时间币免责小字
+     ================================================================== -->
+<view class="page">
+
+  <!-- ---------------- 1. 渐变背景（默认导航栏下的一块彩色区） ---------------- -->
+  <view class="hero-bg"></view>
+
+  <!-- ---------------- 2. 压在顶部的个人卡 ---------------- -->
+  <view class="mine-card card">
+    <view class="row start">
+      <user-avatar
+        size="xl"
+        ring
+        showCredit
+        credit="{{user.creditScore}}"
+        url="{{user.avatarUrl}}"
+        name="{{user.nickName}}"
+        verified="{{user.authStatus === 2}}"
+      />
+
+      <view class="flex-1 mine-card__info">
+        <view class="row gap-s">
+          <text class="mine-card__name ellipsis">{{user.nickName || '未设置昵称'}}</text>
+          <view wx:if="{{user.authStatus === 2}}" class="tag tag--success">已认证</view>
+        </view>
+
+        <text class="mine-card__school ellipsis">{{schoolLine || '还没有填写学校信息'}}</text>
+
+        <text class="mine-card__bio ellipsis-2">{{user.bio || '还没有填写简介'}}</text>
+
+        <view wx:if="{{creditLevel}}" class="credit-chip mine-card__credit">{{creditLevel.text}} · 信用 {{user.creditScore === undefined ? 100 : user.creditScore}}</view>
+      </view>
+
+      <!-- 编辑资料 -->
+      <view class="mine-card__edit" bindtap="goProfile">编辑资料</view>
+    </view>
+  </view>
+
+  <!-- ---------------- 3. 认证状态条（未认证时醒目橙色） ---------------- -->
+  <view
+    wx:if="{{user.authStatus !== 2}}"
+    class="auth-strip auth-strip--{{user.authStatus}}"
+    bindtap="goAuth"
+  >
+    <text class="auth-strip__icon">{{user.authStatus === 1 ? '⏳' : (user.authStatus === 3 ? '❗' : '🪪')}}</text>
+    <view class="flex-1">
+      <text class="auth-strip__title">{{auth.text}}</text>
+      <text class="auth-strip__desc">{{user.authStatus === 3 && user.authRemark ? user.authRemark : auth.desc}}</text>
+    </view>
+    <view wx:if="{{user.authStatus === 0 || user.authStatus === 3}}" class="btn btn--xs btn--accent">
+      {{user.authStatus === 3 ? '重新认证' : '立即认证'}}
+    </view>
+    <text wx:else class="cell__arrow">›</text>
+  </view>
+
+  <!-- ---------------- 4. 主体 ---------------- -->
+  <view class="page-body has-tabbar">
+
+    <!-- 4.1 数据三宫格：时间币 / 信用分 / 完成订单 -->
+    <view class="card nums-grid">
+      <view class="nums-grid__item" bindtap="goWallet">
+        <text class="nums-grid__num nums nums-grid__num--coin">{{user.coins || 0}}</text>
+        <text class="nums-grid__label">可用时间币</text>
+      </view>
+      <view class="nums-grid__item" bindtap="goCredit">
+        <text class="nums-grid__num nums nums-grid__num--credit">{{user.creditScore === undefined ? 100 : user.creditScore}}</text>
+        <text class="nums-grid__label">信用分</text>
+      </view>
+      <view class="nums-grid__item" bindtap="goOrders">
+        <text class="nums-grid__num nums">{{doneCount}}</text>
+        <text class="nums-grid__label">完成订单</text>
+      </view>
+    </view>
+
+    <!-- 4.2 徽章条 -->
+    <view class="card badge-strip" bindtap="goBadge">
+      <view class="between">
+        <text class="badge-strip__title">我的徽章<text wx:if="{{badgeCount}}" class="badge-strip__count">（{{badgeCount}}）</text></text>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <scroll-view wx:if="{{badgeCount}}" class="badge-row" scroll-x enable-flex show-scrollbar="{{false}}">
+        <view class="badge-row__inner">
+          <view wx:for="{{badges}}" wx:key="id" class="badge-chip">
+            <view class="badge-chip__icon"><text class="badge-chip__emoji">{{item.icon}}</text></view>
+            <text class="badge-chip__name">{{item.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view wx:else class="badge-strip__empty">还没有徽章，点亮第一枚徽章 →</view>
+    </view>
+
+    <!-- 4.3 功能列表 -->
+    <view class="cell-group mt">
+      <view class="cell" bindtap="goPublish">
+        <view class="cell__icon">📝</view>
+        <text class="cell__label">我的发布</text>
+        <text class="cell__value">{{counts.publish || 0}}</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <view class="cell" bindtap="goAccept">
+        <view class="cell__icon">🤝</view>
+        <text class="cell__label">我的接单</text>
+        <text class="cell__value">{{counts.serve || 0}}</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <view class="cell" bindtap="goFavorites">
+        <view class="cell__icon">🔖</view>
+        <text class="cell__label">我的收藏</text>
+        <text class="cell__value">{{counts.collected || 0}}</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <view class="cell" bindtap="goReview">
+        <view class="cell__icon">⭐</view>
+        <text class="cell__label">我的评价</text>
+        <text class="cell__value">{{reviewCount}}</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <view class="cell" bindtap="goChat">
+        <view class="cell__icon">💬</view>
+        <text class="cell__label">我的消息</text>
+        <view wx:if="{{unreadChat > 0}}" class="unread-dot">{{unreadChat > 99 ? '99+' : unreadChat}}</view>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <view class="cell" bindtap="goNotice">
+        <view class="cell__icon">🔔</view>
+        <text class="cell__label">系统通知</text>
+        <view wx:if="{{unreadNotice > 0}}" class="unread-dot">{{unreadNotice > 99 ? '99+' : unreadNotice}}</view>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <!-- 管理后台：仅管理员可见 -->
+      <view wx:if="{{isAdmin}}" class="cell" bindtap="goAdmin">
+        <view class="cell__icon">🛠️</view>
+        <text class="cell__label">管理后台</text>
+        <text class="cell__value">管理员</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
+      <view class="cell" bindtap="goAbout">
+        <view class="cell__icon">📖</view>
+        <text class="cell__label">关于与规则</text>
+        <text class="cell__arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 4.4 时间币免责小字 -->
+    <view class="mine-note">时间币不可充值、不可提现，仅用于校园内技能交换</view>
+  </view>
+</view>

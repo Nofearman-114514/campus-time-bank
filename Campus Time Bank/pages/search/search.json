@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "skill-card": "/components/skill-card/index",
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "搜索",
+  "onReachBottomDistance": 100
+}

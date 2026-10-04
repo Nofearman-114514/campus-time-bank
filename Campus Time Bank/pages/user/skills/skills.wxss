@@ -1,0 +1,103 @@
+/* ==================================================================
+ * 我的发布 / 我的接单
+ * 只用 styles/theme.wxss 的 CSS 变量，原子类来自 styles/common.wxss
+ * ================================================================== */
+
+/* ---------------- 1. 筛选区（吸顶） ---------------- */
+.filter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--c-card);
+  box-shadow: var(--sh-1);
+  padding: 16rpx 0 12rpx;
+}
+.filter-bar .scroll-x__inner { gap: 12rpx; }
+
+/* 状态 tab */
+.tab {
+  flex-shrink: 0;
+  height: 60rpx;
+  padding: 0 28rpx;
+  border-radius: var(--r-full);
+  background: var(--c-bg);
+  color: var(--c-t2);
+  font-size: var(--fs-cap);
+  line-height: 60rpx;
+}
+.tab--on {
+  background: var(--c-primary-l);
+  color: var(--c-primary);
+  font-weight: 600;
+}
+
+/* 子筛选 chip */
+.sub-filter {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 12rpx var(--sp) 0;
+}
+.chip {
+  height: 52rpx;
+  padding: 0 24rpx;
+  border-radius: var(--r-full);
+  border: 2rpx solid var(--c-line);
+  color: var(--c-t2);
+  font-size: var(--fs-mini);
+  line-height: 48rpx;
+}
+.chip--on {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  background: var(--c-primary-l);
+}
+
+/* 我的接单：统计 */
+.order-stats {
+  display: flex;
+  align-items: center;
+  padding: 16rpx var(--sp) 4rpx;
+}
+.order-stats__item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.order-stats__item + .order-stats__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rpx;
+  height: 44rpx;
+  background: var(--c-line);
+}
+.order-stats__num {
+  display: block;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--c-primary);
+  line-height: 1.2;
+}
+.order-stats__label {
+  display: block;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* ---------------- 2. 列表项 ---------------- */
+.list-item { margin-bottom: 20rpx; }
+
+/* 我的发布：卡片下方操作行 */
+.ops {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx var(--sp);
+  background: var(--c-card);
+  border-radius: 0 0 var(--r-m) var(--r-m);
+  box-shadow: var(--sh-1);
+  border-top: 2rpx solid var(--c-line);
+}

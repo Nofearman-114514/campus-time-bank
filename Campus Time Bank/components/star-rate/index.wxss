@@ -1,0 +1,33 @@
+.sr {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.sr__item {
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .12s;
+}
+
+.sr__item--edit:active {
+  transform: scale(1.2);
+}
+
+.sr__on {
+  color: #F5B301;
+}
+
+.sr__off {
+  color: var(--c-line);
+}
+
+.sr__val {
+  margin-left: 10rpx;
+  color: #F5B301;
+  font-weight: 700;
+  line-height: 1;
+}

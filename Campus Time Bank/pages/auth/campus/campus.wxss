@@ -1,0 +1,263 @@
+/* ==================================================================
+ * 校园认证
+ * 只用 styles/theme.wxss 的 CSS 变量，原子类来自 styles/common.wxss
+ * ================================================================== */
+
+/* ---------------- 1. 顶部说明条 ---------------- */
+.notice-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: 20rpx var(--sp);
+  border-radius: var(--r-m);
+  background: var(--c-primary-l);
+  margin-bottom: 20rpx;
+}
+.notice-bar__icon { font-size: 30rpx; line-height: 1.4; }
+.notice-bar__text {
+  flex: 1;
+  font-size: var(--fs-cap);
+  color: var(--c-primary);
+  line-height: 1.5;
+}
+
+/* ---------------- 2/3/4. 状态卡 ---------------- */
+.status-card {
+  padding: var(--sp-l) var(--sp);
+  border-radius: var(--r-m);
+  text-align: center;
+  box-shadow: var(--sh-1);
+  background: var(--c-card);
+}
+.status-card--ok { background: var(--c-success-l); }
+.status-card--info { background: var(--c-info-l); }
+.status-card--danger { background: var(--c-danger-l); }
+
+.status-card__icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 50%;
+  background: var(--c-success);
+  color: var(--c-inverse);
+  font-size: 64rpx;
+  line-height: 120rpx;
+  font-weight: 700;
+}
+.status-card__icon--plain {
+  background: transparent;
+  color: inherit;
+  font-size: 84rpx;
+  line-height: 120rpx;
+}
+
+.status-card__title {
+  display: block;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--c-t1);
+}
+.status-card__desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+}
+
+.status-card__body {
+  margin-top: 24rpx;
+  padding: 8rpx var(--sp);
+  border-radius: var(--r-s);
+  background: var(--c-card);
+  text-align: left;
+}
+.kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72rpx;
+}
+.kv + .kv { border-top: 2rpx solid var(--c-line); }
+.kv__k { font-size: var(--fs-cap); color: var(--c-t3); }
+.kv__v {
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  max-width: 420rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 驳回原因 */
+.remark {
+  margin-top: 24rpx;
+  padding: 20rpx var(--sp);
+  border-radius: var(--r-s);
+  background: var(--c-card);
+  text-align: left;
+}
+.remark__label {
+  display: block;
+  font-size: var(--fs-mini);
+  color: var(--c-danger);
+  font-weight: 600;
+}
+.remark__text {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  color: var(--c-t1);
+  line-height: 1.6;
+}
+
+/* 审核中操作 */
+.status-card__ops {
+  margin-top: 28rpx;
+  display: flex;
+  justify-content: center;
+}
+
+/* 折叠区 */
+.fold {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid var(--c-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+.fold__text { font-size: var(--fs-cap); color: var(--c-primary); }
+.fold__arrow {
+  font-size: var(--fs-cap);
+  color: var(--c-primary);
+  transition: transform .2s;
+}
+.fold__arrow.is-open { transform: rotate(90deg); }
+.fold__body {
+  margin-top: 20rpx;
+  text-align: left;
+}
+
+/* ---------------- 5. 三步时间轴 ---------------- */
+.steps { margin-top: 20rpx; padding: 28rpx var(--sp); }
+.steps__item {
+  display: flex;
+  align-items: stretch;
+}
+.steps__rail {
+  width: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.steps__dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-top: 14rpx;
+  background: var(--c-line);
+  flex-shrink: 0;
+}
+.steps__dot--done { background: var(--c-success); }
+.steps__dot--current {
+  background: var(--c-primary);
+  box-shadow: 0 0 0 8rpx var(--c-primary-l);
+}
+.steps__line {
+  flex: 1;
+  width: 2rpx;
+  background: var(--c-line);
+  margin: 6rpx 0;
+}
+.steps__body {
+  flex: 1;
+  padding-bottom: 28rpx;
+  display: flex;
+  flex-direction: column;
+}
+.steps__text {
+  font-size: var(--fs-body);
+  color: var(--c-t3);
+}
+.steps__text--done { color: var(--c-success); }
+.steps__text--current {
+  color: var(--c-primary);
+  font-weight: 600;
+}
+.steps__desc {
+  margin-top: 2rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t4);
+}
+
+/* ---------------- 6. 证件照片网格 ---------------- */
+.img-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.img-grid__cell {
+  position: relative;
+  width: 180rpx;
+  height: 180rpx;
+}
+.img-grid__img {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+}
+.img-grid__del {
+  position: absolute;
+  right: -10rpx;
+  top: -10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--c-danger);
+  color: var(--c-inverse);
+  font-size: 28rpx;
+  line-height: 40rpx;
+  text-align: center;
+}
+.img-grid__add {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--r-s);
+  border: 2rpx dashed var(--c-line);
+  background: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.img-grid__add-icon {
+  font-size: 48rpx;
+  color: var(--c-t4);
+  line-height: 1;
+}
+.img-grid__add-text {
+  margin-top: 8rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}
+
+/* ---------------- 7. 协议 ---------------- */
+.agree {
+  display: block;
+  margin-top: 24rpx;
+  padding: 0 8rpx;
+}
+.agree__label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+.agree__text {
+  flex: 1;
+  font-size: var(--fs-cap);
+  color: var(--c-t2);
+  line-height: 1.6;
+}

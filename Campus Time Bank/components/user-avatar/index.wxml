@@ -1,0 +1,16 @@
+<view
+  class="ua {{ring ? 'ua--ring' : ''}}"
+  style="width:{{px}}rpx;height:{{px}}rpx;"
+  bindtap="onTap"
+>
+  <image wx:if="{{url}}" class="ua__img" src="{{url}}" mode="aspectFill" lazy-load />
+  <view wx:else class="ua__ph" style="background:{{bg}}">
+    <text class="ua__ch" style="font-size:{{px * 0.42}}rpx">{{initial}}</text>
+  </view>
+
+  <view wx:if="{{verified}}" class="ua__verified" style="width:{{px * 0.36}}rpx;height:{{px * 0.36}}rpx;">
+    <text class="ua__verified-icon" style="font-size:{{px * 0.22}}rpx">✓</text>
+  </view>
+
+  <view wx:if="{{showCredit && credit > 0}}" class="ua__credit">{{credit}}</view>
+</view>

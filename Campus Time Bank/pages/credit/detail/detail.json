@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index"
+  },
+  "navigationBarTitleText": "信用分",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 100
+}

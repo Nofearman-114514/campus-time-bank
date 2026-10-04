@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "user-avatar": "/components/user-avatar/index"
+  },
+  "navigationBarTitleText": "我的",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

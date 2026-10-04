@@ -1,0 +1,36 @@
+@import "../../utils/admin.wxss";
+
+/* ==================================================================
+ * 技能分类管理
+ * ================================================================== */
+.cat-icon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: var(--r-s);
+  background: var(--c-primary-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cat-ops {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+/* 行内文字操作 */
+.mini-link {
+  font-size: var(--fs-mini);
+  color: var(--c-primary);
+  padding: 6rpx 20rpx 6rpx 0;
+}
+.mini-link--danger { color: var(--c-danger); }
+.mini-link:active { opacity: .6; }
+
+/* 排序到头/到尾时的禁用提示 */
+.icon-btn--disabled { opacity: .45; }

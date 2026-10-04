@@ -1,0 +1,11 @@
+{
+  "usingComponents": {
+    "user-avatar": "/components/user-avatar/index",
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "管理端 · 认证审核",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 120
+}

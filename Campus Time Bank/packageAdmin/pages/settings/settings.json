@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/index",
+    "loading-skeleton": "/components/loading-skeleton/index"
+  },
+  "navigationBarTitleText": "管理端 · 参数配置",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

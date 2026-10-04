@@ -1,0 +1,103 @@
+<!-- 管理端 · 校园认证审核 -->
+<view class="admin-page">
+
+  <!-- ==================== 标识条 ==================== -->
+  <view class="admin-bar">
+    <view class="admin-bar__shield">🛡</view>
+    <view class="admin-bar__main">
+      <view class="admin-bar__kicker">管理员控制台</view>
+      <view class="admin-bar__title">校园认证审核</view>
+      <view class="admin-bar__sub">核对真实姓名 / 学号 / 证件照</view>
+    </view>
+    <view class="admin-bar__side">
+      <view class="admin-bar__num">{{pendingCount}}</view>
+      <view class="admin-bar__label">待审核</view>
+    </view>
+  </view>
+
+  <!-- ==================== tab ==================== -->
+  <view class="admin-toolbar">
+    <view class="admin-chips">
+      <view
+        wx:for="{{tabs}}"
+        wx:key="v"
+        class="chip {{tab === item.v ? 'chip--on' : ''}}"
+        data-v="{{item.v}}"
+        bindtap="onTab"
+      >{{item.t}}{{item.v === '1' && pendingCount > 0 ? ' ' + pendingCount : ''}}</view>
+    </view>
+  </view>
+
+  <!-- ==================== 列表 ==================== -->
+  <view class="admin-panel">
+    <view class="admin-panel__head">
+      <text class="admin-panel__title">认证申请</text>
+      <text class="admin-panel__hint">共 {{total}} 条</text>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="userId" class="arow audit-row">
+      <view class="audit-row__top">
+        <user-avatar url="{{item.avatarUrl}}" name="{{item.nickName}}" size="m" />
+        <view class="flex-1">
+          <view class="row gap-s">
+            <text class="arow__title ellipsis">{{item.nickName}}</text>
+            <text class="tag tag--info">待审核</text>
+          </view>
+          <view class="arow__meta">{{item.realName}} · 学号 {{item.studentNo}}</view>
+          <view class="arow__meta">{{item.campusText}}</view>
+          <view class="arow__meta">提交时间 {{item.submitTimeText}}</view>
+        </view>
+      </view>
+
+      <!-- 证件缩略图：无图时给明确占位（离线演示数据不含云存储 fileID） -->
+      <view class="audit-imgs">
+        <block wx:if="{{item.images.length}}">
+          <image
+            wx:for="{{item.images}}"
+            wx:for-item="img"
+            wx:key="*this"
+            class="audit-imgs__i"
+            src="{{img}}"
+            mode="aspectFill"
+            data-id="{{item.userId}}"
+            data-url="{{img}}"
+            bindtap="preview"
+          />
+          <view class="audit-imgs__tip">点击图片全屏查看</view>
+        </block>
+        <view wx:else class="audit-imgs__none">
+          <text class="audit-imgs__none-title">📄 无凭证图片</text>
+          <text class="audit-imgs__none-desc">
+            离线演示数据的 authImages 为空数组（离线环境没有云存储，无法提供真实 fileID）；
+            真实环境这里会显示学生证 / 校园卡照片，点击可全屏查看。
+            若线上申请同样没有证件照，建议驳回并要求补充。
+          </text>
+        </view>
+      </view>
+
+      <!-- 操作（仅待审核可操作） -->
+      <view wx:if="{{tab === '1'}}" class="admin-actions">
+        <button class="btn btn--sm btn--primary" data-id="{{item.userId}}" bindtap="onPass">通过</button>
+        <button class="btn btn--sm btn--danger" data-id="{{item.userId}}" bindtap="onReject">驳回</button>
+        <button class="btn btn--sm btn--gray" data-id="{{item.userId}}" data-url="{{item.thumb}}" bindtap="preview">查看证件</button>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="page-body">
+      <loading-skeleton type="list" count="{{3}}" />
+    </view>
+
+    <empty
+      wx:elif="{{!list.length}}"
+      icon="{{emptyView.icon}}"
+      text="{{emptyView.text}}"
+      desc="{{emptyView.desc}}"
+    />
+
+    <view wx:if="{{list.length}}" class="loading-more {{hasMore ? '' : 'loading-more--nomore'}}">
+      {{loadingMore ? '加载中…' : (hasMore ? '上拉加载更多' : '没有更多了')}}
+    </view>
+  </view>
+
+  <view class="admin-footer">审核结果会通过「系统通知」同步给用户</view>
+</view>
