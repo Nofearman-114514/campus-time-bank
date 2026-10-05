@@ -846,11 +846,25 @@ async function actionSetAdmin(event) {
   //   封禁账号不该获得后台权限。
   assert(Number(target.status) !== 0, '该账号已被封禁，不能设为管理员', 400)
 
+  /*
+   * ★ 这里也是「调试员」的**引导入口（bootstrap）**。
+   *
+   *   规则是「调试员身份只有调试员能授予」—— 这在日常是对的（防止普通管理员
+   *   给自己升级），但它有个先有鸡还是先有蛋的问题：**第一个调试员谁来设？**
+   *
+   *   答案就是这个函数：initdb 是控制台手动调用的运维工具，
+   *   它不走 requireAdmin，本来就承担着「初始化 / 救急」的职责。
+   *   在云开发控制台执行：
+   *     { "action": "setAdmin", "openid": "xxx", "role": "debugger" }
+   *   就能把第一个校方账号设成调试员，之后由它去管理其他调试员。
+   */
+  const wanted = event.role === 'debugger' ? 'debugger' : 'admin'
+
   await db.collection(C.USERS).doc(target._id).update({
-    data: { role: 'admin', updateTime: now() }
+    data: { role: wanted, updateTime: now() }
   })
 
-  return { ok: true, openid: target._openid, nickName: target.nickName || '' }
+  return { ok: true, openid: target._openid, nickName: target.nickName || '', role: wanted }
 }
 
 /* ============================ 入口 ============================ */

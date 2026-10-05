@@ -371,4 +371,30 @@ module.exports = async function (t) {
 
   t.log('⚠️ 仍存在的偏差：错误码统一仍在推进中（本文件涉及的 setAdmin / init 已修复；' +
     'skill.myList / skill.remove 的 401、submitCampusAuth 的 409 已在各自用例中覆盖）。')
+
+  /* ==================================================================
+   * 组 28 · initdb.setAdmin 是调试员的**引导入口**
+   * ------------------------------------------------------------------
+   * 「调试员只有调试员能授予」有个先有鸡还是先有蛋的问题：
+   * 第一个调试员谁来设？答案是这个无鉴权的运维函数。
+   * 这条路径断了，调试员身份就永远无法到达。
+   * ================================================================== */
+  t.group('组 28 · ★ initdb.setAdmin：调试员的引导入口（bootstrap）')
+
+  t.seed()
+  r = await t.call('initdb', '', 'setAdmin', { openid: 'o_buy', role: 'debugger' })
+  t.eq(r.code, 0, '★ setAdmin role=debugger 成功（否则调试员身份永远无法到达）')
+  t.eq(r.data.role, 'debugger', '出参回传实际设置的角色')
+  t.eq(t.user('o_buy').role, 'debugger', '★ 落库为 debugger')
+
+  t.seed()
+  r = await t.call('initdb', '', 'setAdmin', { openid: 'o_buy' })
+  t.eq(r.code, 0, '不传 role 时默认设为管理员（保持旧行为）')
+  t.eq(r.data.role, 'admin', '出参 role=admin')
+  t.eq(t.user('o_buy').role, 'admin', '落库为 admin')
+
+  t.seed()
+  r = await t.call('initdb', '', 'setAdmin', { openid: 'o_buy', role: '乱写' })
+  t.eq(r.data.role, 'admin', '非法 role 归一为 admin（不会写进脏数据）')
+  t.eq(t.user('o_buy').role, 'admin', '落库仍是合法值')
 }
