@@ -205,6 +205,18 @@
       <switch checked="{{debugMode}}" disabled="{{debugSwitching}}" bindchange="onToggleDebug" />
     </view>
 
+    <!-- ★ 多账号测试功能：默认关闭。开启后才出现「切换账号」入口。
+         多账号会让答辩变难，所以做成开关 —— 需要时再打开。 -->
+    <view class="dbg-row">
+      <view class="dbg-row__body">
+        <text class="dbg-row__title">多账号测试功能</text>
+        <text class="dbg-row__desc">
+          开启后可以在本机登录并切换多个账号（真登录、真数据），用于演示不同角色的视角。默认关闭：这个功能会显著增加答辩讲解的复杂度，需要时再打开。
+        </text>
+      </view>
+      <switch checked="{{multiAccount}}" bindchange="onToggleMultiAccount" />
+    </view>
+
     <view wx:if="{{debugMode}}" class="dbg-warn">
       当前处于调试模式：你看到的全部数据都是本地模拟的，**不是真实数据**。
     </view>

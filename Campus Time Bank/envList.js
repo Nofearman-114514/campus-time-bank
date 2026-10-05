@@ -93,12 +93,47 @@ function setDebugMode(on) {
   } catch (e) { /* 存储失败则维持现状 */ }
 }
 
+/* ============================ 多账号测试开关 ============================ */
+/**
+ * ★ 这是一个**测试功能开关**，默认关闭。
+ *
+ *   为什么要开关：多账号会让答辩变难 —— 功能再多，讲不清楚就是减分。
+ *   所以默认关着，答辩时展示简单版本；需要用的时候由调试员打开。
+ *
+ * ★ 只对**调试员**可见。学生管理员看不到这个开关，也看不到它开启后才
+ *   出现的一切入口 —— 和调试模式、危险操作区用的是同一条原则：
+ *   没把握的功能不给学生看，因为总有学生会把每个按钮都点一遍。
+ *
+ * ★ 打开后需要重启小程序才生效（切换时会 reLaunch）。
+ */
+const MULTI_ACCOUNT_KEY = 'ctb_multi_account'
+
+/** 当前是否开启了多账号测试功能 */
+function isMultiAccountOn() {
+  try {
+    return wx.getStorageSync(MULTI_ACCOUNT_KEY) === true
+  } catch (e) {
+    return false
+  }
+}
+
+/** 开启 / 关闭（调用方负责校验调试员身份） */
+function setMultiAccount(on) {
+  try {
+    if (on) wx.setStorageSync(MULTI_ACCOUNT_KEY, true)
+    else wx.removeStorageSync(MULTI_ACCOUNT_KEY)
+  } catch (e) { /* 存储失败则维持现状 */ }
+}
+
 module.exports = {
   envId: ENV_ID,
   isMock,
   isDebugOn,
   setDebugMode,
   DEBUG_KEY,
+  isMultiAccountOn,
+  setMultiAccount,
+  MULTI_ACCOUNT_KEY,
   /**
    * 当前是否处于调试模式。
    *

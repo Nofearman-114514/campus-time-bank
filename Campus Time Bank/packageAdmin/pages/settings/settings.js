@@ -27,6 +27,9 @@ Page({
     },
     loading: true,
     saving: false,
+    /* ★ 调试类开关的状态（真实值在 _boot 里读）—— 显式声明便于排查 */
+    isDebugger: false,
+    multiAccount: false,
 
     /* 轮播图 */
     banners: [],
@@ -59,7 +62,8 @@ Page({
     this.setData({
       isDebugger: !!isDebugger,
       mockMode: !!(getApp().globalData && getApp().globalData.MOCK),
-      debugMode: envList.isDebugOn()
+      debugMode: envList.isDebugOn(),
+      multiAccount: envList.isMultiAccountOn()
     })
     this.loadConfig()
     this.loadBanners()
@@ -75,6 +79,31 @@ Page({
    * 关闭后立即回到真实云端数据。
    * 切换本身就是一次模式切换，所以直接 reLaunch 让所有页面重新取数。
    */
+  /**
+   * 多账号测试功能开关。
+   *
+   * ★ 只对调试员可见（所在卡片整体 wx:if="{{isDebugger}}"）。
+   *   打开后需要重启才生效 —— 和调试模式开关一样走 reLaunch。
+   *
+   * ★ 开启前必须清掉内存里的权限缓存：否则 reLaunch 后页面仍按旧状态
+   *   渲染（globalData 不会因为 reLaunch 而重置）。
+   */
+  onToggleMultiAccount(e) {
+    const on = !!(e.detail && e.detail.value)
+    envList.setMultiAccount(on)
+    const app = getApp()
+    if (app && app.globalData) {
+      app.globalData.isAdmin = false
+      app.globalData.isDebugger = false
+      app.globalData.userInfo = null
+      app.globalData.openid = ''
+      app.globalData._loginTask = null
+    }
+    util.toastOk(on ? '多账号测试已开启，正在重启…' : '多账号测试已关闭，正在重启…')
+    this.setData({ multiAccount: on })
+    setTimeout(() => wx.reLaunch({ url: '/pages/mine/mine' }), 800)
+  },
+
   async onToggleDebug(e) {
     if (this.data.debugSwitching) return
     const on = !!(e.detail && e.detail.value)
