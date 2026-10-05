@@ -10,7 +10,7 @@ const constants = require('../../utils/constants')
 const util = require('../../utils/util')
 const envList = require('../../envList')
 
-const VERSION = '1.0.0'
+const VERSION = '0.5.0'
 
 Page({
   data: {
