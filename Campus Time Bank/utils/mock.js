@@ -313,21 +313,21 @@ const CAMPUS = campus.SPOTS.reduce((m, s) => (m[s.key] = s, m), {})
  *  注意：mock.js 有 15 条技能（比云端的 DEMO_SKILLS 多 3 条「我」发布的），
  *  所以本表按 15 条编写；云端只用到前 12 条。 */
 const DEMO_SKILL_LOCS = [
-  'bldgB',    // 01 吉他入门：B 栋空教室
-  'bldgD',    // 02 尤克里里：D 栋中庭
-  'train2',   // 03 证件照：实训 2 楼（室内背景布）
-  'lake',     // 04 毕业照跟拍：学子湖外景
-  'library',  // 05 高数辅导：图书馆研讨间
-  'bldgA',    // 06 线代答疑：A 栋自习室
-  'train1',   // 07 海报设计：实训 1 楼机房
-  'train3',   // 08 PPT 美化：实训 3 楼
+  'bldgB',    // 01 吉他入门：教学楼 B1
+  'bldgB',    // 02 尤克里里：教学楼 B1
+  'train1',   // 03 证件照拍摄：实训楼 1 号
+  'lake',     // 04 毕业照跟拍：学子湖边
+  'library',  // 05 高数辅导：图书馆一楼大厅
+  'bldgB',    // 06 线代答疑：教学楼 B1
+  'train1',   // 07 海报设计：实训楼 1 号
+  'train1',   // 08 PPT 美化：实训楼 1 号
   'canteenS', // 09 电脑清灰：山下饭堂门口（公共区域）
-  'newField', // 10 校园陪跑：新操场
+  'newField', // 10 校园陪跑：新操场田径场
   'lake',     // 11 英语口语：学子湖边
-  'train1',   // 12 剪映教学：实训 1 楼机房
-  'oldField', // 13 羽毛球求球友（仅 mock）：旧操场
-  'bldgC',    // 14 小程序开发答疑（仅 mock，「我」发布的）：C 栋
-  'oldField'  // 15 羽毛球陪打（仅 mock，「我」发布的）：旧操场
+  'train1',   // 12 剪映教学：实训楼 1 号
+  'newField', // 13 羽毛球求球友（仅 mock）：新操场
+  'bldgB',    // 14 小程序答疑（仅 mock）：教学楼 B1
+  'newField', // 15 羽毛球陪打（仅 mock）：新操场
 ]
 
 function mkSkill(openid, type, title, desc, categoryId, price, duration, tags, extra) {

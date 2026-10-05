@@ -16,7 +16,7 @@
  * ================================================================== */
 
 /** 校园中心（1 栋）—— 地图默认中心，定位失败时也不会飘到别的城市 */
-const CENTER = { lat: 23.003611, lng: 112.818333 }
+const CENTER = { lat: 23.001079, lng: 112.823601 }
 
 /**
  * 校园有效范围（米）：以校园中心为圆心的半径。
@@ -28,31 +28,18 @@ const CENTER = { lat: 23.003611, lng: 112.818333 }
  * ★ 与云端 `cloudfunctions/_shared/index.js` 的 CAMPUS_RADIUS 必须一致；
  *   云端的校验是最后一道防线（客户端校验可被绕过）。
  */
-const RADIUS = 1200
+const RADIUS = 700
 
 /** 校内地点：key 唯一，name 是短标签（按钮上显示），locationName/address 与技能字段对齐 */
 const SPOTS = [
-  // —— 山下（南侧）：男生宿舍 1~6 栋、山下饭堂、旧操场 ——
-  { key: 'canteenS', name: '山下饭堂', locationName: '山下饭堂一楼', address: '广职院 · 山下饭堂', lat: 23.004200, lng: 112.818700 },
-  { key: 'oldField', name: '旧操场', locationName: '旧操场看台', address: '广职院 · 旧操场', lat: 23.003400, lng: 112.817700 },
-  { key: 'dorm1', name: '山下1栋', locationName: '山下 1 栋楼下', address: '广职院 · 山下 1 栋', lat: 23.003611, lng: 112.818333 },
-  { key: 'dorm3', name: '山下3栋', locationName: '山下 3 栋门口', address: '广职院 · 山下 3 栋', lat: 23.003950, lng: 112.818100 },
-  { key: 'dorm6', name: '山下6栋', locationName: '山下 6 栋楼下', address: '广职院 · 山下 6 栋', lat: 23.003300, lng: 112.818900 },
-  // —— 中区：图书馆 / 学子湖（相邻）/ ABCD 栋 / 实训 1-2-3 ——
-  { key: 'library', name: '图书馆', locationName: '图书馆一楼大厅', address: '广职院 · 图书馆', lat: 23.005600, lng: 112.819600 },
-  { key: 'lake', name: '学子湖', locationName: '学子湖边', address: '广职院 · 学子湖', lat: 23.005500, lng: 112.820100 },
-  { key: 'bldgA', name: 'A栋', locationName: 'A 栋自习室', address: '广职院 · A 栋', lat: 23.005000, lng: 112.819200 },
-  { key: 'bldgB', name: 'B栋', locationName: 'B 栋 301 教室', address: '广职院 · B 栋', lat: 23.004800, lng: 112.819500 },
-  { key: 'bldgC', name: 'C栋', locationName: 'C 栋门口', address: '广职院 · C 栋', lat: 23.004900, lng: 112.819800 },
-  { key: 'bldgD', name: 'D栋', locationName: 'D 栋中庭', address: '广职院 · D 栋', lat: 23.005100, lng: 112.820000 },
-  { key: 'train1', name: '实训1', locationName: '实训 1 楼机房', address: '广职院 · 实训 1 楼', lat: 23.004600, lng: 112.820300 },
-  { key: 'train2', name: '实训2', locationName: '实训 2 楼', address: '广职院 · 实训 2 楼', lat: 23.004700, lng: 112.820600 },
-  { key: 'train3', name: '实训3', locationName: '实训 3 楼', address: '广职院 · 实训 3 楼', lat: 23.004800, lng: 112.820900 },
-  // —— 山上（北侧）：女生宿舍 7~14 栋、山上饭堂、新操场 ——
-  { key: 'canteenN', name: '山上饭堂', locationName: '山上饭堂二楼', address: '广职院 · 山上饭堂', lat: 23.007600, lng: 112.820800 },
-  { key: 'newField', name: '新操场', locationName: '新操场田径场', address: '广职院 · 新操场', lat: 23.008800, lng: 112.821800 },
-  { key: 'dorm8', name: '山上8栋', locationName: '山上 8 栋楼下', address: '广职院 · 山上 8 栋', lat: 23.007200, lng: 112.820500 },
-  { key: 'dorm12', name: '山上12栋', locationName: '山上 12 栋门口', address: '广职院 · 山上 12 栋', lat: 23.008100, lng: 112.821300 }
+  { key: 'dorm1', name: '1栋', locationName: '学生公寓 1 栋楼下', address: '广职院 · 学生公寓 1 栋', lat: 23.001079, lng: 112.823601 },
+  { key: 'canteenS', name: '山下饭堂', locationName: '山下饭堂一楼', address: '广职院 · 山下饭堂', lat: 23.000554, lng: 112.823584 },
+  { key: 'bldgB', name: '教学楼B1', locationName: '教学楼 B1 楼', address: '广职院 · 教学楼 B1', lat: 23.000751, lng: 112.821652 },
+  { key: 'train1', name: '实训楼1号', locationName: '实训楼 1 号', address: '广职院 · 实训楼 1 号', lat: 22.999123, lng: 112.823408 },
+  { key: 'canteenN', name: '山上饭堂', locationName: '山上饭堂二楼', address: '广职院 · 山上饭堂', lat: 23.001627, lng: 112.821381 },
+  { key: 'lake', name: '学子湖', locationName: '学子湖边', address: '广职院 · 学子湖', lat: 22.999801, lng: 112.821641 },
+  { key: 'newField', name: '新操场', locationName: '新操场田径场', address: '广职院 · 新操场', lat: 22.998165, lng: 112.823102 },
+  { key: 'library', name: '图书馆', locationName: '图书馆一楼大厅', address: '广职院 · 图书馆', lat: 23.000436, lng: 112.820359 }
 ]
 
 /** 两点间球面距离（米） */

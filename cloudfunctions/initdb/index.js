@@ -403,48 +403,32 @@ const CAT_MAP = SEED_CATEGORIES.reduce((m, c) => (m[c._id] = c, m), {})
  *   演示数据里不出现「去异性宿舍」的场景。
  * ================================================================== */
 const CAMPUS = {
-  // —— 山下（南侧）：男生宿舍 1~6 栋、山下饭堂、旧操场 ——
-  dorm1:    { address: '广职院 · 山下 1 栋',  locationName: '山下 1 栋楼下',  lng: 112.818333, lat: 23.003611 },
-  dorm3:    { address: '广职院 · 山下 3 栋',  locationName: '山下 3 栋门口',  lng: 112.818100, lat: 23.003950 },
-  dorm6:    { address: '广职院 · 山下 6 栋',  locationName: '山下 6 栋楼下',  lng: 112.818900, lat: 23.003300 },
-  canteenS: { address: '广职院 · 山下饭堂',   locationName: '山下饭堂一楼',   lng: 112.818700, lat: 23.004200 },
-  oldField: { address: '广职院 · 旧操场',     locationName: '旧操场看台',     lng: 112.817700, lat: 23.003400 },
-  // —— 中区：图书馆 / 学子湖（相邻）/ ABCD 栋 / 实训 1-2-3 ——
-  library:  { address: '广职院 · 图书馆',     locationName: '图书馆一楼大厅', lng: 112.819600, lat: 23.005600 },
-  lake:     { address: '广职院 · 学子湖',     locationName: '学子湖边',       lng: 112.820100, lat: 23.005500 },
-  bldgA:    { address: '广职院 · A 栋',       locationName: 'A 栋自习室',     lng: 112.819200, lat: 23.005000 },
-  bldgB:    { address: '广职院 · B 栋',       locationName: 'B 栋 301 教室',  lng: 112.819500, lat: 23.004800 },
-  bldgC:    { address: '广职院 · C 栋',       locationName: 'C 栋门口',       lng: 112.819800, lat: 23.004900 },
-  bldgD:    { address: '广职院 · D 栋',       locationName: 'D 栋中庭',       lng: 112.820000, lat: 23.005100 },
-  train1:   { address: '广职院 · 实训 1 楼',  locationName: '实训 1 楼机房',  lng: 112.820300, lat: 23.004600 },
-  train2:   { address: '广职院 · 实训 2 楼',  locationName: '实训 2 楼',      lng: 112.820600, lat: 23.004700 },
-  train3:   { address: '广职院 · 实训 3 楼',  locationName: '实训 3 楼',      lng: 112.820900, lat: 23.004800 },
-  // —— 山上（北侧）：女生宿舍 7~14 栋、山上饭堂、新操场 ——
-  canteenN: { address: '广职院 · 山上饭堂',   locationName: '山上饭堂二楼',   lng: 112.820800, lat: 23.007600 },
-  dorm8:    { address: '广职院 · 山上 8 栋',  locationName: '山上 8 栋楼下',  lng: 112.820500, lat: 23.007200 },
-  dorm12:   { address: '广职院 · 山上 12 栋', locationName: '山上 12 栋门口', lng: 112.821300, lat: 23.008100 },
-  newField: { address: '广职院 · 新操场',     locationName: '新操场田径场',   lng: 112.821800, lat: 23.008800 }
+  dorm1: { address: '广职院 · 学生公寓 1 栋', locationName: '学生公寓 1 栋楼下', lng: 112.823601, lat: 23.001079 },
+  canteenS: { address: '广职院 · 山下饭堂', locationName: '山下饭堂一楼', lng: 112.823584, lat: 23.000554 },
+  bldgB: { address: '广职院 · 教学楼 B1', locationName: '教学楼 B1 楼', lng: 112.821652, lat: 23.000751 },
+  train1: { address: '广职院 · 实训楼 1 号', locationName: '实训楼 1 号', lng: 112.823408, lat: 22.999123 },
+  canteenN: { address: '广职院 · 山上饭堂', locationName: '山上饭堂二楼', lng: 112.821381, lat: 23.001627 },
+  lake: { address: '广职院 · 学子湖', locationName: '学子湖边', lng: 112.821641, lat: 22.999801 },
+  newField: { address: '广职院 · 新操场', locationName: '新操场田径场', lng: 112.823102, lat: 22.998165 },
+  library: { address: '广职院 · 图书馆', locationName: '图书馆一楼大厅', lng: 112.820359, lat: 23.000436 }
 }
 
 /** 演示技能 → 校内地点（顺序与 DEMO_SKILLS / mock.js 的 skills 一一对应）
  *  注意：mock.js 有 15 条技能（比云端的 DEMO_SKILLS 多 3 条「我」发布的），
  *  所以本表按 15 条编写；云端只用到前 12 条。 */
 const DEMO_SKILL_LOCS = [
-  'bldgB',    // 01 吉他入门：B 栋空教室
-  'bldgD',    // 02 尤克里里：D 栋中庭
-  'train2',   // 03 证件照：实训 2 楼（室内背景布）
-  'lake',     // 04 毕业照跟拍：学子湖外景
-  'library',  // 05 高数辅导：图书馆研讨间
-  'bldgA',    // 06 线代答疑：A 栋自习室
-  'train1',   // 07 海报设计：实训 1 楼机房
-  'train3',   // 08 PPT 美化：实训 3 楼
+  'bldgB',    // 01 吉他入门：教学楼 B1
+  'bldgB',    // 02 尤克里里：教学楼 B1
+  'train1',   // 03 证件照拍摄：实训楼 1 号
+  'lake',     // 04 毕业照跟拍：学子湖边
+  'library',  // 05 高数辅导：图书馆一楼大厅
+  'bldgB',    // 06 线代答疑：教学楼 B1
+  'train1',   // 07 海报设计：实训楼 1 号
+  'train1',   // 08 PPT 美化：实训楼 1 号
   'canteenS', // 09 电脑清灰：山下饭堂门口（公共区域）
-  'newField', // 10 校园陪跑：新操场
+  'newField', // 10 校园陪跑：新操场田径场
   'lake',     // 11 英语口语：学子湖边
-  'train1',   // 12 剪映教学：实训 1 楼机房
-  'oldField', // 13 羽毛球求球友（仅 mock）：旧操场
-  'bldgC',    // 14 小程序开发答疑（仅 mock，「我」发布的）：C 栋
-  'oldField'  // 15 羽毛球陪打（仅 mock，「我」发布的）：旧操场
+  'train1',   // 12 剪映教学：实训楼 1 号
 ]
 
 /** 构造一条演示技能 */
