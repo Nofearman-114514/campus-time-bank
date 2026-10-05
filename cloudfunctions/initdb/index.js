@@ -292,10 +292,23 @@ const SEED_BANNERS = [
  * §3.1 演示用户 6 位，_openid 固定为 openid_demo_u1 ~ openid_demo_u6
  * 文案与 utils/mock.js 的 mkUser 调用一一对应
  */
+/* ------------------------------------------------------------------
+ * 演示数据的年级：按「当前届」推算，**不写死**
+ * ------------------------------------------------------------------
+ * 8 月是入学月（与 pages/user/profile/profile.js 的 buildGradeRange 口径一致）。
+ * 写死年级的话，明年这些写着「大三」的角色就变成已毕业了。
+ */
+const GRADE_NOW = (() => {
+  const d = new Date()
+  return (d.getMonth() + 1) >= 8 ? d.getFullYear() : d.getFullYear() - 1
+})()
+/** yearsAgo: 0=大一 1=大二 2=大三 3=大四 */
+const gradeAt = (yearsAgo) => (GRADE_NOW - yearsAgo) + '级'
+
 const DEMO_USERS = [
   {
     _id: 'user_u1', _openid: U1, nickName: '李思远', avatarUrl: '', gender: 0, phone: '',
-    campus: '广东职业技术学院', college: '艺术设计学院', major: '音乐表演', grade: '2021级',
+    campus: '广东职业技术学院', college: '艺术设计学院', major: '音乐表演', grade: gradeAt(2),
     studentNo: '2021010233', realName: '',
     bio: '音乐社社长，艺术设计学院大三。弹了六年吉他，带过三届新生。零基础也能上手，第一节课就能弹出完整旋律，平时在 B 栋空教室上课。',
     tags: ['吉他', '尤克里里', '乐理'],
@@ -310,7 +323,7 @@ const DEMO_USERS = [
   },
   {
     _id: 'user_u2', _openid: U2, nickName: '王雨桐', avatarUrl: '', gender: 0, phone: '',
-    campus: '广东职业技术学院', college: '艺术设计学院', major: '数字媒体艺术设计', grade: '2022级',
+    campus: '广东职业技术学院', college: '艺术设计学院', major: '数字媒体艺术设计', grade: gradeAt(1),
     studentNo: '2022010451', realName: '',
     bio: '摄影协会成员，艺术设计学院。有单反和补光灯，专拍证件照、毕业照。学子湖和图书馆一带的出片点我都熟，当天出片、免费修图三次。',
     tags: ['摄影', '证件照', '后期修图', '短视频'],
@@ -325,7 +338,7 @@ const DEMO_USERS = [
   },
   {
     _id: 'user_u3', _openid: U3, nickName: '陈子豪', avatarUrl: '', gender: 0, phone: '',
-    campus: '广东职业技术学院', college: '智能制造学院', major: '机电一体化技术', grade: '2021级',
+    campus: '广东职业技术学院', college: '智能制造学院', major: '机电一体化技术', grade: gradeAt(2),
     studentNo: '2021010876', realName: '',
     bio: '智能制造学院大三，高数/线代/概率论都能带。擅长考前突击，两小时讲完一学期的重点，可约图书馆研讨间。',
     tags: ['高等数学', '线性代数', '概率论', '考研数学'],
@@ -340,7 +353,7 @@ const DEMO_USERS = [
   },
   {
     _id: 'user_u4', _openid: U4, nickName: '刘佳怡', avatarUrl: '', gender: 0, phone: '',
-    campus: '广东职业技术学院', college: '艺术设计学院', major: '视觉传达设计', grade: '2022级',
+    campus: '广东职业技术学院', college: '艺术设计学院', major: '视觉传达设计', grade: gradeAt(1),
     studentNo: '2022020319', realName: '',
     bio: '艺术设计学院视觉传达方向。PS / AI / Figma 熟练，接海报、PPT、简历排版，改到满意为止。',
     tags: ['PS', '海报设计', 'PPT美化', '简历排版', 'Figma'],
@@ -355,7 +368,7 @@ const DEMO_USERS = [
   },
   {
     _id: 'user_u5', _openid: U5, nickName: '赵一鸣', avatarUrl: '', gender: 0, phone: '',
-    campus: '广东职业技术学院', college: '信息工程学院', major: '计算机应用技术', grade: '2023级',
+    campus: '广东职业技术学院', college: '信息工程学院', major: '计算机应用技术', grade: gradeAt(3),
     studentNo: '2023030145', realName: '',
     bio: '计算机协会技术部，信息工程学院。装机、清灰、系统重装、装环境都能搞，约在实训楼或山下饭堂门口，一般 1 小时内解决。',
     tags: ['电脑维修', '系统重装', '装机', '环境配置'],
@@ -370,7 +383,7 @@ const DEMO_USERS = [
   },
   {
     _id: 'user_u6', _openid: U6, nickName: '孙晓雯', avatarUrl: '', gender: 0, phone: '',
-    campus: '广东职业技术学院', college: '外语外贸学院', major: '商务英语', grade: '2022级',
+    campus: '广东职业技术学院', college: '外语外贸学院', major: '商务英语', grade: gradeAt(2),
     studentNo: '2022040502', realName: '',
     bio: '外语外贸学院，校田径队。可以陪跑配速、制定体测训练计划；也能陪练英语口语（雅思 7.0），新操场或学子湖边都行。',
     tags: ['跑步', '健身计划', '英语口语', '雅思'],

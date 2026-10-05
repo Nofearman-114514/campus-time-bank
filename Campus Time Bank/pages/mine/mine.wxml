@@ -151,6 +151,13 @@
         <text class="cell__label">关于与规则</text>
         <text class="cell__arrow">›</text>
       </view>
+
+      <!-- 退出登录 -->
+      <view class="cell" bindtap="onLogout">
+        <view class="cell__icon">🚪</view>
+        <text class="cell__label cell__label--logout">退出登录</text>
+        <text class="cell__arrow">›</text>
+      </view>
     </view>
 
     <!-- 4.4 时间币免责小字 -->

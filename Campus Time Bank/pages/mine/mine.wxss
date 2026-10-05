@@ -178,3 +178,8 @@
   color: var(--c-t4);
   line-height: 1.6;
 }
+
+/* 退出登录：用警示色，与普通功能项区分开 */
+.cell__label--logout {
+  color: var(--c-danger);
+}

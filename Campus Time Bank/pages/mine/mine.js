@@ -138,6 +138,39 @@ Page({
   goWallet() { util.switchTab(TAB_WALLET) },
   goOrders() { util.switchTab(TAB_ORDER) },
 
+  /**
+   * 退出登录。
+   *
+   * ★ 必须说清楚的技术事实：
+   *   微信小程序**没有传统的登录态** —— 身份来自 wx.login 换到的 openid，
+   *   它与你的微信号绑定，无法「登出」成另一个人。
+   *   所以这里的「退出」= 清空本机业务缓存 + 清空内存里的用户态 + 强制重新登录一次。
+   *   实际效果：拿到最新的用户资料（例如管理员刚通过了你的校园认证）。
+   *   确认弹窗里把这一点如实告诉用户，避免造成「能换账号」的误解。
+   */
+  onLogout() {
+    wx.showModal({
+      title: '退出登录',
+      content: '将清除本机缓存并重新获取你的微信身份。\n\n注意：小程序账号与你的微信号绑定，退出后再次进入仍是同一账号。',
+      confirmText: '退出',
+      confirmColor: '#E5484D',
+      success: res => {
+        if (!res.confirm) return
+        // 只清业务缓存，保留设备级设置（例如管理员开的调试模式）
+        try { wx.removeStorageSync('pickedLocation') } catch (e) { /* 忽略 */ }
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.userInfo = null
+          app.globalData.isAdmin = false
+          app.globalData.openid = ''
+        }
+        util.toastOk('已退出')
+        // reLaunch 回首页 → onLaunch 会重新走一次 login，身份与配置都刷新
+        setTimeout(() => wx.reLaunch({ url: '/pages/square/square' }), 500)
+      }
+    })
+  },
+
   onShareAppMessage() {
     return { title: '校园时间银行 · 用技能换技能', path: '/pages/square/square' }
   }

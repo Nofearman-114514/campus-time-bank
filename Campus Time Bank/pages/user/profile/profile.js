@@ -25,12 +25,13 @@ const GENDER_RANGE = ['保密', '男', '女']
  *   8 月及以后 → 最新一届是今年；8 月之前 → 最新一届是去年
  *   （例如 2026-03 时 26 级还没入学，最新应是 25 级）。
  *
- * ★ 往前看 8 届，覆盖延期毕业的情况。
+ * ★ 往前看 5 届：够覆盖绝大多数在读学生（4 年制 + 1 年缓冲）。
+ *   注意窗口是**滑动**的 —— 列表长度恒为 5，不会逐年变长。
  */
 function buildGradeRange() {
   const d = new Date()
   const newestYear = (d.getMonth() + 1) >= 8 ? d.getFullYear() : d.getFullYear() - 1
-  const SPAN = 8
+  const SPAN = 5
   const list = []
   for (let y = newestYear - SPAN + 1; y <= newestYear; y++) list.push(y + '级')
   return list

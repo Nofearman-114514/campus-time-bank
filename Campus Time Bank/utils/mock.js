@@ -66,6 +66,19 @@ class MockError extends Error {
 const fail = (code, msg) => { throw new MockError(code, msg) }
 
 /* ============================ 用户 ============================ */
+/* ------------------------------------------------------------------
+ * 演示数据的年级：按「当前届」推算，**不写死**
+ * ------------------------------------------------------------------
+ * 8 月是入学月（与 pages/user/profile/profile.js 的 buildGradeRange 口径一致）。
+ * 写死年级的话，明年这些写着「大三」的角色就变成已毕业了。
+ */
+const GRADE_NOW = (() => {
+  const d = new Date()
+  return (d.getMonth() + 1) >= 8 ? d.getFullYear() : d.getFullYear() - 1
+})()
+/** yearsAgo: 0=大一 1=大二 2=大三 3=大四 */
+const gradeAt = (yearsAgo) => (GRADE_NOW - yearsAgo) + '级'
+
 const OPENID = {
   me: 'openid_demo_me',
   guitar: 'openid_demo_u1',
@@ -131,7 +144,7 @@ const users = [
   mkUser(OPENID.guitar, '李思远', {
     bio: '音乐社社长，艺术设计学院大三。弹了六年吉他，带过三届新生。零基础也能上手，第一节课就能弹出完整旋律，平时在 B 栋空教室上课。',
     tags: ['吉他', '尤克里里', '乐理'],
-    campus: '广东职业技术学院', college: '艺术设计学院', major: '音乐表演', grade: '2021级',
+    campus: '广东职业技术学院', college: '艺术设计学院', major: '音乐表演', grade: gradeAt(2),
     coins: 23, frozenCoins: 0, totalEarned: 41, totalSpent: 18,
     creditScore: 128, creditLevel: 'excellent',
     badges: ['newbie', 'ontime', 'warm', 'expert', 'trust'],
@@ -140,7 +153,7 @@ const users = [
   mkUser(OPENID.photo, '王雨桐', {
     bio: '摄影协会成员，艺术设计学院。有单反和补光灯，专拍证件照、毕业照。学子湖和图书馆一带的出片点我都熟，当天出片、免费修图三次。',
     tags: ['摄影', '证件照', '后期修图', '短视频'],
-    college: '新闻与传播学院', major: '广播电视学', grade: '2022级',
+    college: '艺术设计学院', major: '数字媒体艺术设计', grade: gradeAt(1),
     coins: 17, frozenCoins: 3, totalEarned: 30, totalSpent: 13,
     creditScore: 121, creditLevel: 'excellent',
     badges: ['newbie', 'ontime', 'warm', 'trust'],
@@ -149,7 +162,7 @@ const users = [
   mkUser(OPENID.math, '陈子豪', {
     bio: '智能制造学院大三，高数/线代/概率论都能带。擅长考前突击，两小时讲完一学期的重点，可约图书馆研讨间。',
     tags: ['高等数学', '线性代数', '概率论', '考研数学'],
-    college: '数学与统计学院', major: '数学与应用数学', grade: '2021级',
+    college: '智能制造学院', major: '机电一体化技术', grade: gradeAt(2),
     coins: 31, frozenCoins: 0, totalEarned: 55, totalSpent: 24,
     creditScore: 133, creditLevel: 'excellent',
     badges: ['newbie', 'ontime', 'warm', 'expert', 'trust', 'popular'],
@@ -158,7 +171,7 @@ const users = [
   mkUser(OPENID.design, '刘佳怡', {
     bio: '艺术设计学院视觉传达方向。PS / AI / Figma 熟练，接海报、PPT、简历排版，改到满意为止。',
     tags: ['PS', '海报设计', 'PPT美化', '简历排版', 'Figma'],
-    college: '艺术学院', major: '视觉传达设计', grade: '2022级',
+    college: '艺术设计学院', major: '视觉传达设计', grade: gradeAt(1),
     coins: 15, frozenCoins: 0, totalEarned: 26, totalSpent: 11,
     creditScore: 109, creditLevel: 'good',
     badges: ['newbie', 'ontime', 'social'],
@@ -167,7 +180,7 @@ const users = [
   mkUser(OPENID.pc, '赵一鸣', {
     bio: '计算机协会技术部，信息工程学院。装机、清灰、系统重装、装环境都能搞，约在实训楼或山下饭堂门口，一般 1 小时内解决。',
     tags: ['电脑维修', '系统重装', '装机', '环境配置'],
-    college: '计算机与信息学院', major: '计算机科学与技术', grade: '2023级',
+    college: '信息工程学院', major: '计算机应用技术', grade: gradeAt(3),
     coins: 9, frozenCoins: 0, totalEarned: 19, totalSpent: 10,
     creditScore: 96, creditLevel: 'normal',
     badges: ['newbie', 'ontime'],
@@ -176,7 +189,7 @@ const users = [
   mkUser(OPENID.run, '孙晓雯', {
     bio: '外语外贸学院，校田径队。可以陪跑配速、制定体测训练计划；也能陪练英语口语（雅思 7.0），新操场或学子湖边都行。',
     tags: ['跑步', '健身计划', '英语口语', '雅思'],
-    college: '外国语学院', major: '英语', grade: '2022级',
+    college: '外语外贸学院', major: '商务英语', grade: gradeAt(2),
     coins: 14, frozenCoins: 0, totalEarned: 22, totalSpent: 8,
     creditScore: 115, creditLevel: 'good',
     badges: ['newbie', 'ontime', 'warm'],
@@ -204,7 +217,7 @@ users.forEach(u => { u.realName = u.nickName })
 users.push(
   mkUser('openid_demo_u7', '周雨薇', {
     realName: '周雨薇', authStatus: 1, authImages: [],
-    college: '外国语学院', major: '日语', grade: '2023级',
+    college: '外语外贸学院', major: '应用英语', grade: gradeAt(1),
     creditScore: 100, coins: 5, badges: [], stats: {
       publishCount: 0, serveCount: 0, buyCount: 0, reviewCount: 0,
       ratingSum: 0, avgRating: 0, ontimeStreak: 0
@@ -212,7 +225,7 @@ users.push(
   }),
   mkUser('openid_demo_u8', '吴天宇', {
     realName: '吴天宇', authStatus: 1, authImages: [],
-    college: '体育学院', major: '运动训练', grade: '2024级',
+    college: '教育学院', major: '学前教育', grade: gradeAt(0),
     creditScore: 100, coins: 5, badges: [], stats: {
       publishCount: 0, serveCount: 0, buyCount: 0, reviewCount: 0,
       ratingSum: 0, avgRating: 0, ontimeStreak: 0
@@ -229,14 +242,27 @@ const DEMO_EXTRA_NAMES = [
   '田浩宇', '董思彤', '潘嘉豪', '蒋雨桐', '蔡明哲', '余静雯', '杜承轩', '叶清妍'
 ]
 const DEMO_COLLEGES = [
-  ['计算机与信息学院', '软件工程'], ['计算机与信息学院', '人工智能'],
-  ['数学与统计学院', '数学与应用数学'], ['外国语学院', '英语'],
-  ['艺术学院', '视觉传达设计'], ['艺术学院', '音乐表演'],
-  ['新闻与传播学院', '广播电视学'], ['体育学院', '运动训练'],
-  ['经济管理学院', '会计学'], ['电子信息学院', '通信工程'],
-  ['机械工程学院', '机械设计制造'], ['化学化工学院', '应用化学']
+  // ★ 广职院的真实院系（13 院 1 部）。原来这里写的是虚构大学，
+  //   会生成 40 个学院对不上号的用户，管理端「学院分布」一眼就穿帮。
+  ['纺织学院', '现代纺织技术'], ['纺织学院', '纺织品设计'],
+  ['服装学院', '服装设计与工艺'], ['服装学院', '服装与服饰设计'],
+  ['轻工与材料学院', '高分子材料智能制造技术'],
+  ['艺术设计学院', '视觉传达设计'], ['艺术设计学院', '数字媒体艺术设计'],
+  ['艺术设计学院', '环境艺术设计'],
+  ['外语外贸学院', '商务英语'], ['外语外贸学院', '应用英语'],
+  ['信息工程学院', '计算机应用技术'], ['信息工程学院', '软件技术'],
+  ['信息工程学院', '大数据技术'], ['信息工程学院', '人工智能技术应用'],
+  ['商学院', '电子商务'], ['商学院', '大数据与会计'], ['商学院', '现代物流管理'],
+  ['智能制造学院', '机电一体化技术'], ['智能制造学院', '工业机器人技术'],
+  ['智能制造学院', '数控技术'],
+  ['汽车与交通学院', '汽车检测与维修技术'], ['汽车与交通学院', '新能源汽车技术'],
+  ['教育学院', '学前教育']
 ]
-const DEMO_GRADES = ['2021级', '2022级', '2023级', '2024级']
+const DEMO_GRADES = (() => {
+  const out = []
+  for (let y = GRADE_NOW - 4; y <= GRADE_NOW; y++) out.push(y + '级')
+  return out
+})()
 
 DEMO_EXTRA_NAMES.forEach((name, i) => {
   const pair = pickOne(DEMO_COLLEGES)
