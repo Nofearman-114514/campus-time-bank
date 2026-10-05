@@ -13,7 +13,30 @@ const util = require('../../../utils/util')
 const constants = require('../../../utils/constants')
 
 const GENDER_RANGE = ['保密', '男', '女']
-const GRADE_RANGE = ['2021级', '2022级', '2023级', '2024级', '2025级']
+
+/**
+ * 年级下拉 —— **按当前时间动态生成，不要写死**。
+ *
+ * ★ 为什么必须动态：
+ *   年级每年都会新增一届。写死成 ['2021级'…'2025级'] 的话，
+ *   2026 年入学的新生就选不到自己 —— 而且这个问题年年复发。
+ *
+ * ★ 规则：8 月是入学月。
+ *   8 月及以后 → 最新一届是今年；8 月之前 → 最新一届是去年
+ *   （例如 2026-03 时 26 级还没入学，最新应是 25 级）。
+ *
+ * ★ 往前看 8 届，覆盖延期毕业的情况。
+ */
+function buildGradeRange() {
+  const d = new Date()
+  const newestYear = (d.getMonth() + 1) >= 8 ? d.getFullYear() : d.getFullYear() - 1
+  const SPAN = 8
+  const list = []
+  for (let y = newestYear - SPAN + 1; y <= newestYear; y++) list.push(y + '级')
+  return list
+}
+
+const GRADE_RANGE = buildGradeRange()
 const MAX_TAGS = 5
 const MAX_NICK = 12
 

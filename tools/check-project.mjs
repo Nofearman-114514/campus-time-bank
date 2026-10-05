@@ -256,6 +256,39 @@ for (const jf of jsFiles) {
 }
 
 /* ------------------------------------------------------------------ */
+/* 5.6 硬编码的年级下拉不能过期                                          */
+/* ------------------------------------------------------------------ */
+/**
+ * ★ 为什么要有这条：
+ *   年级每年新增一届。写死成 ['2021级'…'2025级'] 的话，
+ *   2026 年入学的新生就选不到自己 —— 而且这个问题**年年复发**，
+ *   不写检查就只能等用户来报。
+ *
+ *   只有「≥3 个年级字符串」才当成下拉列表（单条用户数据不算）。
+ *   规则与 profile.js 的 buildGradeRange 一致：8 月是入学月。
+ */
+const enrollYear = (() => {
+  const d = new Date()
+  return (d.getMonth() + 1) >= 8 ? d.getFullYear() : d.getFullYear() - 1
+})()
+let gradeLists = 0
+for (const jf of jsFiles) {
+  const relPath = rel(jf)
+  // ★ 注意用 /(^|\/)pages\// 而不是 /^pages\// —— rel() 会带上小程序根目录前缀
+  //   （现在是 "Campus Time Bank/pages/..."，而且根目录名可改），
+  //   锚定开头就永远匹配不到，检查会静默失效。
+  if (!/(^|\/)(pages|components|packageAdmin)\//.test(relPath)) continue
+  const years = [...readCode(jf).matchAll(/'(20\d{2})级'/g)].map(m => Number(m[1]))
+  if (years.length < 3) continue          // 不像列表，跳过
+  gradeLists++
+  const maxYear = Math.max(...years)
+  if (maxYear < enrollYear) {
+    err(`${relPath} 年级下拉最新只到 ${maxYear}级，但当前最新一届是 ${enrollYear}级 —— ` +
+        `年级逐年新增，请改成按当前时间动态生成（参考 pages/user/profile/profile.js 的 buildGradeRange()）`)
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* 6.5 wxml 事件处理函数是否存在 + wx:for 是否有 wx:key                  */
 /* ------------------------------------------------------------------ */
 const wxmlFiles = walk(MP, p => p.endsWith('.wxml'))
