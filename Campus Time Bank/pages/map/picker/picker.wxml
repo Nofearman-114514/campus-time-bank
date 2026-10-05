@@ -83,6 +83,12 @@
       </view>
     </view>
 
+    <!-- 经纬度：点一下复制。腾讯地图的 POI 数据最准，方便把真实坐标抄下来 -->
+    <view wx:if="{{picked.latitude}}" class="picker-card__coord" bindtap="onCopyCoord">
+      <text class="picker-card__coord-num">{{picked.longitude}}, {{picked.latitude}}</text>
+      <text class="picker-card__coord-copy">复制</text>
+    </view>
+
     <view class="picker-card__tip">
       提示：可以直接点地图上的位置，或用「微信地图选点」搜索精确地点。
     </view>

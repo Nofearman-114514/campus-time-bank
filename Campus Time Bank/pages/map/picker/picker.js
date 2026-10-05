@@ -323,6 +323,18 @@ Page({
     setTimeout(() => util.navBack(1), 400)
   },
 
+  /** 复制当前选中点的经纬度（方便把腾讯地图的真实坐标抄下来） */
+  onCopyCoord() {
+    const p = this.data.picked
+    if (!p || !p.latitude) return
+    const text = `${p.name || '未命名'}  ${Number(p.longitude).toFixed(6)},${Number(p.latitude).toFixed(6)}`
+    wx.setClipboardData({
+      data: text,
+      success: () => util.toastOk('已复制经纬度'),
+      fail: () => util.toast('复制失败')
+    })
+  },
+
   /** 取消 */
   onCancel() {
     util.navBack(1)

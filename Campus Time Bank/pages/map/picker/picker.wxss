@@ -258,3 +258,29 @@
   line-height: 1.5;
   color: var(--c-danger);
 }
+
+/* 经纬度行（点一下复制）—— 用来把腾讯地图的真实坐标抄下来 */
+.picker-card__coord {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 14rpx;
+  padding: 12rpx 18rpx;
+  border-radius: var(--r-s);
+  background: var(--c-bg);
+}
+
+.picker-card__coord-num {
+  flex: 1;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+  font-family: Menlo, Consolas, monospace;
+}
+
+.picker-card__coord-copy {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-primary);
+  font-weight: 600;
+}
