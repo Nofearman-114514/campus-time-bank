@@ -131,13 +131,29 @@ function mkUser(openid, nickName, extra) {
   return Object.assign(base, extra || {})
 }
 
+/*
+ * 管理层判断 —— 与云端 _shared 的 isAdminUser / isDebuggerUser 保持一致。
+ * 权限是包含关系：debugger（校方） ⊃ admin（学生管理员）。
+ */
+function isMockManager() {
+  const r = me().role
+  return r === 'admin' || r === 'debugger'
+}
+function isMockDebugger() {
+  return me().role === 'debugger'
+}
+
 const users = [
   mkUser(OPENID.me, '张小明', {
     bio: '信息工程学院移动应用开发大三，正在做毕业设计，喜欢用技术解决校园里的小麻烦。',
     tags: ['产品设计', '小程序开发', '羽毛球'],
     coins: 12, frozenCoins: 2, totalEarned: 16, totalSpent: 14,
     creditScore: 112, creditLevel: 'good',
-    role: 'admin',                 // ★ 演示用：管理员，可进入管理端
+    // ★ 演示用：设为「调试员」而不是「管理员」。
+    //   原因：调试模式开关现在**只有调试员可见** —— 如果这里是 admin，
+    //   离线模式下就看不到开关，一旦打开就再也关不掉（把自己锁在门外）。
+    //   想演示「管理员看不到调试功能」的效果，把这里改成 'admin' 即可。
+    role: 'debugger',
     badges: ['newbie', 'ontime', 'social'],
     stats: { publishCount: 2, serveCount: 3, buyCount: 5, reviewCount: 8, ratingSum: 38, avgRating: 4.8, ontimeStreak: 6 }
   }),
@@ -1017,7 +1033,7 @@ const handlers = {
   'order.accept': d => {
     const o = orders.find(x => x._id === d.orderId)
     if (!o) fail(404, '订单不存在')
-    if (o.sellerId !== OPENID.me && me().role !== 'admin') fail(403, '只有服务者可以接单')
+    if (o.sellerId !== OPENID.me && !isMockManager()) fail(403, '只有服务者可以接单')
     if (o.status !== 'waiting') fail(409, '该订单已被处理')
     o.status = 'ongoing'
     o.acceptTime = now()
@@ -1136,7 +1152,7 @@ const handlers = {
     const isBuyer = o.buyerId === OPENID.me
     const isSeller = o.sellerId === OPENID.me
     const isParty = isBuyer || isSeller
-    if (!isParty && me().role !== 'admin') fail(403, '无权查看该订单')
+    if (!isParty && !isMockManager()) fail(403, '无权查看该订单')
     // ★ 非参与方的管理员：role 返回 'admin'，与 order 云函数保持一致，
     //   前端据此隐藏所有状态操作按钮（不能代替买卖双方操作）
     if (!isParty) return { order: clone(o), role: 'admin', roleText: '订单详情' }
@@ -1405,7 +1421,7 @@ const handlers = {
   }),
 
   /* ================= admin ================= */
-  'admin.check': () => ({ isAdmin: me().role === 'admin' }),
+  'admin.check': () => ({ isAdmin: me().role === 'admin' || me().role === 'debugger', isDebugger: me().role === 'debugger', role: me().role }),
 
   'admin.stats': d => {
     const range = [7, 14, 30].indexOf(Number(d && d.range)) > -1 ? Number(d.range) : 7
@@ -1540,7 +1556,10 @@ const handlers = {
   'admin.setUserRole': d => {
     const u = users.find(x => x._openid === d.userId || x._id === d.userId)
     if (!u) fail(404, '用户不存在')
-    u.role = d.role === 'admin' ? 'admin' : 'user'
+    // 与云端 admin.setUserRole 同一套规则：调试员的授予/撤销只有调试员能做
+  const wanted = ['user', 'admin', 'debugger'].indexOf(d.role) >= 0 ? d.role : 'user'
+  if ((wanted === 'debugger' || u.role === 'debugger') && !isMockDebugger()) fail(403, '无管理员权限')
+  u.role = wanted
     return { ok: true }
   },
 

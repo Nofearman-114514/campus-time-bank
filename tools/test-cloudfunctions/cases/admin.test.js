@@ -147,15 +147,29 @@ module.exports = async function (t) {
   let r = await A('check', {})
   t.eq(r.code, 0, 'check：管理员调用 code 0')
   t.eq(r.data.isAdmin, true, 'check：管理员 isAdmin=true')
-  t.eq(Object.keys(r.data).sort().join(','), 'isAdmin', 'check 只返回 isAdmin 一个字段')
+  t.eq(r.data.isDebugger, false, '★ 普通管理员 isDebugger=false（碰不到调试功能）')
+  t.eq(r.data.role, 'admin', 'check：回传当前角色')
+  t.eq(Object.keys(r.data).sort().join(','), 'isAdmin,isDebugger,role', 'check 返回 { isAdmin, isDebugger, role }')
+
+  /* ★ 调试员（校方）：管理后台进得去，调试功能也碰得到 ——
+     权限是包含关系 debugger ⊃ admin */
+  seedAdmin()
+  t.user(ADMIN).role = 'debugger'
+  r = await A('check', {})
+  t.eq(r.data.isAdmin, true, '★ 调试员 isAdmin=true（能接触所有数据 → 后台也进得去）')
+  t.eq(r.data.isDebugger, true, '★ 调试员 isDebugger=true（能接触调试功能）')
+  t.eq(r.data.role, 'debugger', 'check：回传 debugger')
 
   r = await t.call('admin', 'o_buy', 'check', {})
   t.eq(r.code, 0, 'check：普通用户不返回 403（前端靠 isAdmin 渲染入口）')
   t.eq(r.data.isAdmin, false, 'check：普通用户 isAdmin=false')
+  t.eq(r.data.isDebugger, false, 'check：普通用户 isDebugger=false')
+  t.eq(r.data.role, 'user', 'check：普通用户 role=user')
 
   r = await t.call('admin', '', 'check', {})
   t.eq(r.code, 0, 'check：未登录也 code 0（不抛异常）')
   t.eq(r.data.isAdmin, false, 'check：未登录 isAdmin=false')
+  t.eq(r.data.role, 'user', 'check：未登录 role 兜底为 user')
 
   r = await t.call('admin', 'o_ghost', 'check', {})
   t.eq(r.data.isAdmin, false, 'check：openid 未注册 isAdmin=false')
@@ -982,4 +996,71 @@ module.exports = async function (t) {
   t.eq(chk.code, 0, 'check 不抛错（契约：未登录/非管理员都返回 isAdmin=false）')
   t.eq(chk.data.isAdmin, false,
     '★ 被封禁的管理员 isAdmin=false（修复前仍返回 true：后台入口可见，但每个 action 都 403，无从解释）')
+
+
+  /* ==================================================================
+   * 组 27 · ★ 调试员权限隔离（debugger ⊃ admin）
+   * ------------------------------------------------------------------
+   * 这是本次改动里**最要紧的安全断言**：
+   * 如果普通管理员能给自己升级成调试员，整套隔离就是纸糊的。
+   * ================================================================== */
+  t.group('组 27 · ★ 调试员权限隔离：管理员不能自己升级')
+
+  seedAdmin()
+  r = await A('setUserRole', { userId: 'o_adm', role: 'debugger' })
+  t.eq(r.code, 403, '★ 普通管理员不能把自己设为调试员')
+  t.eq(t.user('o_adm').role, 'admin', '★ 被拒后角色没变（没有半途写入）')
+
+  seedAdmin()
+  r = await A('setUserRole', { userId: 'o_buy', role: 'debugger' })
+  t.eq(r.code, 403, '★ 普通管理员不能把别人设为调试员（否则可找同伙绕过）')
+  t.eq(t.user('o_buy').role, 'user', '被拒后目标角色没变')
+
+  seedAdmin()
+  r = await A('setUserRole', { userId: 'o_buy', role: 'admin' })
+  t.eq(r.code, 0, '普通管理员设/撤普通管理员不受影响')
+  t.eq(t.user('o_buy').role, 'admin', '设为管理员成功')
+
+  seedAdmin()
+  t.user('o_adm').role = 'debugger'
+  r = await A('setUserRole', { userId: 'o_buy', role: 'debugger' })
+  t.eq(r.code, 0, '★ 调试员可以授予调试员身份')
+  t.eq(t.user('o_buy').role, 'debugger', '设为调试员成功')
+
+  seedAdmin()
+  t.user('o_buy').role = 'debugger'
+  r = await A('setUserRole', { userId: 'o_buy', role: 'user' })
+  t.eq(r.code, 403, '★ 普通管理员不能撤销调试员（不能把校方踢下来）')
+  t.eq(t.user('o_buy').role, 'debugger', '被拒后仍是调试员')
+
+  seedAdmin()
+  t.user('o_buy').role = 'debugger'
+  r = await A('setUserStatus', { userId: 'o_buy', status: 0 })
+  t.eq(r.code, 403, '★ 普通管理员不能封禁调试员')
+  t.eq(t.user('o_buy').status, 1, '被拒后调试员未被封禁')
+
+  seedAdmin()
+  t.user('o_adm').role = 'debugger'
+  t.user('o_buy').role = 'debugger'
+  r = await A('setUserStatus', { userId: 'o_buy', status: 0 })
+  t.eq(r.code, 0, '调试员之间可以互相封禁')
+
+  seedAdmin()
+  t.user('o_adm').role = 'debugger'
+  r = await A('users', {})
+  t.eq(r.code, 0, '★ 调试员能进管理后台（能接触所有数据）')
+
+  /* admin.debugInfo —— 云端真正被 requireDebugger 守住的接口 */
+  seedAdmin()
+  r = await A('debugInfo', {})
+  t.eq(r.code, 403, '★ 普通管理员调 debugInfo → 403（云端有真实边界，不只是前端隐藏）')
+  t.eq(r.msg, '无管理员权限', '★ 文案与 requireAdmin 一致，不透露上层存在')
+
+  seedAdmin()
+  t.user('o_adm').role = 'debugger'
+  r = await A('debugInfo', {})
+  t.eq(r.code, 0, '★ 调试员调 debugInfo → 0')
+  t.eq(r.data.role, 'debugger', 'debugInfo 回传角色')
+  t.ok(r.data.serverTime > 0, 'debugInfo 回传服务器时间')
+  t.ok(r.data.config && r.data.config.minCreditToOrder !== undefined, 'debugInfo 回传全局配置')
 }

@@ -49,7 +49,15 @@ Page({
   async _boot() {
     const ok = await guard.requireAdmin(this)
     if (!ok) return
+    /*
+     * ★ 进得来这一页 ≠ 看得到调试功能。
+     *   本页只要求「管理员」（管理员 + 调试员都能进），
+     *   但调试模式那一块额外要求**调试员** —— 未调试完的东西不给学生看，
+     *   因为总有学生会管理员把每个按钮都点一遍。
+     */
+    const isDebugger = await getApp().isDebuggerUser()
     this.setData({
+      isDebugger: !!isDebugger,
       mockMode: !!(getApp().globalData && getApp().globalData.MOCK),
       debugMode: envList.isDebugOn()
     })

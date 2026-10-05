@@ -62,6 +62,10 @@ Page({
   async _boot() {
     const ok = await guard.requireAdmin(this)
     if (!ok) return
+    // ★ 是否为调试员 —— 决定操作菜单里有没有「设为调试员」那一项。
+    //   与云端 admin.setUserRole 的规则一致：普通管理员不能授予调试员身份，
+    //   否则他给自己升一级就绕过了整套隔离。
+    this._isDebugger = await getApp().isDebuggerUser()
     // 搜索防抖（400ms）
     this._debouncedSearch = util.debounce(() => this.loadList(true), 400)
     this.loadList(true)
@@ -177,22 +181,37 @@ Page({
 
     const banned = u.status === 0
     const isAdmin = u.role === 'admin'
-    const items = [
-      '查看详情',
-      banned ? '解封账号' : '封禁账号',
-      isAdmin ? '取消管理员' : '设为管理员',
-      '调整时间币',
-      '查看 TA 的主页'
-    ]
+    const isDebugger = u.role === 'debugger'
+
+    /*
+     * 菜单按能力动态拼，而不是写死下标 —— 少一项时下标不会错位。
+     * ★ 「设为调试员」只对**调试员本人**出现（this._isDebugger）。
+     */
+    const items = ['查看详情', banned ? '解封账号' : '封禁账号']
+    const acts = ['detail', 'ban']
+    if (!isDebugger) {
+      // 调试员已经包含管理员能力，不需要再来一个「设为管理员」
+      items.push(isAdmin ? '取消管理员' : '设为管理员')
+      acts.push('admin')
+    }
+    if (this._isDebugger) {
+      items.push(isDebugger ? '取消调试员' : '设为调试员')
+      acts.push('debugger')
+    }
+    items.push('调整时间币', '查看 TA 的主页')
+    acts.push('coin', 'home')
+
     const idx = await util.actionSheet(items)
     if (idx === null || idx === undefined) return
+    const act = acts[idx]
 
-    switch (idx) {
-      case 0: this.openDetail(u); break
-      case 1: await this.toggleBan(u, banned); break
-      case 2: await this.toggleAdmin(u, isAdmin); break
-      case 3: this.openCoin(u); break
-      case 4:
+    switch (act) {
+      case 'detail': this.openDetail(u); break
+      case 'ban': await this.toggleBan(u, banned); break
+      case 'admin': await this.toggleAdmin(u, isAdmin); break
+      case 'debugger': await this.toggleDebugger(u, isDebugger); break
+      case 'coin': this.openCoin(u); break
+      case 'home':
         if (!u.userId) return util.toast('该用户缺少 ID，无法跳转')
         util.navTo('/pages/user/home/home?openid=' + encodeURIComponent(u.userId))
         break
@@ -225,6 +244,20 @@ Page({
     await this.run(
       () => api.admin.setUserRole({ userId: u.userId, role }),
       isAdmin ? '已取消管理员' : '已设为管理员'
+    )
+  },
+
+  /** 设为 / 取消调试员（校方）—— 只有调试员本人能做，云端也会再校验一次 */
+  async toggleDebugger(u, isDebugger) {
+    const role = isDebugger ? 'user' : 'debugger'
+    const content = isDebugger
+      ? `确认取消「${u.nickName}」的调试员身份吗？取消后 TA 将看不到未上线的调试功能。`
+      : `设为调试员后，「${u.nickName}」能看到尚未上线的调试功能与全部数据，还能管理其他调试员。确认吗？`
+    const ok = await util.confirm(content, isDebugger ? '取消调试员' : '设为调试员')
+    if (!ok) return
+    await this.run(
+      () => api.admin.setUserRole({ userId: u.userId, role }),
+      isDebugger ? '已取消调试员' : '已设为调试员'
     )
   },
 

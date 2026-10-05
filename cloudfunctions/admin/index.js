@@ -20,7 +20,8 @@ const {
   wrap, bizError, assert,
   now, startOfDay, lastNDays, pad,
   parsePage, paginateQuery,
-  requireAdmin, getUser,
+  requireAdmin, requireDebugger, getUser,
+  ROLE, isAdminUser, isDebuggerUser,
   getConfig, changeCredit, addWalletLog, addNotice
 } = require('./shared')
 
@@ -130,7 +131,12 @@ async function check() {
   const u = await getUser()          // 未登录返回 null，不抛异常
   // ★ 封禁账号不应被识别为管理员：否则后台入口可见、但每个 action 都 403，
   //   前端无从解释「为什么我是管理员却什么都干不了」。
-  return { isAdmin: !!(u && u.role === 'admin' && Number(u.status) !== 0) }
+  const ok = !!u && Number(u.status) !== 0
+  return {
+    isAdmin: ok && isAdminUser(u),        // 能否进管理后台：管理员 + 调试员
+    isDebugger: ok && isDebuggerUser(u),  // 能否接触调试功能：仅调试员
+    role: (u && u.role) || ROLE.USER
+  }
 }
 
 /* ============================ stats（§4.8 看板） ============================ */
@@ -365,7 +371,10 @@ async function setUserStatus(event) {
 
   const status = Number(event.status) === 0 ? 0 : 1
   if (status === 0 && u._openid === admin._openid) throw bizError(409, '不能封禁自己')
-  if (status === 0 && u.role === 'admin') throw bizError(409, '不能封禁管理员账号')
+  // ★ 调试员只有调试员能封 —— 否则普通管理员可以把校方账号封掉
+  if (status === 0 && isDebuggerUser(u) && !isDebuggerUser(admin)) throw bizError(403, '无管理员权限')
+  // 管理员之间不能互封（防止学生管理员互相打击）；调试员（校方）有权限处理
+  if (status === 0 && isAdminUser(u) && !isDebuggerUser(admin)) throw bizError(409, '不能封禁管理员账号')
 
   await db.collection(C.USERS).doc(u._id).update({ data: { status, updateTime: now() } })
 
@@ -381,16 +390,29 @@ async function setUserStatus(event) {
   return { ok: true }
 }
 
-/** setUserRole —— 设置 / 取消管理员 */
+/** setUserRole —— 设置 / 取消管理员 或 调试员 */
 async function setUserRole(event) {
   const admin = await requireAdmin()
   const u = await findUser(event.userId)
   if (!u) throw bizError(404, '用户不存在')
 
-  const role = event.role === 'admin' ? 'admin' : 'user'
-  if (role === 'user' && u._openid === admin._openid) throw bizError(409, '不能取消自己的管理员身份')
+  const wanted = [ROLE.USER, ROLE.ADMIN, ROLE.DEBUGGER].indexOf(event.role) >= 0 ? event.role : ROLE.USER
 
-  await db.collection(C.USERS).doc(u._id).update({ data: { role, updateTime: now() } })
+  /*
+   * ★ 调试员身份的**授予与撤销只有调试员能做**。
+   *
+   *   否则整套权限隔离形同虚设：普通管理员只要调一次 setUserRole
+   *   把 role 改成 'debugger' 就能给自己升级，然后碰那些
+   *   「不想让学生看到」的功能。
+   *
+   *   文案与 requireAdmin 保持一致，不透露上层的存在。
+   */
+  const touchesDebugger = wanted === ROLE.DEBUGGER || u.role === ROLE.DEBUGGER
+  if (touchesDebugger && !isDebuggerUser(admin)) throw bizError(403, '无管理员权限')
+
+  if (wanted === ROLE.USER && u._openid === admin._openid) throw bizError(409, '不能取消自己的管理员身份')
+
+  await db.collection(C.USERS).doc(u._id).update({ data: { role: wanted, updateTime: now() } })
   return { ok: true }
 }
 
@@ -751,6 +773,29 @@ async function saveConfig(event) {
   return { ok: true }
 }
 
+/* ============================ debugInfo（仅调试员） ============================ */
+/**
+ * 调试员专用的环境 / 配置速查。
+ *
+ * ★ 它存在的意义不只是「有个功能」：
+ *   它让 requireDebugger 这道关卡**真的被用上**，从而能被测试覆盖
+ *   （普通管理员 → 403，调试员 → 0）。
+ *   否则权限隔离就只有前端在演，云端其实没有边界 ——
+ *   而前端是可以被绕过的。
+ *
+ * ★ 文案口径：管理员拿到的是和 requireAdmin 一样的「无管理员权限」，
+ *   不透露「上面还有一层」，避免学生顺着报错去猜。
+ */
+async function debugInfo() {
+  const u = await requireDebugger()
+  const config = await getConfig()
+  return {
+    role: u.role,
+    serverTime: now(),
+    config
+  }
+}
+
 /* ==================================================================
  * 入口（check 之外每个 action 内部都已 requireAdmin）
  * ================================================================== */
@@ -759,6 +804,8 @@ exports.main = wrap(async (event, context) => {
   switch (action) {
     case 'check': return await check()
     case 'stats': await requireAdmin(); return await stats(event)
+
+    case 'debugInfo': return await debugInfo(event)
 
     case 'users': await requireAdmin(); return await users(event)
     case 'auditUser': return await auditUser(event)

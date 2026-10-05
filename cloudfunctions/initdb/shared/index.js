@@ -169,12 +169,48 @@ async function requireVerified(openid) {
   return u
 }
 
+/* ============================ 角色 ============================ */
 /**
- * 要求管理员
+ * 管理层角色。
+ *
+ * ★ 权限是**包含**关系，不是并列：
+ *     debugger（调试员 / 校方） ⊃ admin（管理员 / 学生）
+ *
+ *   调试员能接触所有数据，所以管理后台也进得去；
+ *   管理员反过来**碰不到调试功能** —— 未调试完的新功能不能让学生看到
+ *   （现实里总有管理员学生会「手贱」把每个按钮都点一遍）。
+ *
+ *   因此「一个人同时是两者」等价于「他是调试员」：
+ *   debugger 已包含 admin 的全部能力，不需要再用数组字段去表达。
+ */
+const ROLE = { USER: 'user', ADMIN: 'admin', DEBUGGER: 'debugger' }
+
+/** 能否进入管理后台：管理员 + 调试员 */
+function isAdminUser(u) {
+  return !!u && (u.role === ROLE.ADMIN || u.role === ROLE.DEBUGGER)
+}
+
+/** 能否接触调试功能：仅调试员 */
+function isDebuggerUser(u) {
+  return !!u && u.role === ROLE.DEBUGGER
+}
+
+/**
+ * 要求管理员（含调试员）
  */
 async function requireAdmin(openid) {
   const u = await requireUser(openid)
-  if (u.role !== 'admin') throw new BizError(403, '无管理员权限')
+  if (!isAdminUser(u)) throw new BizError(403, '无管理员权限')
+  return u
+}
+
+/**
+ * 要求调试员 —— 调试功能、未上线的新功能都走这个。
+ * 管理员会拿到 403；文案刻意与 requireAdmin 一致，不透露「还有这么个东西」。
+ */
+async function requireDebugger(openid) {
+  const u = await requireUser(openid)
+  if (!isDebuggerUser(u)) throw new BizError(403, '无管理员权限')
   return u
 }
 
@@ -502,7 +538,8 @@ module.exports = {
   ok, fail, bizError, BizError, assert, wrap, friendlyError,
   now, hoursLater, daysAgo, startOfDay, lastNDays, pad, genOrderNo,
   parsePage, paginateQuery,
-  getOpenId, getUser, requireUser, requireVerified, requireAdmin,
+  getOpenId, getUser, requireUser, requireVerified, requireAdmin, requireDebugger,
+  ROLE, isAdminUser, isDebuggerUser,
   getConfig, DEFAULT_CONFIG,
   creditLevelOf, orderLimitOf, changeCredit, CREDIT_LEVELS,
   addWalletLog, addNotice, sendSubscribe,

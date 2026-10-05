@@ -21,6 +21,8 @@ App({
     /* 用户态 */
     userInfo: null,        // users 文档
     isAdmin: false,
+    isDebugger: false,   // 调试员（校方）：能接触调试功能
+    role: 'user',
     openid: '',
 
     /* 全局配置（config 集合） */
@@ -152,7 +154,11 @@ App({
       .then(res => {
         g.userInfo = res.user || null
         g.openid = (res.user && res.user._openid) || ''
-        g.isAdmin = !!(res.user && res.user.role === 'admin')
+        // 角色是包含关系：debugger（调试员/校方） ⊃ admin（管理员/学生）
+        const r = (res.user && res.user.role) || 'user'
+        g.isAdmin = r === 'admin' || r === 'debugger'
+        g.isDebugger = r === 'debugger'
+        g.role = r
         if (res.config) g.config = Object.assign(g.config, res.config)
         g._loginTask = null
         this.emit('userChange', g.userInfo)
@@ -215,14 +221,35 @@ App({
     return user
   },
 
-  /** 是否管理员（带缓存，首次会请求） */
+  /** 是否管理员（带缓存，首次会请求）—— 管理员与调试员都算 */
   async isAdminUser() {
     if (this.globalData.isAdmin) return true
     const api = require('./utils/api')
     try {
       const res = await api.admin.check({})
       this.globalData.isAdmin = !!res.isAdmin
+      this.globalData.isDebugger = !!res.isDebugger
       return this.globalData.isAdmin
+    } catch (e) {
+      return false
+    }
+  },
+
+  /**
+   * 是否调试员（校方）—— 只有调试员能接触调试功能 / 未上线的新功能。
+   *
+   * ★ 与 isAdminUser 分开：管理员能进管理后台，但**看不到调试类入口**。
+   *   现实里总有学生会管理员把每个按钮都点一遍，所以未调试完的功能
+   *   默认只给校方看。
+   */
+  async isDebuggerUser() {
+    if (this.globalData.isDebugger) return true
+    const api = require('./utils/api')
+    try {
+      const res = await api.admin.check({})
+      this.globalData.isDebugger = !!res.isDebugger
+      this.globalData.isAdmin = !!res.isAdmin
+      return this.globalData.isDebugger
     } catch (e) {
       return false
     }

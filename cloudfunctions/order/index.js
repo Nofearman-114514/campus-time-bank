@@ -20,7 +20,8 @@ const {
   now, hoursLater, genOrderNo, parsePage, paginateQuery,
   getOpenId, getUser, requireUser, getConfig,
   creditLevelOf, orderLimitOf, changeCredit, addWalletLog, addNotice, sendSubscribe,
-  partySnapshot, canOrderSkill
+  partySnapshot, canOrderSkill,
+  isAdminUser
 } = require('./shared')
 
 /* ============================ 本地常量 ============================ */
@@ -339,7 +340,7 @@ async function actionAccept(event, openid) {
   const me = await requireUser(openid)
   const order = await findOrder(event.orderId)
   assert(order, '订单不存在', 404)
-  if (order.sellerId !== openid && me.role !== 'admin') throw bizError(403, '只有服务者可以接单')
+  if (order.sellerId !== openid && !isAdminUser(me)) throw bizError(403, '只有服务者可以接单')
 
   const config = await getConfig()
   const t = now()
@@ -385,7 +386,7 @@ async function actionReject(event, openid) {
   const me = await requireUser(openid)
   const order = await findOrder(event.orderId)
   assert(order, '订单不存在', 404)
-  if (order.sellerId !== openid && me.role !== 'admin') throw bizError(403, '只有服务者可以拒单')
+  if (order.sellerId !== openid && !isAdminUser(me)) throw bizError(403, '只有服务者可以拒单')
   assert(order.status === 'waiting', '该订单已被处理', 409)
 
   const reason = String(event.reason || '').trim() || '服务者暂时无法接单'
@@ -449,7 +450,7 @@ async function actionFinish(event, openid) {
   const me = await requireUser(openid)
   const order = await findOrder(event.orderId)
   assert(order, '订单不存在', 404)
-  if (order.sellerId !== openid && me.role !== 'admin') throw bizError(403, '只有服务者可以标记完成')
+  if (order.sellerId !== openid && !isAdminUser(me)) throw bizError(403, '只有服务者可以标记完成')
 
   const config = await getConfig()
   const t = now()
@@ -785,7 +786,7 @@ async function actionDetail(event, openid) {
   const order = await findOrder(event.orderId)
   assert(order, '订单不存在', 404)
   const isParty = order.buyerId === openid || order.sellerId === openid
-  if (!isParty && me.role !== 'admin') throw bizError(403, '无权查看该订单')
+  if (!isParty && !isAdminUser(me)) throw bizError(403, '无权查看该订单')
   const view = withRole(order, openid)
   return { order: view, role: view.role }
 }

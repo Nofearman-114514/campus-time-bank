@@ -185,11 +185,13 @@
     </view>
   </view>
 
-  <!-- ==================== 调试模式（仅管理员可见） ==================== -->
-  <view class="card mt">
+  <!-- ============ 调试模式（仅调试员可见） ============
+       本页本身只要求「管理员」，管理员与调试员都进得来；
+       但这一块额外要求「调试员」，所以普通管理员看不到它。 -->
+  <view wx:if="{{isDebugger}}" class="card mt">
     <view class="sec-title">
       <text class="sec-title__text">调试模式</text>
-      <text class="sec-title__more">仅管理员可见</text>
+      <text class="sec-title__more">仅调试员可见</text>
     </view>
 
     <view class="dbg-row">
