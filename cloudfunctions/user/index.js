@@ -364,6 +364,72 @@ async function reviewReply(event) {
   return { ok: true }
 }
 
+/* ============================ cancel —— 注销账号 ============================ */
+/**
+ * 注销账号：**匿名化**，不做物理删除。
+ *
+ * 为什么不能物理删除：你服务过的订单、你在对方那里的评价，都还挂在对方那边。
+ * 删掉 users 文档会让那些记录指向一个不存在的用户，对方的「我的订单」直接崩。
+ * 所以保留文档与业务记录，只抹掉**能指向具体人**的字段。
+ *
+ * 拒绝条件：还有进行中的订单 —— 否则对方约不到人、订单永远卡住。
+ */
+async function cancelAccount() {
+  const me = await requireUser()
+  assert(!me.canceled, '该账号已注销，无需重复操作', 409)
+
+  const ACTIVE = ['waiting', 'ongoing', 'confirming']
+  const asBuyer = await db.collection(C.ORDERS)
+    .where({ buyerId: me._openid, status: _.in(ACTIVE) }).count()
+  const asSeller = await db.collection(C.ORDERS)
+    .where({ sellerId: me._openid, status: _.in(ACTIVE) }).count()
+  const active = (asBuyer.total || 0) + (asSeller.total || 0)
+  assert(active === 0, `你还有 ${active} 个进行中的订单，请先完成或取消它们再注销`, 409)
+
+  /*
+   * ★ 只抹掉「能指向具体人」的字段。
+   *   时间币 / 信用分 / 统计数据**保留** —— 它们是与其他人的往来记录，
+   *   而且「时间币总额守恒」是全项目的硬约束，凭空清掉会破坏账。
+   */
+  const data = {
+    canceled: true,
+    canceledTime: now(),
+    status: 0,                  // 注销后不能再登录
+
+    nickName: '已注销用户',
+    avatarUrl: '',
+    realName: '',
+    studentNo: '',
+    phone: '',
+    campus: '',
+    college: '',
+    major: '',
+    grade: '',
+    bio: '',
+    tags: [],
+    // 认证材料是最敏感的部分（证件照等），必须清
+    authStatus: 0,
+    authImages: [],
+    authRemark: '',
+    authTime: 0,
+    // 定位
+    location: null,
+    locationName: '',
+    locationTime: null,
+
+    updateTime: now()
+  }
+
+  await db.collection(C.USERS).doc(me._id).update({ data })
+
+  // 内部账户：把会话一并作废，否则旧令牌仍然能操作
+  try {
+    await db.collection(C.SESSIONS).where({ accountOpenid: me._openid }).remove()
+  } catch (e) { /* 没有会话是常态 */ }
+
+  return { ok: true }
+}
+
 /* ==================================================================
  * 入口
  * ================================================================== */
@@ -377,6 +443,7 @@ exports.main = wrap(async (event, context) => {
     case 'reviews': return await reviews(event)
     case 'reviewCreate': return await reviewCreate(event)
     case 'reviewReply': return await reviewReply(event)
+    case 'cancel': return await cancelAccount(event)
     default: throw bizError(400, `未知 action: ${action}`)
   }
 })

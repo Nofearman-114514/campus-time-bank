@@ -1261,6 +1261,40 @@ const handlers = {
   },
 
   /* ================= user ================= */
+  'user.cancel': () => {
+    const u = me()
+    if (u.canceled) fail(409, '该账号已注销，无需重复操作')
+    const ACTIVE = ['waiting', 'ongoing', 'confirming']
+    const active = orders.filter(o =>
+      (o.buyerId === u._openid || o.sellerId === u._openid) && ACTIVE.indexOf(o.status) >= 0
+    ).length
+    if (active > 0) fail(409, '你还有 ' + active + ' 个进行中的订单，请先完成或取消它们再注销')
+    // 与云端同口径：匿名化，不删记录
+    u.canceled = true
+    u.canceledTime = now()
+    u.status = 0
+    u.nickName = '已注销用户'
+    u.avatarUrl = ''
+    u.realName = ''
+    u.studentNo = ''
+    u.phone = ''
+    u.campus = ''
+    u.college = ''
+    u.major = ''
+    u.grade = ''
+    u.bio = ''
+    u.tags = []
+    u.authStatus = 0
+    u.authImages = []
+    u.authRemark = ''
+    u.location = null
+    u.locationName = ''
+    u.locationTime = null
+    // 会话一并作废
+    for (let i = sessions.length - 1; i >= 0; i--) { if (sessions[i].accountOpenid === u._openid) sessions.splice(i, 1) }
+    return { ok: true }
+  },
+
   'user.mine': () => {
     const u = me()
     const mineOrders = orders.filter(o => o.buyerId === OPENID.me || o.sellerId === OPENID.me)

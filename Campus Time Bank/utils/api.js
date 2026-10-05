@@ -154,7 +154,13 @@ const user = {
   /** 发表评价 → { ok } */
   reviewCreate: p => call('user', 'reviewCreate', p),
   /** 回复评价 → { ok } */
-  reviewReply: p => call('user', 'reviewReply', p)
+  reviewReply: p => call('user', 'reviewReply', p),
+  /**
+   * 注销账号 → { ok }
+   * ★ 不可逆：云端会把个人身份信息匿名化并禁用账号。
+   *   调用前必须走完多步确认（见 pages/mine/mine.js 的 onCancelAccount）。
+   */
+  cancel: p => call('user', 'cancel', p)
 }
 
 /* ==================================================================

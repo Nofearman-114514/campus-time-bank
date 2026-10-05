@@ -562,4 +562,120 @@ module.exports = async function (t) {
   t.eq(t.user('o_sel').creditScore, 150, '148 + 5 被 clamp 到 150（上界）')
 
   t.eq((await t.call('user', 'o_buy', 'nope', {})).code, 400, '未知 action → 400')
+
+  /* ==================================================================
+   * 组 22 · ★ 注销账号：匿名化而不是物理删除
+   * ------------------------------------------------------------------
+   * 为什么不能物理删除：你服务过的订单、你在对方那里的评价，都还挂在对方
+   * 那边。删掉 users 文档会让那些记录指向不存在的用户，对方的「我的订单」
+   * 直接崩。所以保留文档与业务记录，只抹掉**能指向具体人**的字段。
+   * ================================================================== */
+  t.group('组 22 · ★ 注销账号：匿名化 + 保留业务记录')
+
+  t.seed()
+  const meBefore = t.user('o_buy')
+  meBefore.realName = '买家小明'
+  meBefore.studentNo = '2021001'
+  meBefore.phone = '13800000000'
+  meBefore.campus = '广东职业技术学院'
+  meBefore.college = '信息工程学院'
+  meBefore.major = '计算机应用技术'
+  meBefore.grade = '2024级'
+  meBefore.bio = '这是我的自我介绍'
+  meBefore.tags = ['吉他', '摄影']
+  meBefore.authImages = ['cloud://fake-idcard.jpg']
+  meBefore.locationName = '山下饭堂一楼'
+  const coinsBefore = meBefore.coins
+  const creditBefore = meBefore.creditScore
+
+  // 所有进行中的订单先结掉，否则注销会被拒
+  t.store().orders.forEach(o => {
+    if (o.buyerId === 'o_buy' || o.sellerId === 'o_buy') o.status = 'finished'
+  })
+  const orderCount = t.store().orders.length
+  // user 用例的 seed 只造 7 个集合，没有 reviews —— 用安全访问
+  const reviewCount = (t.store().reviews || []).length
+
+  let cr = await t.call('user', 'o_buy', 'cancel', {})
+  t.eq(cr.code, 0, '★ 无进行中订单时注销成功')
+
+  const me = t.user('o_buy')
+  t.eq(me.canceled, true, '★ 打上 canceled 标记')
+  t.eq(me.status, 0, '★ status=0（注销后不能再登录）')
+  t.eq(me.nickName, '已注销用户', '昵称匿名化')
+  t.eq(me.realName, '', '真实姓名清空')
+  t.eq(me.studentNo, '', '学号清空')
+  t.eq(me.phone, '', '手机号清空')
+  t.eq(me.campus, '', '校区清空')
+  t.eq(me.college, '', '院系清空')
+  t.eq(me.major, '', '专业清空')
+  t.eq(me.grade, '', '年级清空')
+  t.eq(me.bio, '', '简介清空')
+  t.eq(JSON.stringify(me.tags), '[]', '标签清空')
+  t.eq(JSON.stringify(me.authImages), '[]', '★ 认证材料（证件照）清空 —— 这是最敏感的部分')
+  t.eq(me.authStatus, 0, '认证状态重置')
+  t.eq(me.locationName, '', '定位信息清空')
+  t.eq(me.location, null, '★ 经纬度清空')
+
+  t.eq(me.coins, coinsBefore, '★ 时间币保留（「总额守恒」是硬约束，清掉会破坏账）')
+  t.eq(me.creditScore, creditBefore, '信用分保留（记录的是与他人的往来）')
+  t.eq(t.store().orders.length, orderCount, '★ 订单记录保留（对方的历史不能凭空消失）')
+  t.eq((t.store().reviews || []).length, reviewCount, '★ 评价记录保留')
+
+  // 注销后不能再以该身份操作
+  cr = await t.call('user', 'o_buy', 'mine', {})
+  t.eq(cr.code, 403, '★ 注销后再调接口 → 403')
+  t.ok(/已注销/.test(cr.msg), '★ 文案说的是「已注销」而不是「已被封禁」', r.msg)
+
+  // 重复注销
+  cr = await t.call('user', 'o_buy', 'cancel', {})
+  t.eq(cr.code, 403, '重复注销 → 403（requireUser 先拦下）')
+
+  /* 有进行中订单时必须拒绝 */
+  t.seed()
+  t.store().orders.forEach(o => {
+    if (o.buyerId === 'o_buy' || o.sellerId === 'o_buy') o.status = 'finished'
+  })
+  // 这个用例的 seed 不保证有订单 —— 自己造一条进行中的
+  t.store().orders.push({
+    _id: 'ord_cancel_test',
+    orderNo: 'TB_CANCEL1',
+    buyerId: 'o_buy',
+    sellerId: 'o_sel',
+    skillId: 'sk1',
+    status: 'ongoing',
+    amount: 5,
+    createTime: Date.now()
+  })
+  cr = await t.call('user', 'o_buy', 'cancel', {})
+  t.eq(cr.code, 409, '★ 有进行中的订单 → 409（否则对方约不到人、订单永远卡住）')
+  t.ok(/进行中的订单/.test(cr.msg), '409 文案提示先处理订单', cr.msg)
+  t.eq(t.user('o_buy').canceled, undefined, '被拒后没有打上注销标记')
+
+  /* 内部账户注销要连会话一起作废 */
+  t.seed()
+  t.store().accounts = []
+  t.store().sessions = []
+  const salt = t.shared.newSalt()
+  t.store().accounts.push({
+    _id: 'acc_t', username: 't', salt,
+    passwordHash: t.shared.hashPassword('T@2026', salt),
+    openid: 'o_buy', nickName: '内部T', status: 1, failCount: 0, lockUntil: 0,
+    createTime: Date.now(), lastLoginTime: 0
+  })
+  t.store().users.push({
+    _id: 'u_t', _openid: 'acct_x', nickName: '内部T', coins: 0, frozenCoins: 0,
+    creditScore: 100, authStatus: 2, status: 1, role: 'admin', badges: [],
+    stats: {}, createTime: Date.now(), updateTime: Date.now()
+  })
+  t.store().sessions.push({
+    token: 't'.repeat(64), accountOpenid: 'acct_x', accountId: 'acc_t',
+    createTime: Date.now(), expireTime: Date.now() + 100000
+  })
+  t.store().orders.forEach(o => {
+    if (o.buyerId === 'acct_x' || o.sellerId === 'acct_x') o.status = 'finished'
+  })
+  cr = await t.call('user', 'o_buy', 'cancel', { __token: 't'.repeat(64) })
+  t.eq(cr.code, 0, '内部账户注销成功')
+  t.eq(t.store().sessions.length, 0, '★ 注销时把该账户的会话一并作废（否则旧令牌仍能操作）')
 }

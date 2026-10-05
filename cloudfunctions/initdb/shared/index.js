@@ -244,6 +244,10 @@ async function getUser(openid) {
 async function requireUser(openid) {
   const u = await getUser(openid)
   if (!u) throw new BizError(401, '用户不存在，请重新登录')
+  // ★ 注销要单独判断、单独文案。
+  //   注销后 status 也是 0（禁止再登录），若直接落到「已被封禁」分支，
+  //   用户会以为自己是违规被封 —— 明明是本人主动注销的。
+  if (u.canceled) throw new BizError(403, '该账号已注销，数据不可恢复。如需继续使用，请重新注册')
   if (u.status === 0) throw new BizError(403, '账号已被封禁，如有疑问请联系管理员')
   return u
 }

@@ -141,56 +141,66 @@ Page({
   goOrders() { util.switchTab(TAB_ORDER) },
 
   /**
-   * 退出登录。
+   * 注销账号（不可逆）。
    *
-   * ★ 必须说清楚的技术事实：
-   *   微信小程序**没有传统的登录态** —— 身份来自 wx.login 换到的 openid，
-   *   它与你的微信号绑定，无法「登出」成另一个人。
-   *   所以这里的「退出」= 清空本机业务缓存 + 清空内存里的用户态 + 强制重新登录一次。
-   *   实际效果：拿到最新的用户资料（例如管理员刚通过了你的校园认证）。
-   *   确认弹窗里把这一点如实告诉用户，避免造成「能换账号」的误解。
+   * ★ 为什么不做成「退出登录」：
+   *   微信小程序**没有登录态** —— 身份来自 wx.login 的 openid，与微信号绑定，
+   *   退出后再次进入仍是同一人。所以「退出登录」本质上是个无效按钮。
+   *   而「注销账号」是真正有意义、且法律上要求提供的功能（删除个人信息）。
+   *
+   * ★ 为什么三步确认，而且**每一步说不同的话**：
+   *   如果三个弹窗都是「确定吗」，用户会形成连点三下的肌肉记忆 ——
+   *   第三步反而变成最容易误点的一步，等于白加了两道关。
+   *   真正打断反射的是中间那步「动手输入短语」。
+   *   所以这里：① 讲清楚后果 → ② 输入短语 → ③ 不可撤回的最终确认。
    */
-  onLogout() {
-    wx.showModal({
-      title: '退出登录',
-      content: '将清除本机缓存并重新获取你的微信身份。\n\n注意：小程序账号与你的微信号绑定，退出后再次进入仍是同一账号。',
-      confirmText: '退出',
-      confirmColor: '#E5484D',
-      success: res => {
-        if (!res.confirm) return
-        // 只清业务缓存，保留设备级设置（例如管理员开的调试模式）
-        try { wx.removeStorageSync('pickedLocation') } catch (e) { /* 忽略 */ }
-        /*
-         * ★ 内部账户令牌必须一起清。
-         *   否则「退出登录」只是清了个缓存 —— 下一个请求仍会带着令牌，
-         *   云端照样以那个内部账户的身份操作，等于没退。
-         */
-        try { require('../../utils/api').setToken('') } catch (e) { /* 忽略 */ }
-        const app = getApp()
-        if (app && app.globalData) {
-          app.globalData.userInfo = null
-          app.globalData.isAdmin = false
-          app.globalData.isDebugger = false
-          app.globalData.openid = ''
-          /*
-           * ★ role 也要清。
-           *   实测发现漏了它之后会出现自相矛盾的状态：
-           *   isAdmin=false 但 role 还是 'admin' —— 页面上任何按 role 渲染的
-           *   地方都会与权限判断对不上。
-           */
-          app.globalData.role = 'user'
-          // 让下一次登录真的是「重新登」：不然 login() 会因为 userInfo 存在而直接返回缓存
-          app.globalData._loginTask = null
-        }
-        util.toastOk('已退出')
-        /*
-         * ★ 这里必须如实说明：reLaunch 之后小程序会**立刻用 wx.login 静默登录**，
-         *   因为身份来自 openid、与微信号绑定 —— 没有「未登录」这种状态。
-         *   所以看到的还是同一个人，这是平台的模型，不是没退成功。
-         */
-        setTimeout(() => wx.reLaunch({ url: '/pages/square/square' }), 500)
+  async onCancelAccount() {
+    if (this._canceling) return
+
+    /* ---------- 第一步：说清楚会发生什么（不是笼统的「确定吗」） ---------- */
+    const ok1 = await util.confirm(
+      '注销后：\n· 昵称、头像、姓名、学号、手机号、院系、简介会被清除\n· 校园认证材料会被删除\n· 账号无法再登录，且不可恢复\n\n会保留：你参与过的订单与评价（对方的记录不能凭空消失）、时间币与信用分。',
+      '注销账号'
+    )
+    if (!ok1) return
+
+    /* ---------- 第二步：输入短语（真正的那道关） ---------- */
+    const PHRASE = '我确定要注销此账号'
+    const typed = await util.prompt('请输入这句话以确认：\n\n' + PHRASE, '确认注销', '在此输入')
+    if (typed === null) return
+    if (String(typed).trim() !== PHRASE) {
+      return util.toast('输入不一致，已取消')
+    }
+
+    /* ---------- 第三步：不可撤回的最终确认 ---------- */
+    const ok3 = await util.confirm(
+      '最后确认：此操作无法撤回。\n\n注销后账号立即失效，本机缓存的资料也会被清除。',
+      '无法撤回'
+    )
+    if (!ok3) return
+
+    this._canceling = true
+    try {
+      await api.user.cancel({})
+      // 本地状态一并清掉，否则页面上还挂着已注销的资料
+      const app = getApp()
+      if (app && app.globalData) {
+        app.globalData.userInfo = null
+        app.globalData.isAdmin = false
+        app.globalData.isDebugger = false
+        app.globalData.openid = ''
+        app.globalData.role = 'user'
+        app.globalData._loginTask = null
       }
-    })
+      try { wx.removeStorageSync('pickedLocation') } catch (e) { /* 忽略 */ }
+      try { api.setToken('') } catch (e) { /* 忽略 */ }
+      util.toastOk('账号已注销')
+      setTimeout(() => wx.reLaunch({ url: '/pages/square/square' }), 900)
+    } catch (e) {
+      this._canceling = false
+      // 例如「还有进行中的订单」—— 文案来自云端，直接透出
+      util.toast((e && e.message) || '注销失败')
+    }
   },
 
   onShareAppMessage() {
