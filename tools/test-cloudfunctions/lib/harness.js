@@ -36,7 +36,7 @@ const shared = require(path.join(ROOT, 'cloudfunctions', '_shared', 'index.js'))
 /**
  * 加载全部 8 个云函数入口。
  *
- * ★ 原先这里只 require 了 order / wallet —— 于是其余 6 个函数（login / skill /
+ * ★ 这里必须加载全部 8 个云函数 —— 只 require order / wallet 的话，其余 6 个（login / skill /
  *   user / message / admin / initdb）在离线回归里**根本无法被测到**。
  *   改成遍历加载后，任何云函数都能写进 cases/ 直接测。
  *   某个函数加载失败不会中断整体（只记录），方便逐个补齐覆盖。

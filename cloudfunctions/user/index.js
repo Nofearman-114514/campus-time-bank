@@ -270,7 +270,7 @@ async function reviewCreate(event) {
   const toInfo = { nickName: target.nickName || '匿名同学', avatarUrl: target.avatarUrl || '' }
 
   // 1) ★ 原子抢占「评价位」（关键修复）
-  //    原实现是「读订单判 isRatedBuyer → 中间隔 6 次 await 才写回订单」，属 check-then-act：
+  //    不能「读订单判 isRatedBuyer → 中间隔 6 次 await 才写回订单」—— 这是 check-then-act：
   //    同一方的两个并发评价会**双双通过校验** → 落 2 条评价、2 条 +1 信用流水，
   //    但 creditScore 只 +1（**账实不符**），还能刷 social 徽章、重复发通知。
   //    改成条件 update 抢占：并发下只有一个请求能把 false 改成 true（updated === 1），

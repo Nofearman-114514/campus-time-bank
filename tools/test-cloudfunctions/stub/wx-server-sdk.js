@@ -84,7 +84,7 @@ const command = {
   in: cmd('in'), nin: cmd('nin'), eq: cmd('eq'), neq: cmd('neq'),
   lt: cmd('lt'), lte: cmd('lte'), gt: cmd('gt'), gte: cmd('gte'),
   and: cmd('and'), or: cmd('or'), push: cmd('push'), inc: cmd('inc'), set: cmd('set'),
-  // ★ 下面三个是覆盖其余 6 个云函数时才需要的（原先缺失，导致它们根本跑不起来）：
+  // ★ 下面三个是其余 6 个云函数能跑起来的必要条件（缺失时它们根本起不来）：
   all: cmd('all'),          // 数组字段包含全部给定值 —— message.openChat 用它精确匹配二人会话
   exists: cmd('exists'),    // 字段是否存在
   geoNear: cmd('geoNear'),  // 地理位置邻近查询 —— skill.list 的「附近」排序
@@ -197,7 +197,7 @@ function matchField(actual, c) {
     }
     // ★ 数组字段按元素匹配：真实数据库（MongoDB）里 `{ tags: /英语/ }`
     //   命中的是 tags 数组中**任一元素**匹配。
-    //   原先这里只判 `typeof actual === 'string'`，数组直接 false，
+    //   只判 `typeof actual === 'string'` 的话数组直接 false，
     //   导致 skill.list「关键词命中 tags」这条路径离线根本无法验证。
     if (Array.isArray(actual)) return actual.some(hit)
     return hit(actual)
@@ -514,7 +514,7 @@ module.exports = {
     /**
      * 手机号快速验证（`<button open-type="getPhoneNumber">` 的 code 换手机号）。
      *
-     * ★ 原先 stub 只有 subscribeMessage，`login.bindPhone` 一调就
+     * ★ stub 必须同时实现 subscribeMessage 与 phonenumber：只有前者时 `login.bindPhone` 一调就
      *   「Cannot read properties of undefined (reading 'getPhoneNumber')」，
      *   导致 login 的用例整片挂掉。
      *   真实接口返回的是**当前登录用户**的手机号（与 code 无关），

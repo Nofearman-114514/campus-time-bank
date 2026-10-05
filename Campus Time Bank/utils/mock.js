@@ -845,7 +845,7 @@ const handlers = {
       skill: clone(sk),
       author: clone(userMap[sk.authorId] || {}),
       isOwner: sk.authorId === OPENID.me,
-      // ★ 真实收藏态（原先是硬编码 false，「收藏」一直是半成品）
+      // ★ 真实收藏态（不要硬编码 false —— 那样「收藏」功能等于没接）
       isCollected: favorites.some(f => f._openid === OPENID.me && f.skillId === sk._id)
     }
   },
@@ -1311,7 +1311,7 @@ const handlers = {
 
   'message.history': d => {
     // ★ 与云函数 §4.6 对齐：page=1 是**最新**一页，页内升序，hasMore 表示还有更早的。
-    //   原实现恒返回全部消息且 hasMore:false，导致「上滑加载历史」这条分支
+    //   必须真实分页：恒返回全部消息且 hasMore:false，会让「上滑加载历史」这条分支
     //   在离线模式下永远走不到（mock / 云端行为分叉）。
     const all = messages.filter(m => m.chatId === d.chatId)
       .slice().sort((a, b) => new Date(a.createTime) - new Date(b.createTime))
@@ -1603,7 +1603,7 @@ const handlers = {
     if (!r) fail(404, '举报不存在')
     const result = Number(d.result)
     // ★ 与云端对齐①：幂等 —— 已处理过的举报再次处理不再重复扣分、不再重复发通知。
-    //   原实现每调一次就 addCredit(-10) 一次，重复点击会把被举报人扣到 0 分。
+    //   必须幂等：每调一次就 addCredit(-10) 一次的话，重复点击会把被举报人扣到 0 分。
     if (r.status === 1 || r.status === 2) {
       if (d.remark) r.handleRemark = d.remark
       return { ok: true }
@@ -1621,7 +1621,7 @@ const handlers = {
       })
     } else {
       // ★ 与云端对齐②：驳回也要通知举报人 ——
-      //   原实现只有「成立」才发通知，举报被驳回时举报人会永远等不到结果。
+      //   驳回也必须发通知：只通知「成立」的话，举报人会永远等不到结果。
       notices.unshift({
         _id: rid('n'), _openid: r._openid, type: 'report', title: '举报已处理',
         content: `你提交的举报「${r.reason}」经核实未予采纳，感谢你的监督。`,

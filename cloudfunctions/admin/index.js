@@ -109,8 +109,8 @@ const ORDER_STATUS_TEXT = {
   waiting: '待接单',
   confirming: '待确认',
   canceled: '已取消',
-  // ★ 修复：原先是 '已取消'，把 canceled 与 closed 合并成一格，
-  //   导致看板「已关闭」恒为 0、「已取消」虚高一倍。
+  // closed 必须与 canceled 分开：两者都是「终态但未完成」，语义不同。
+  //   合并成一格会让看板「已关闭」恒为 0、「已取消」虚高一倍。
   //   前端 constants.ORDER_STATUS / mock.js / admin 订单页的 DIST_NAME_TO_KEY
   //   都按 6 个状态设计，云端必须一致。
   closed: '已关闭'
@@ -283,8 +283,8 @@ async function stats(event) {
     nickName: u.nickName || '匿名同学',
     avatarUrl: u.avatarUrl || '',
     serveCount: ((u.stats || {}).serveCount) || 0,
-    // ★ 修复：`|| 100` 会把 0 分显示成 100（mock 侧是裸 creditScore，两端漂移）。
-    //   只有真的缺失（不是数字）才兜底 100，0 分必须原样透出。
+    // 不能用 `|| 100`：0 分是合法值，会被当成缺失而显示成 100（mock 侧是裸 creditScore，两端会漂移）。
+    //   只有真的不是数字时才兜底 100。
     creditScore: typeof u.creditScore === 'number' ? u.creditScore : 100,
     avgRating: ((u.stats || {}).avgRating) || 0
   }))
@@ -608,7 +608,7 @@ async function handleReport(event) {
   if (r.status !== 0) return { ok: true }
 
   // ★ 契约收紧：result 只能是 1（成立）或 2（驳回）。
-  //   原实现是 `Number(event.result) === 1 ? 1 : 2`，会把非法值
+  //   不能写 `Number(event.result) === 1 ? 1 : 2` —— 那样会把非法值
   //   （缺失 / 3 / 'abc'）**静默当成「驳回」**处理，管理员传错参数拿不到任何提示。
   const result = Number(event.result)
   assert(result === 1 || result === 2, '处理结果只能是 1（成立）或 2（驳回）', 400)
@@ -671,9 +671,8 @@ async function saveBanner(event) {
     } catch (e) { old = null }
     if (!old) throw bizError(404, '轮播图不存在')
 
-    // ★ 修复：更新时**未传的字段必须沿用旧值**，不能回落到上面的新增默认值。
-    //   原实现无条件用 data 覆盖，于是「只改标题」会把 status 0（停用）重置为
-    //   启用 1、sort 从 2 掉到 99、image 被清空。
+    // 更新时**未传的字段必须沿用旧值**，不能回落到新增时的默认值：
+    //   否则「只改标题」会把 status 0（停用）重置为启用 1、sort 从 2 掉到 99、image 被清空。
     //   saveCategory 是「保留 old.status」的正确写法，这里对齐。
     const patch = {
       image: event.image === undefined ? (old.image || '') : (event.image || ''),
@@ -710,7 +709,7 @@ async function saveConfig(event) {
   const cur = await getConfig()
 
   const num = (v, dft) => {
-    // ★ 修复：空串 / null / 纯空白必须先判掉再 Number()。
+    // 空串 / null / 纯空白必须先判掉再 Number()。
     //   Number('') === 0 且 0 >= 0 成立，于是前端数字输入框留空（传 ''）
     //   会把 minCreditToOrder 从 60 静默写成 0 —— 等于关闭信用门槛。
     if (v === null || v === undefined) return dft
@@ -727,8 +726,8 @@ async function saveConfig(event) {
     serviceFee: num(event.serviceFee, cur.serviceFee),
     hotCategories: Array.isArray(event.hotCategories) ? event.hotCategories.slice(0, 20) : (cur.hotCategories || []),
     aboutUs: typeof event.aboutUs === 'string' ? event.aboutUs.slice(0, 2000) : (cur.aboutUs || ''),
-    // ★ 修复（高危）：原白名单漏了 subscribeTemplates，而收尾是 doc('global').set()
-    //   整篇覆盖 —— 管理员保存任意配置都会把 initdb 种下的订阅模板 ID 永久删掉，
+    // 白名单必须覆盖所有可写字段，因为收尾是 doc('global').set() 整篇覆盖 ——
+    //   漏掉 subscribeTemplates，管理员保存任意配置都会把模板 ID 永久删掉，
     //   于是 order 云函数 tplId() 取不到模板，订阅消息静默失效。
     //   传对象则按 key 合并（保留未知模板），不传则原样沿用。
     subscribeTemplates: (event.subscribeTemplates &&

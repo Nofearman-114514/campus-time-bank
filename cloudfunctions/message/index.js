@@ -163,8 +163,8 @@ async function openChat(event) {
     } catch (e) { orderNo = '' }
   }
 
-  // ★ 修复：用**确定性 _id** 保证同一对用户物理上只可能有一条会话。
-  //   原实现是 check-then-act（先 where 查、不存在再 add），双方同时开聊会各建一条：
+  // 用**确定性 _id** 保证同一对用户物理上只可能有一条会话。
+  //   不能 check-then-act（先 where 查、不存在再 add）—— 双方同时开聊会各建一条：
   //   其中一条成为孤儿（lastMsg 永远为空），两个聊天窗口内容不同步。
   //   members 升序只能保证「顺序调用」幂等，挡不住并发。
   const chatId = chatIdOf(members)
@@ -253,16 +253,16 @@ async function send(event) {
   const content = event.content == null ? '' : String(event.content)
   assert(content.trim(), '消息内容不能为空', 400)
   assert(content.length <= 1000, '消息内容不能超过 1000 字', 400)
-  // ★ 修复：类型必须是 §3.9 定义的枚举，原先 'video' 之类会原样落库并写进 lastMsgType
+  // 类型必须是 §3.9 定义的枚举：否则 'video' 之类会原样落库并写进 lastMsgType
   assert(['text', 'image', 'system'].indexOf(type) > -1, '不支持的消息类型', 400)
 
   const toId = event.toId || (chat.members || []).find(m => m !== me._openid)
   assert((chat.members || []).indexOf(toId) > -1, '接收者不在该会话中', 400)
-  // ★ 修复：禁止给自己发消息 —— 原先只校验「是会话成员」，
+  // 禁止给自己发消息 —— 只校验「是会话成员」是不够的，
   //   于是 unread[自己] +1，聊天列表会出现清不掉的红点
   assert(toId !== me._openid, '不能给自己发消息', 400)
 
-  // ★ 修复：文本消息落库前 trim，避免首尾空格直接进会话列表的 lastMsg
+  // 文本消息落库前必须 trim，否则首尾空格会直接进会话列表的 lastMsg
   const finalContent = type === 'text' ? content.trim() : content
 
   const createTime = now()

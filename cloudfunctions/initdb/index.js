@@ -86,7 +86,7 @@ async function countOf(name, where) {
  *
  * ★ 为什么需要它：微信云函数**默认超时只有 3 秒**。原来 seedDocs 是完全串行的
  *   （每条种子数据 1 次 get + 1 次 add ≈ 2 次往返），60 多条就是 120+ 次串行往返，
- *   必然超时。改成并发后往返轮次降到原来的 1/8 左右。
+ *   必然超时。并发写入后往返轮次约为串行的 1/8。
  *
  *   限制并发数（而不是 Promise.all 全开）是因为云开发对并发请求有配额，
  *   一次放几百个请求反而会触发限流。
@@ -146,7 +146,7 @@ async function seedDocs(name, docs, label) {
         // ★ 真实云开发的 set **不允许 data 里带 _id**：
         //     document.set:fail -501007 invalid parameters. 不能更新_id的值
         //   文档 id 已由 doc(id) 指定，body 里必须剔除 _id。
-        //   （离线 stub 原先默认放行，所以这个 bug 在测试里是绿的 —— stub 已同步修正。）
+        //   （离线 stub 按真实行为拒绝带 _id 的 set，所以这个 bug 不会被测试放过。）
         const body = Object.assign({}, d)
         delete body._id
         await db.collection(name).doc(d._id).set({ data: body })
@@ -845,7 +845,7 @@ async function actionSetAdmin(event) {
   const res = await db.collection(C.USERS).where(where).limit(1).get()
   const target = (res.data && res.data[0]) || null
   if (!target) throw bizError(404, '用户不存在')
-  // ★ 修复：不校验账号状态的话，把已封禁用户设成管理员也会成功。
+  // 必须校验账号状态，否则把已封禁用户设成管理员也会成功。
   //   封禁账号不该获得后台权限。
   assert(Number(target.status) !== 0, '该账号已被封禁，不能设为管理员', 400)
 

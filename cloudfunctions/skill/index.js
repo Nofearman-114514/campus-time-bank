@@ -115,8 +115,8 @@ function buildConds(event, o) {
   }
 
   // 广场只展示上架（status === 1）的技能。
-  // ★ 修复：调用方**显式传了 status 就尊重它**，不要无条件覆盖 ——
-  //   原先 forceStatus1 会把 event.status 静默吃掉，于是传 status:0 不报错、
+  // 调用方**显式传了 status 就尊重它**，不要无条件覆盖 ——
+  //   不能让 forceStatus1 把 event.status 静默吃掉 —— 否则传 status:0 不报错、
   //   却只返回上架技能，前端若复用 list 查「已下架」会拿到错数据。
   if (opt.forceStatus1 && !hasStatus) flat.status = 1
 
@@ -178,8 +178,8 @@ const bySort = (a, b) => (a.sort || 0) - (b.sort || 0)
 async function actionList(event) {
   const { page, size } = parsePage(event, 10)
   const sort = SORTS.indexOf(str(event.sort)) > -1 ? str(event.sort) : 'new'
-  // ★ 修复：把 authorId 透传进 buildConds —— §4.2 声明支持、mock.js 也支持，
-  //   原先只传 forceStatus1，导致「按作者筛选」在云端静默失效
+  // 把 authorId 透传进 buildConds —— §4.2 声明支持、mock.js 也支持，
+  //   只传 forceStatus1 会让「按作者筛选」在云端静默失效，必须把 authorId 一并透传
   //   （离线演示能按作者筛、真机不能，属 mock/云端行为分叉）。
   const where = combine(buildConds(event, {
     forceStatus1: true,
@@ -281,7 +281,6 @@ async function actionDetail(event) {
   })
 
   // ★ 收藏态：真实读 favorites 集合。
-  //   此前恒为 false（前端「收藏」是个半成品），现在接入真实数据。
   let isCollected = false
   if (openid) {
     try {
@@ -467,7 +466,7 @@ async function actionUpdate(event) {
 async function actionRemove(event) {
   const openid = requireOpenId()
   // ★ 契约统一：先判账号存在（401）再判归属（403）——
-  //   原先未注册用户直接拿到 403，语义不对。
+  //   未注册用户应该是 401（账号不存在），不是 403（权限不足）。
   const me = await getUser(openid)
   assert(me, '请先登录', 401)
   const id = str(event.id)
