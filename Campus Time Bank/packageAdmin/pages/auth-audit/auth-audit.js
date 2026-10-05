@@ -157,9 +157,9 @@ Page({
     let remark = ''
     for (let i = 0; i < 3; i++) {
       const input = await util.prompt(
-        '驳回原因必填，会以系统通知发送给该用户',
         '驳回校园认证',
-        '如：证件照模糊，请重新上传清晰照片'
+        '驳回原因（必填，会通知该用户）',
+        ''
       )
       if (input === null) return
       remark = util.trimAll(input)

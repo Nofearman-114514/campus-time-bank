@@ -348,10 +348,11 @@ Page({
     )
     if (!step1) return
 
+    // ★ 说明放 title；content 留空 —— 否则会被预填，二次确认形同虚设
     const input = await util.prompt(
-      '请输入「确认清空」四个字（必须完全一致）以继续',
-      '二次确认',
-      '确认清空'
+      '请输入四个字以继续：确认清空',
+      '在此输入',
+      ''
     )
     if (input === null) return
     if (util.trimAll(input) !== '确认清空') return util.toast('输入不匹配，已取消本次操作')

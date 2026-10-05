@@ -177,9 +177,9 @@ Page({
     if (!r) return
 
     const input = await util.prompt(
-      '可填写处理说明（选填），会记录在举报单上',
-      '核实成立',
-      '如：已联系双方核实，内容与描述不符'
+        '核实成立',
+        '处理说明（选填，会记录在举报单上）',
+        ''
     )
     if (input === null) return
     const remark = util.trimAll(input) || '举报核实成立'
@@ -203,9 +203,9 @@ Page({
     let remark = ''
     for (let i = 0; i < 3; i++) {
       const input = await util.prompt(
-        '驳回必须填写处理备注（会记录在举报单上，供复查）',
-        '驳回举报',
-        '如：证据不足，双方各执一词，建议先沟通'
+          '驳回举报',
+          '处理备注（必填，供复查）',
+          ''
       )
       if (input === null) return
       remark = util.trimAll(input)

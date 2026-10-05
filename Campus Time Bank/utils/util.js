@@ -107,12 +107,35 @@ function confirm(content, title) {
   })
 }
 
-/** 输入弹窗 → Promise<string|null> */
-function prompt(content, title, placeholder) {
+/**
+ * 输入弹窗 → Promise<string|null>（null = 用户取消）
+ *
+ * ★★★ 一个必须知道的坑：`wx.showModal` 在 `editable: true` 时，
+ *     **`content` 是输入框的「初始值」，不是提示文字。**
+ *
+ *     而 content 又是这个 API 里唯一能放长文本的字段 ——
+ *     于是「把说明写进 content」会导致那段说明**直接预填进输入框**：
+ *     用户什么都没输，看起来却像已经填好了。
+ *
+ *     更危险的是：如果那段说明恰好等于期望输入
+ *     （例如二次确认的「确认清空」），校验就形同虚设。
+ *
+ * ★ 所以这里的参数语义刻意设计成三个互不混淆的口子：
+ *     title       标题。**说明文字放这里**（它是唯一不会变成输入内容的字段）
+ *     placeholder 输入框里的灰色提示
+ *     value       输入框的**初始值** —— 默认空；只有确实要预填时才传
+ *
+ *   「不小心把说明预填进去」在这个签名下不可能发生。
+ *
+ * @param {String} title       标题 / 说明
+ * @param {String} placeholder 输入框提示
+ * @param {String} value       初始值（通常不传）
+ */
+function prompt(title, placeholder, value) {
   return new Promise(resolve => {
     wx.showModal({
       title: title || '请输入',
-      content: content || '',
+      content: value || '',
       editable: true,
       placeholderText: placeholder || '',
       confirmColor: '#0EA47A',

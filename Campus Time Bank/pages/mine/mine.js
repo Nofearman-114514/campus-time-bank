@@ -166,7 +166,12 @@ Page({
 
     /* ---------- 第二步：输入短语（真正的那道关） ---------- */
     const PHRASE = '我确定要注销此账号'
-    const typed = await util.prompt('请输入这句话以确认：\n\n' + PHRASE, '确认注销', '在此输入')
+    /*
+     * ★ 说明必须放在 title 里 —— 放 content 会被预填进输入框，
+     *   那样用户什么都不用输，这道关就没了。
+     *   第三个参数是「初始值」，这里**不传**（留空）。
+     */
+    const typed = await util.prompt('请输入下面的短语以确认：' + PHRASE, '在此输入', '')
     if (typed === null) return
     if (String(typed).trim() !== PHRASE) {
       return util.toast('输入不一致，已取消')

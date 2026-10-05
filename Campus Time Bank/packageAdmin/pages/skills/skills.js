@@ -154,9 +154,9 @@ Page({
     if (!item) return
 
     const input = await util.prompt(
-      '可填写下架原因（选填），会记录为该技能的审核备注',
-      '违规下架',
-      '如：内容与描述不符，涉嫌引流'
+        '违规下架',
+        '下架原因（选填，会记录为审核备注）',
+        ''
     )
     if (input === null) return // 取消输入 = 放弃操作
     const remark = util.trimAll(input)
