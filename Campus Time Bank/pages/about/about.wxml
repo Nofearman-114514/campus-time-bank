@@ -113,5 +113,24 @@
     </view>
   </view>
 
+  <!-- ============ 身份预览（仅离线模式） ============ -->
+  <view class="block" wx:if="{{mock}}">
+    <view class="block__title">身份预览</view>
+    <view class="block__p block__p--minor">
+      用来看「别的角色眼中的界面」。只影响离线模拟数据的「我」，与云端无关。当前：{{previewLabel}}
+    </view>
+    <view class="pv-row">
+      <view
+        class="pv-chip {{previewRole === item.value ? 'pv-chip--on' : ''}}"
+        wx:for="{{previewRoles}}"
+        wx:key="value"
+        data-value="{{item.value}}"
+        bindtap="onPickPreview"
+      >{{item.label}}</view>
+    </view>
+    <!-- ★ 这句话要说清楚：用户最怕的就是「切过去回不来」 -->
+    <view class="pv-tip">切到任何角色都能再切回来 —— 本页始终进得来。</view>
+  </view>
+
   <view class="about-foot">校园时间银行 · 让每一份时间都被认真对待</view>
 </view>

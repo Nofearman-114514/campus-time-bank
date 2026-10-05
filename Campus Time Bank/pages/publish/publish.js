@@ -283,7 +283,9 @@ Page({
     const preview = paths.map(p => ({ path: p, fileID: '', local: true }))
     this.setData({ images: this.data.images.concat(preview) })
 
-    if (envList.MOCK) {
+    // ★ 同样必须是运行时值：用编译期快照的话，调试模式下会去调真实云存储
+    //   上传（没有云环境 → 必然失败）。
+    if (getApp().globalData.MOCK) {
       util.toast('离线预览模式：图片仅本地展示，不会真实上传')
       return
     }

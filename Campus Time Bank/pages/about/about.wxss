@@ -263,3 +263,34 @@
   font-size: var(--fs-mini);
   color: var(--c-t4);
 }
+
+/* ============ 身份预览（仅离线模式） ============ */
+.pv-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+}
+
+.pv-chip {
+  margin: 0 16rpx 16rpx 0;
+  padding: 12rpx 28rpx;
+  border: 2rpx solid var(--c-line, #E5E6EB);
+  border-radius: 999rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t2);
+  background: #fff;
+}
+
+.pv-chip--on {
+  border-color: var(--c-primary);
+  color: #fff;
+  background: var(--c-primary);
+  font-weight: 600;
+}
+
+.pv-tip {
+  margin-top: 4rpx;
+  font-size: var(--fs-mini);
+  color: var(--c-t3);
+}

@@ -99,8 +99,23 @@ module.exports = {
   isDebugOn,
   setDebugMode,
   DEBUG_KEY,
-  /** 编译期基础值。页面请用 app.globalData.MOCK（它会在开关切换时同步） */
-  MOCK: MOCK_OVERRIDE === null ? !ENV_ID : !!MOCK_OVERRIDE,
+  /**
+   * 当前是否处于调试模式。
+   *
+   * ★ 必须是 getter，不能写成静态值。
+   *   调试模式可以在运行时开关（结果存本地存储），写成静态值就会变成
+   *   「编译期快照」—— 于是出现最迷惑的一类 bug：
+   *   **开关打开了，页面却仍然认为自己连着真实云环境**。
+   *
+   *   这个陷阱已经真实发生过两次：
+   *     · about 页的模式提示条永远显示「已接入云开发环境」
+   *     · publish 页在调试模式下仍去调真实云存储上传（必然失败）
+   *
+   *   现在 envList.MOCK 与 app.globalData.MOCK 语义一致，两种写法都对。
+   */
+  get MOCK() {
+    return isMock()
+  },
   SUBSCRIBE_TEMPLATES,
   QQMAP_KEY,
 

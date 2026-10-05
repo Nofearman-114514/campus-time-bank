@@ -364,6 +364,65 @@ let currentOpenid = ''
 
 const userMap = users.reduce((m, u) => (m[u._openid] = u, m), {})
 
+/* ============================ 调试模式：身份预览 ============================ */
+/*
+ * 用途：本机是管理员时，想看看「普通用户眼中的界面」长什么样。
+ * 不用改云端数据、不用第二个微信号。
+ *
+ * ★ 只影响**离线模拟数据的「我」**，与云端无关 —— 真实环境里身份由
+ *   微信 openid 决定，不可能也不应该被本机切换。
+ *
+ * ★ 实现上直接改 me() 那个对象的 role，而不是返回副本：
+ *    mock 里有多处就地写入（me().authStatus = 1 等），返回副本会**静默丢数据**。
+ *    所以先把源数据里的原始角色记下来，切换时在它之上做覆盖，
+ *    「还原」就是恢复这个原始值。
+ *
+ * ★ 切换界面放在「关于与规则」页（任何角色都能到达），
+ *    否则切到普通用户后就再也切不回来了。
+ */
+const PREVIEW_ROLE_KEY = 'ctb_preview_role'
+
+/** 预览选项 —— 顺序按权限从低到高 */
+const PREVIEW_ROLES = [
+  { value: 'user', label: '普通用户' },
+  { value: 'admin', label: '管理员' },
+  { value: 'debugger', label: '调试员（校方）' }
+]
+
+/** 「我」在源数据里的原始角色 —— 在任何覆盖之前先记住 */
+const ME_ORIGINAL_ROLE = (userMap[OPENID.me] && userMap[OPENID.me].role) || 'user'
+
+/** 读取当前预览设置（'' = 不预览，用原始角色） */
+function getPreviewRole() {
+  try {
+    return wx.getStorageSync(PREVIEW_ROLE_KEY) || ''
+  } catch (e) {
+    return ''
+  }
+}
+
+/**
+ * 把预览应用到「我」。
+ * ★ 模块加载时就调一次：必须早于任何 handler 读角色。
+ */
+function applyPreviewRole() {
+  const u = userMap[OPENID.me]
+  if (!u) return
+  u.role = getPreviewRole() || ME_ORIGINAL_ROLE
+}
+
+/** 设置预览（'' = 还原） */
+function setPreviewRole(role) {
+  try {
+    if (role) wx.setStorageSync(PREVIEW_ROLE_KEY, role)
+    else wx.removeStorageSync(PREVIEW_ROLE_KEY)
+  } catch (e) { /* 存储失败则只在本次生效 */ }
+  applyPreviewRole()
+}
+
+// 立刻应用一次，保证加载后身份就是用户上次选的
+applyPreviewRole()
+
 /* ============================ 分类 ============================ */
 const categories = [
   { _id: 'c1', name: '学业辅导', icon: '📚', sort: 1, status: 1 },
@@ -1882,4 +1941,15 @@ async function dispatch(name, data) {
   return fn(data || {})
 }
 
-module.exports = { dispatch, MockError, store: { users, skills, orders, reviews, chats, messages, notices, categories, reports, banners, config, walletLogs, creditLogs, favorites, accounts, sessions } }
+module.exports = {
+  dispatch,
+  MockError,
+  store: { users, skills, orders, reviews, chats, messages, notices, categories, reports, banners, config, walletLogs, creditLogs, favorites, accounts, sessions },
+  /* 调试模式的身份预览（见文件内说明） */
+  preview: {
+    options: PREVIEW_ROLES,
+    current: getPreviewRole,
+    set: setPreviewRole,
+    originalRole: ME_ORIGINAL_ROLE
+  }
+}

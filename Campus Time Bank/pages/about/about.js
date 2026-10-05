@@ -16,7 +16,14 @@ Page({
   data: {
     version: VERSION,
     /* ★ 运行模式：答辩演示时一眼看出用的是模拟数据还是真实云环境 */
-    mock: envList.MOCK,
+    // ★ 必须用运行时值 —— envList.MOCK 曾经是编译期快照，导致开了调试模式
+    //   提示条还显示「已接入云开发环境」。（现在 envList.MOCK 也修好了，
+    //   这里显式用 getApp 是为了让意图一目了然。）
+    mock: !!(getApp() && getApp().globalData && getApp().globalData.MOCK),
+    /* ★ 身份预览（仅离线模式）：用来看「别的角色眼中的界面」 */
+    previewRoles: [],
+    previewRole: '',
+    previewLabel: '',
     envText: envList.MOCK
       ? '当前为离线预览模式，数据来自本地模拟'
       : '已接入云开发环境',
@@ -32,6 +39,56 @@ Page({
       isUp: r.change > 0,
       isZero: r.change === 0
     }))
+  },
+
+  onShow() {
+    this.refreshPreview()
+  },
+
+  /* ================================================================
+   * 身份预览（仅离线模式）
+   * ----------------------------------------------------------------
+   * 本机是管理员时，看不到普通用户眼中的界面 —— 而「管理员看不到普通
+   * 用户长什么样」这件事会让权限相关的改动永远验不充分。
+   *
+   * ★ 为什么放在「关于与规则」页：任何角色都能到达这里。
+   *   如果放在只有管理层能进的页面，切到普通用户后就**再也切不回来**。
+   * ================================================================ */
+  refreshPreview() {
+    try {
+      const pv = require('../../utils/mock').preview
+      const cur = pv.current()
+      const hit = pv.options.filter(o => o.value === cur)[0]
+      this.setData({
+        previewRoles: pv.options,
+        previewRole: cur,
+        previewLabel: hit ? hit.label : '跟随原始设置'
+      })
+    } catch (e) { /* 真实环境下没有预览，静默跳过 */ }
+  },
+
+  onPickPreview(e) {
+    const value = (e.currentTarget.dataset || {}).value
+    let pv = null
+    try { pv = require('../../utils/mock').preview } catch (err) { return }
+    pv.set(value)
+    const hit = pv.options.filter(o => o.value === value)[0]
+    /*
+     * ★ 角色变了，内存里的权限缓存必须清掉 ——
+     *   app.isAdminUser() 缓存为 true 就直接返回，不清的话切到普通用户
+     *   仍然会看到管理员界面（测试结果会骗人）。
+     */
+    const app = getApp()
+    if (app && app.globalData) {
+      app.globalData.isAdmin = false
+      app.globalData.isDebugger = false
+      app.globalData.userInfo = null
+      app.globalData.openid = ''
+      app.globalData._loginTask = null
+    }
+    util.toastOk('已切换为「' + (hit ? hit.label : value) + '」')
+    // 重跑本页：既刷新界面，也保证其它页面按新角色取数。留在本页方便再切回来。
+    setTimeout(() => wx.reLaunch({ url: '/pages/about/about' }), 600)
   },
 
   /* ================================================================
