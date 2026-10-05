@@ -194,6 +194,18 @@ for (const a of definedActions) {
 /* ------------------------------------------------------------------ */
 /* 5. require 路径解析                                                  */
 /* ------------------------------------------------------------------ */
+/**
+ * ★ 可选依赖白名单：这些 require 的目标**允许不存在**。
+ *
+ *   典型是「本地个人配置」—— 真实值不进仓库（见 .gitignore 的 envList.local.js），
+ *   调用方用 try/catch 包住，文件不在时降级为默认值。
+ *
+ *   如果不在这里放行，**别人 clone 仓库后 check-project 会直接失败** ——
+ *   而仓库里本来就不该有这个文件（它装着云环境 ID）。
+ *   往这个列表里加东西要慎重：等于声明「缺失是正常的」。
+ */
+const OPTIONAL_REQUIRE = [/envList\.local$/]
+
 let requireCount = 0
 for (const jf of jsFiles.concat(walk(CF, p => p.endsWith('.js')))) {
   const src = jf.endsWith('_shared/index.js') || jf.includes(`${path.sep}shared${path.sep}`) ? read(jf) : readCode(jf)
@@ -204,6 +216,8 @@ for (const jf of jsFiles.concat(walk(CF, p => p.endsWith('.js')))) {
     const target = path.resolve(path.dirname(jf), spec)
     const cands = [target, `${target}.js`, path.join(target, 'index.js')]
     if (!cands.some(exists)) {
+      // 可选依赖：文件不在是正常情况（本地个人配置不进程）
+      if (OPTIONAL_REQUIRE.some(re => re.test(spec))) continue
       // cloudfunctions/*/shared 由 tools/sync-shared.mjs 生成，缺失单独提示
       if (spec.includes('shared')) {
         warn(`未同步共享代码：${rel(jf)} → "${spec}"（请在根目录执行 node tools/sync-shared.mjs）`)
