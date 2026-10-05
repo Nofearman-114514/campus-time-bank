@@ -170,10 +170,24 @@ Page({
         if (app && app.globalData) {
           app.globalData.userInfo = null
           app.globalData.isAdmin = false
+          app.globalData.isDebugger = false
           app.globalData.openid = ''
+          /*
+           * ★ role 也要清。
+           *   实测发现漏了它之后会出现自相矛盾的状态：
+           *   isAdmin=false 但 role 还是 'admin' —— 页面上任何按 role 渲染的
+           *   地方都会与权限判断对不上。
+           */
+          app.globalData.role = 'user'
+          // 让下一次登录真的是「重新登」：不然 login() 会因为 userInfo 存在而直接返回缓存
+          app.globalData._loginTask = null
         }
         util.toastOk('已退出')
-        // reLaunch 回首页 → onLaunch 会重新走一次 login，身份与配置都刷新
+        /*
+         * ★ 这里必须如实说明：reLaunch 之后小程序会**立刻用 wx.login 静默登录**，
+         *   因为身份来自 openid、与微信号绑定 —— 没有「未登录」这种状态。
+         *   所以看到的还是同一个人，这是平台的模型，不是没退成功。
+         */
         setTimeout(() => wx.reLaunch({ url: '/pages/square/square' }), 500)
       }
     })
