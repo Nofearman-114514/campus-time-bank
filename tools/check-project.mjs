@@ -229,6 +229,33 @@ for (const jf of jsFiles.concat(walk(CF, p => p.endsWith('.js')))) {
 }
 
 /* ------------------------------------------------------------------ */
+/* 5.5 禁止直接读 Geo 的 .latitude / .longitude                          */
+/* ------------------------------------------------------------------ */
+/**
+ * ★ 为什么要有这条静态检查：
+ *   云端 `db.Geo.Point(lng, lat)` 经 wx.cloud 序列化回来是 **GeoJSON**：
+ *       { type: 'Point', coordinates: [经度, 纬度] }
+ *   它**没有** `.latitude` / `.longitude` 属性 —— 直接读永远是 undefined。
+ *
+ *   这个错配很难在测试里暴露（页面上只是按钮不出现，不报错），
+ *   而且旧种子数据的 location 是 null，所以长期潜伏。
+ *   统一走 utils/campus.js 的 parseGeoPoint()，它两种格式都吃。
+ */
+let geoCheck = 0
+for (const jf of jsFiles) {
+  const relPath = rel(jf)
+  if (relPath.includes('utils/campus.js')) continue          // 归一化函数自己的实现
+  const src = readCode(jf)
+  src.split('\n').forEach((line, i) => {
+    if (/\.location\.(longitude|latitude)\b/.test(line)) {
+      err(`${relPath}:${i + 1} 直接读 .location.longitude/.latitude —— ` +
+          `云端返回的是 GeoJSON，请用 campus.parseGeoPoint(skill.location)`)
+    }
+    geoCheck++
+  })
+}
+
+/* ------------------------------------------------------------------ */
 /* 6.5 wxml 事件处理函数是否存在 + wx:for 是否有 wx:key                  */
 /* ------------------------------------------------------------------ */
 const wxmlFiles = walk(MP, p => p.endsWith('.wxml'))

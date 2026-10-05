@@ -96,4 +96,35 @@ function isInside(lat, lng) {
   return { inside: d <= RADIUS, distance: d, radius: RADIUS }
 }
 
-module.exports = { CENTER, RADIUS, SPOTS, distanceMeters, nearest, byKey, isInside }
+/**
+ * 把各种「坐标」值统一成 { lng, lat }；没有有效坐标时返回 null。
+ *
+ * ★ 为什么必须有这个函数：
+ *   云端 `db.Geo.Point(lng, lat)` 经 wx.cloud 序列化回来是 **GeoJSON**：
+ *       { type: 'Point', coordinates: [经度, 纬度] }
+ *   它**没有** `.latitude` / `.longitude` 属性 —— 直接读会永远是 undefined，
+ *   于是 `hasGeo` 恒为 false、「在地图中查看」按钮永远不出现。
+ *   （旧种子数据的 location 是 null，所以这个错配一直没被触发。）
+ *
+ * ★ 两种格式都要能吃：
+ *   · GeoJSON：{ type:'Point', coordinates:[lng, lat] }  ← 云端数据库
+ *   · 普通对象：{ latitude, longitude }                    ← wx.getLocation()
+ *
+ * ★ coordinates 是 **[经度, 纬度]**（GeoJSON 规范），顺序不能反。
+ */
+function parseGeoPoint(g) {
+  if (!g) return null
+  let lng, lat
+  if (Array.isArray(g.coordinates) && g.coordinates.length >= 2) {
+    lng = Number(g.coordinates[0])
+    lat = Number(g.coordinates[1])
+  } else {
+    lng = Number(g.longitude)
+    lat = Number(g.latitude)
+  }
+  if (!isFinite(lng) || !isFinite(lat)) return null
+  if (lng < -180 || lng > 180 || lat < -90 || lat > 90) return null
+  return { lng, lat }
+}
+
+module.exports = { CENTER, RADIUS, SPOTS, distanceMeters, nearest, byKey, isInside, parseGeoPoint }

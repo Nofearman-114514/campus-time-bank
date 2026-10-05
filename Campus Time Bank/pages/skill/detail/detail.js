@@ -8,6 +8,7 @@
  */
 const api = require('../../../utils/api')
 const util = require('../../../utils/util')
+const campus = require('../../../utils/campus')
 
 /** 没有图片时的分类渐变（与 skill-card 的降级策略保持一致） */
 const COVER_PALETTE = {
@@ -101,7 +102,7 @@ Page({
       const authorOpenid = author._openid || skill.authorId || ''
       const images = skill.images || []
       const pair = COVER_PALETTE[skill.categoryId] || COVER_PALETTE.c10
-      const geo = skill.location || null
+      const geo = campus.parseGeoPoint(skill.location)
 
       this.setData({
         loading: false,
@@ -128,9 +129,11 @@ Page({
         authorRating: (author.stats && author.stats.avgRating) || 0,
         authorReviewCount: (author.stats && author.stats.reviewCount) || 0,
 
-        hasGeo: !!(geo && geo.longitude && geo.latitude),
-        longitude: (geo && geo.longitude) || 0,
-        latitude: (geo && geo.latitude) || 0,
+        // ★ 云端返回的是 GeoJSON { type:'Point', coordinates:[lng,lat] }，
+        //   没有 .latitude / .longitude —— 必须用 parseGeoPoint 统一（见 utils/campus.js）
+        hasGeo: !!geo,
+        longitude: geo ? geo.lng : 0,
+        latitude: geo ? geo.lat : 0,
         locationName: skill.locationName || '',
         address: skill.address || ''
       })
