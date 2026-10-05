@@ -15,18 +15,20 @@ const VERSION = '1.0.0'
 Page({
   data: {
     version: VERSION,
-    /* ★ 运行模式：答辩演示时一眼看出用的是模拟数据还是真实云环境 */
-    // ★ 必须用运行时值 —— envList.MOCK 曾经是编译期快照，导致开了调试模式
-    //   提示条还显示「已接入云开发环境」。（现在 envList.MOCK 也修好了，
-    //   这里显式用 getApp 是为了让意图一目了然。）
-    mock: !!(getApp() && getApp().globalData && getApp().globalData.MOCK),
+    /*
+     * ★ 运行模式：答辩演示时一眼看出用的是模拟数据还是真实云环境。
+     *
+     * ⚠️ 真实值在 onLoad 里算，**不能写在这里**。
+     *    data 字面量只在**页面模块首次加载**时求值一次，之后即使调试模式
+     *    开关变了也不会重算 —— 于是出现「先访问过本页、再开调试模式，
+     *    回来还是旧值」。这和 envList.MOCK 的静态快照是同一类错误。
+     */
+    mock: false,
     /* ★ 身份预览（仅离线模式）：用来看「别的角色眼中的界面」 */
     previewRoles: [],
     previewRole: '',
     previewLabel: '',
-    envText: envList.MOCK
-      ? '当前为离线预览模式，数据来自本地模拟'
-      : '已接入云开发环境',
+    envText: '',
     /* 交易流程 4 步 */
     steps: [
       { icon: '🧊', title: '下单冻结', desc: '买家下单，时间币从可用余额转为冻结' },
@@ -41,8 +43,27 @@ Page({
     }))
   },
 
+  /**
+   * ★ 运行模式必须在 onLoad 里算，不能写在 data 字面量里。
+   *   data 字面量只在模块首次加载时求值一次 —— 那样「先访问过本页、
+   *   再开调试模式」就会一直显示旧值。
+   */
+  onLoad() {
+    this.refreshMockState()
+  },
+
   onShow() {
+    this.refreshMockState()
     this.refreshPreview()
+  },
+
+  refreshMockState() {
+    const app = getApp()
+    const on = !!(app && app.globalData && app.globalData.MOCK)
+    this.setData({
+      mock: on,
+      envText: on ? '当前为离线预览模式，数据来自本地模拟' : '已接入云开发环境'
+    })
   },
 
   /* ================================================================
