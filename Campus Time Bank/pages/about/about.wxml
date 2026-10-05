@@ -9,7 +9,8 @@
     <view class="flex-1">
       <view class="app-card__name">校园时间银行</view>
       <view class="app-card__slogan">用你的技能，换你需要的帮助</view>
-      <view class="app-card__ver">版本 {{version}}</view>
+      <!-- ★ 长按版本号 = 内部账户登录的隐藏入口。见 about.js 的 onHoldVersion -->
+    <view class="app-card__ver" bindlongpress="onHoldVersion">版本 {{version}}</view>
     </view>
   </view>
 

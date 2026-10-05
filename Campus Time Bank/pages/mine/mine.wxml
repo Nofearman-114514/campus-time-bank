@@ -152,8 +152,13 @@
         <text class="cell__arrow">›</text>
       </view>
 
-      <!-- 内部账户登录（校方/运维）—— 普通用户不需要，用微信身份即可 -->
-      <view class="cell" bindtap="goAccountLogin">
+      <!--
+        内部账户登录（校方/运维）。
+        ★ 只对管理层显示 —— 普通学生看到它等于被告知「这里有个特权入口」，
+          既不专业也会引来试探。没有微信绑定权限的新校方走「关于与规则」
+          页长按版本号的隐藏入口（见 pages/about/about.js）。
+      -->
+      <view class="cell" wx:if="{{isAdmin}}" bindtap="goAccountLogin">
         <view class="cell__icon">🔑</view>
         <text class="cell__label">内部账户登录</text>
         <text class="cell__arrow">›</text>
