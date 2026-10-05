@@ -81,6 +81,20 @@ Page({
     this.setData({ debugSwitching: true })
     try {
       envList.setDebugMode(on)
+      /*
+       * ★ 必须清掉角色缓存。
+       *
+       *   reLaunch 只会重建页面，**不会重跑 app.onLaunch**，
+       *   所以 globalData 会原样留着。
+       *   而 debugger 是「看到就缓存、缓存为 true 就直接返回」的策略 ——
+       *   切换后如果不清，危险操作区与调试开关会继续按**切换前**的身份显示：
+       *   管理员可能因此看到本该只有校方可见的入口。
+       */
+      const app = getApp()
+      if (app && app.globalData) {
+        app.globalData.isAdmin = false
+        app.globalData.isDebugger = false
+      }
       util.toast(on ? '已开启调试模式（使用模拟数据）' : '已关闭调试模式（回到云端数据）')
       // 延时一拍，让 toast 能被看到；reLaunch 会重建所有页面并按新模式取数
       setTimeout(() => {

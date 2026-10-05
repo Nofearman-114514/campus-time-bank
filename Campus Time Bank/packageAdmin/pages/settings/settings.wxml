@@ -210,8 +210,11 @@
     </view>
   </view>
 
-  <!-- ==================== 危险操作区 ==================== -->
-  <view class="admin-danger">
+  <!-- ============ 危险操作区（仅调试员可见） ============
+       这些操作直接作用于云数据库、影响全站，误点的代价很大。
+       管理员（学生）连入口都看不到；云端 initdb 也不走 requireAdmin，
+       本来就只有控制台能调。 -->
+  <view wx:if="{{isDebugger}}" class="admin-danger">
     <view class="admin-danger__title">⚠️ 危险操作区</view>
     <view class="admin-danger__desc">
       以下操作直接作用于云数据库，影响全站数据。执行前请确认已做好数据备份。

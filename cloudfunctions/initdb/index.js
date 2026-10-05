@@ -17,7 +17,7 @@
 const {
   db, C, _,
   wrap, bizError, assert,
-  now, getOpenId, requireAdmin
+  now, getOpenId, requireAdmin, requireDebugger
 } = require('./shared')
 
 /* ============================ 常量 ============================ */
@@ -227,15 +227,20 @@ async function guardDangerous(openid, action) {
     return { firstTime: true, bootstrap: true, operator: openid }
   }
 
-  const adminCount = await countOf(C.USERS, { role: 'admin' })
-  if (adminCount === 0) {
+  // 管理员和调试员都算「已有人管事」—— 否则只剩调试员时会被误判成
+  // 引导模式，于是任何人都能调危险操作。
+  const managerCount = await countOf(C.USERS, { role: 'admin' }) +
+    await countOf(C.USERS, { role: 'debugger' })
+  if (managerCount === 0) {
     console.log(`[initdb] ${action} 以「引导模式」执行：系统尚无管理员`)
     return { firstTime: true, bootstrap: true, operator: openid }
   }
 
-  const admin = await requireAdmin(openid)
-  console.log(`[initdb] ${action} 由管理员执行：`, admin._openid, admin.nickName || '')
-  return { firstTime: false, bootstrap: false, operator: admin._openid }
+  // ★ 危险操作只有**调试员**能做（不只是管理员）。
+  //   控制台与引导模式在上面已经放行，否则会出现「没人能初始化」的死锁。
+  const who = await requireDebugger(openid)
+  console.log(`[initdb] ${action} 由调试员执行：`, who._openid, who.nickName || '')
+  return { firstTime: false, bootstrap: false, operator: who._openid }
 }
 
 /* ============================ 种子数据 ============================ */
@@ -796,9 +801,9 @@ async function actionClear() {
   }
 
   // users：只删非 admin（单次上限 100 条 → 循环）
-  cleared.push(await clearCollection(C.USERS, { role: _.neq('admin') }, '用户（保留管理员）'))
+  cleared.push(await clearCollection(C.USERS, { role: _.nin(['admin', 'debugger']) }, '用户（保留管理员与调试员）'))
 
-  const keptAdmins = await countOf(C.USERS, { role: 'admin' })
+  const keptAdmins = await countOf(C.USERS, { role: _.in(['admin', 'debugger']) })
   console.log('[initdb] clear 完成', JSON.stringify(cleared), '保留管理员', keptAdmins)
 
   return {

@@ -160,19 +160,23 @@ module.exports = async function (t) {
   const mkAdminState = async () => {
     blank()
     await consoleCall({})
+    // 系统里已有管理员 → 不再走引导模式
     t.store().users.find(u => u._openid === 'openid_demo_u1').role = 'admin'
+    // 调用者是**调试员** —— 危险操作只有调试员能做。
+    // ★ 用 u3 而不是 u2：u2 在下面的用例里要扮演「普通用户」。
+    t.store().users.find(u => u._openid === 'openid_demo_u3').role = 'debugger'
   }
 
   await mkAdminState()
   t.eq(t.store().users.filter(u => u.role === 'admin').length, 1, '已存在 1 个管理员')
-  r = await t.call('initdb', 'openid_demo_u1', 'init', {})
-  t.eq(r.code, 0, '★ 已有 admin 且调用者是 admin → init 放行')
-  t.isTrue(r.data.firstTime === false, '管理员调用 firstTime=false')
+  r = await t.call('initdb', 'openid_demo_u3', 'init', {})
+  t.eq(r.code, 0, '★ 已有管理员且调用者是调试员 → init 放行')
+  t.isTrue(r.data.firstTime === false, '调试员调用 firstTime=false')
 
   await mkAdminState()
-  r = await t.call('initdb', 'openid_demo_u2', 'init', {})
-  t.eq(r.code, 403, '★ 已有 admin 且调用者不是 admin → init 403')
-  t.ok(/无管理员权限/.test(r.msg), '403 文案', r.msg)
+  r = await t.call('initdb', 'openid_demo_u1', 'init', {})
+  t.eq(r.code, 403, '★ 普通管理员不能调危险操作（只有调试员能）')
+  t.ok(/无管理员权限/.test(r.msg), '★ 403 文案与 requireAdmin 一致，不透露上层存在', r.msg)
 
   await mkAdminState()
   r = await t.call('initdb', 'openid_demo_u2', 'clear', {})
@@ -230,9 +234,14 @@ module.exports = async function (t) {
 
   await mkAdminState()
   r = await t.call('initdb', 'openid_demo_u1', 'clear', {})
-  t.eq(r.code, 0, '★ 管理员本人 clear → 放行')
-  t.eq(t.store().users.length, 1, 'clear 后只剩调用者（管理员）')
-  t.eq(t.store().users[0].role, 'admin', '调用者仍是管理员（没有被自己删掉）')
+  t.eq(r.code, 403, '★ 普通管理员 clear → 403（危险操作只有调试员能调）')
+
+  await mkAdminState()
+  r = await t.call('initdb', 'openid_demo_u3', 'clear', {})
+  t.eq(r.code, 0, '★ 调试员 clear → 放行')
+  t.eq(t.store().users.filter(u => u.role === 'admin').length, 1, 'clear 后管理员被保留')
+  t.eq(t.store().users.filter(u => u.role === 'debugger').length, 1, '★ 调试员也被保留（否则没人能再调危险操作）')
+  t.eq(t.store().users.length, 2, 'clear 后只剩管理层两人')
 
   blank()
   r = await t.call('initdb', 'openid_anyone', 'clear', {})
