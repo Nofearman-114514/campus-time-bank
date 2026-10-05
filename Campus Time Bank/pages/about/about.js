@@ -108,8 +108,19 @@ Page({
       app.globalData._loginTask = null
     }
     util.toastOk('已切换为「' + (hit ? hit.label : value) + '」')
-    // 重跑本页：既刷新界面，也保证其它页面按新角色取数。留在本页方便再切回来。
-    setTimeout(() => wx.reLaunch({ url: '/pages/about/about' }), 600)
+    /*
+     * ★ 用 redirectTo，**不能用 reLaunch**。
+     *
+     *   reLaunch 会清空整个页面栈 —— 切换后栈里只剩本页，
+     *   手机的返回键就没有上一页可回，直接**退出小程序回到桌面**。
+     *   而用户只是在本页切了个预览，返回键理应还能回到「我的」。
+     *
+     *   redirectTo 只替换当前页、保留后面的栈：
+     *   本页被重建（onLoad 重跑，界面按新角色刷新），
+     *   返回时「我的」页 onShow 也会重新查一次角色，
+     *   所以两边都拿到新身份。
+     */
+    setTimeout(() => wx.redirectTo({ url: '/pages/about/about' }), 600)
   },
 
   /* ================================================================
