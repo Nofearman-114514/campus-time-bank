@@ -1,0 +1,71 @@
+<!-- ==================================================================
+     内部账户登录
+     ★ 普通用户不需要来这里 —— 小程序启动时用 wx.login 静默登录，
+       身份与微信号绑定，没有密码这回事。
+       这一页只服务「不属于任何个人微信号」的内部账户（校方 / 运维）。
+     ================================================================== -->
+<view class="page login-page">
+
+  <!-- 已登录：显示当前账户 + 退出 -->
+  <block wx:if="{{current}}">
+    <view class="card">
+      <view class="sec-title">
+        <text class="sec-title__text">当前内部账户</text>
+      </view>
+      <view class="acc-row">
+        <text class="acc-row__icon">🔑</text>
+        <view class="acc-row__body">
+          <text class="acc-row__name">{{current.user.nickName || '内部账户'}}</text>
+          <text class="acc-row__sub">角色：{{current.role === 'debugger' ? '调试员（校方）' : (current.role === 'admin' ? '管理员' : '普通')}}</text>
+        </view>
+      </view>
+      <view class="btn btn--gray mt" bindtap="onLogout">退出内部账户</view>
+    </view>
+  </block>
+
+  <!-- 未登录：账号密码表单 -->
+  <block wx:else>
+    <view class="login-hero">
+      <text class="login-hero__icon">🔐</text>
+      <text class="login-hero__title">内部账户登录</text>
+      <text class="login-hero__desc">仅限校方 / 运维的内部账户。普通同学无须登录 —— 打开小程序即为你的微信身份。</text>
+    </view>
+
+    <view class="card">
+      <view class="form-item">
+        <text class="form-item__label">账号</text>
+        <input
+          class="form-item__input"
+          value="{{username}}"
+          placeholder="请输入内部账号"
+          placeholder-class="form-item__ph"
+          maxlength="32"
+          bindinput="onUsername"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-item__label">密码</text>
+        <input
+          class="form-item__input"
+          value="{{password}}"
+          password="{{!showPwd}}"
+          placeholder="请输入密码"
+          placeholder-class="form-item__ph"
+          maxlength="64"
+          bindinput="onPassword"
+        />
+        <text class="login-eye" bindtap="onTogglePwd">{{showPwd ? '隐藏' : '显示'}}</text>
+      </view>
+
+      <view class="btn btn--primary login-submit {{submitting ? 'is-disabled' : ''}}" bindtap="onSubmit">
+        {{submitting ? '登录中…' : '登录'}}
+      </view>
+    </view>
+
+    <view class="login-tip">
+      连续 5 次输错会锁定 15 分钟。<text class="login-tip__strong">账号与密码同样用于区分身份</text>，请勿转借。
+    </view>
+  </block>
+
+</view>

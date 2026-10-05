@@ -13,9 +13,41 @@
  */
 const cloud = require('./cloud')
 
+/* ============================ 内部账户令牌 ============================ */
+/**
+ * 令牌的本地存储 key。
+ *
+ * ★ 普通用户**没有**令牌 —— 他们的身份来自微信（wx.login 换的 openid），
+ *   这是小程序里唯一自然的方式，无需密码。
+ *   只有内部账户（校方/运维）用账号密码登录后才会拿到令牌。
+ */
+const TOKEN_KEY = 'ctb_account_token'
+
+function getToken() {
+  try {
+    return wx.getStorageSync(TOKEN_KEY) || ''
+  } catch (e) {
+    return ''
+  }
+}
+
+function setToken(t) {
+  try {
+    if (t) wx.setStorageSync(TOKEN_KEY, t)
+    else wx.removeStorageSync(TOKEN_KEY)
+  } catch (e) { /* 存储失败则维持现状 */ }
+}
+
 /** 统一包装：把 action 塞进 data */
 function call(name, action, payload, opts) {
   const data = Object.assign({ action }, payload || {})
+  /*
+   * ★ 令牌随每个请求走。云端的 wrap() 看到 __token 就解析会话，
+   *   把这次请求的身份替换成该账户的合成 openid。
+   *   没有令牌时什么都不加 —— 普通用户完全不受影响。
+   */
+  const tk = getToken()
+  if (tk) data.__token = tk
   return cloud.call(name, data, opts)
 }
 
@@ -184,6 +216,35 @@ const admin = {
   saveConfig: p => call('admin', 'saveConfig', p)
 }
 
+/* ==================================================================
+ * account —— 内部账户（账号密码登录，**不绑定微信号**）
+ * ------------------------------------------------------------------
+ * ★ 这条通道只服务「不属于任何个人微信号」的账号（校方 / 运维）。
+ *   普通用户走 login 的静默登录，不需要也不应该用密码。
+ * ================================================================== */
+const account = {
+  /** 账号密码登录 → { token, expireTime, user, role, isAdmin, isDebugger } */
+  login: async p => {
+    const res = await call('account', 'login', p)
+    if (res && res.token) setToken(res.token)
+    return res
+  },
+  /**
+   * 退出内部账户。
+   * ★ 顺序很重要：先让云端删掉会话（这时还需要令牌），再清本地令牌。
+   */
+  logout: async () => {
+    let out = { ok: true }
+    try {
+      out = await call('account', 'logout')
+    } catch (e) { /* 云端失败也要清本地令牌，否则会一直带着废令牌 */ }
+    setToken('')
+    return out
+  },
+  /** 当前是否以内部账户登录 → { account, user, role, isAdmin, isDebugger } */
+  me: () => call('account', 'me')
+}
+
 module.exports = {
   login,
   skill,
@@ -192,6 +253,10 @@ module.exports = {
   user,
   message,
   admin,
+  account,
+  /** 令牌读写（退出登录、切换账户时用） */
+  getToken,
+  setToken,
   /** 逃生舱：调用未在上面登记的 action */
   raw: (name, action, payload, opts) => call(name, action, payload, opts),
   BizError: cloud.BizError

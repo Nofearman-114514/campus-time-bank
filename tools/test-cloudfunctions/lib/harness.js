@@ -41,7 +41,7 @@ const shared = require(path.join(ROOT, 'cloudfunctions', '_shared', 'index.js'))
  *   改成遍历加载后，任何云函数都能写进 cases/ 直接测。
  *   某个函数加载失败不会中断整体（只记录），方便逐个补齐覆盖。
  */
-const FUNC_NAMES = ['login', 'skill', 'order', 'wallet', 'user', 'message', 'admin', 'initdb']
+const FUNC_NAMES = ['login', 'skill', 'order', 'wallet', 'user', 'message', 'admin', 'initdb', 'account']
 const fns = {}
 const loadErrors = {}
 for (const n of FUNC_NAMES) {

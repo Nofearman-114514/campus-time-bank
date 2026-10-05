@@ -316,6 +316,52 @@ DEMO_EXTRA_NAMES.forEach((name, i) => {
   users.push(u)
 })
 
+/* ============================ 内部账户（离线模拟） ============================
+ * ★ 真实云端只存 PBKDF2 哈希；离线环境**没有 Node crypto**（小程序里跑），
+ *   所以这里直接存明文口令做比对 —— 仅用于离线演示，不涉及任何真实凭据。
+ *   同理，令牌是随手拼的字符串，不走 sessions 查询之外的任何校验。
+ */
+const ACCT_ADMIN_OPENID = 'acct_internal_admin'
+const ACCT_DEBUG_OPENID = 'acct_internal_debugger'
+
+const INTERNAL_ACCOUNTS = [
+  { username: 'admin', password: 'Admin@2026', openid: ACCT_ADMIN_OPENID, nickName: '内部管理员', role: 'admin' },
+  { username: 'debugger', password: 'Debug@2026', openid: ACCT_DEBUG_OPENID, nickName: '内部调试员', role: 'debugger' }
+]
+
+INTERNAL_ACCOUNTS.forEach(a => {
+  users.push(mkUser(a.openid, a.nickName, {
+    realName: a.nickName,
+    bio: '系统内部账户（账号密码登录，不绑定微信号）',
+    college: '', major: '', grade: '', studentNo: '',
+    coins: 0, totalEarned: 0, totalSpent: 0,
+    creditScore: 100, creditLevel: 'good',
+    badges: [], role: a.role, authStatus: 2,
+    stats: {
+      publishCount: 0, serveCount: 0, buyCount: 0,
+      reviewCount: 0, ratingSum: 0, avgRating: 0, ontimeStreak: 0
+    }
+  }))
+})
+
+const accounts = INTERNAL_ACCOUNTS.map(a => ({
+  _id: 'acc_' + a.username,
+  username: a.username,
+  password: a.password,          // 见上方说明：离线模拟专用
+  openid: a.openid,
+  nickName: a.nickName,
+  status: 1,
+  failCount: 0,
+  lockUntil: 0,
+  createTime: now(),
+  lastLoginTime: 0
+}))
+
+const sessions = []
+
+/** 当前 mock 身份：内部账户带令牌时会被换成它的合成 openid */
+let currentOpenid = ''
+
 const userMap = users.reduce((m, u) => (m[u._openid] = u, m), {})
 
 /* ============================ 分类 ============================ */
@@ -793,8 +839,8 @@ function paginate(list, page, size) {
   return { list: clone(slice), total: list.length, hasMore: start + n < list.length }
 }
 
-/** 取当前用户（模拟环境恒为 me） */
-const me = () => userMap[OPENID.me]
+/** 取当前用户：内部账户带令牌时是那个账户，否则是默认演示用户 */
+const me = () => userMap[currentOpenid || OPENID.me]
 
 /** 给订单补上「对我而言的角色」 */
 function withRole(o) {
@@ -1421,6 +1467,58 @@ const handlers = {
   }),
 
   /* ================= admin ================= */
+  /* ---------------- 内部账户（账号密码，不绑定微信号） ---------------- */
+  'account.login': d => {
+    const username = String(d.username || '').trim().toLowerCase()
+    const password = String(d.password || '')
+    if (!username) fail(400, '请输入账号')
+    if (!password) fail(400, '请输入密码')
+    const acc = accounts.find(a => a.username === username)
+    // ★ 与真实云端同口径：账号不存在 / 密码错 / 被禁用都是同一句话，防枚举
+    if (!acc || Number(acc.status) === 0) fail(401, '账号或密码不正确')
+    if (Number(acc.lockUntil) > Date.now()) {
+      const mins = Math.max(1, Math.ceil((Number(acc.lockUntil) - Date.now()) / 60000))
+      fail(429, '尝试次数过多，请 ' + mins + ' 分钟后再试')
+    }
+    if (acc.password !== password) {
+      acc.failCount = (acc.failCount || 0) + 1
+      if (acc.failCount >= 5) { acc.lockUntil = Date.now() + 15 * 60 * 1000; acc.failCount = 0 }
+      fail(401, '账号或密码不正确')
+    }
+    acc.failCount = 0
+    acc.lockUntil = 0
+    acc.lastLoginTime = now()
+    const token = 'mock_acct_' + acc.username + '_' + (Date.now().toString(36)) + '_' + Math.random().toString(36).slice(2, 18)
+    const expireTime = Date.now() + 7 * 24 * 3600 * 1000
+    sessions.push({ token, accountOpenid: acc.openid, accountId: acc._id, createTime: now(), expireTime })
+    const u = userMap[acc.openid]
+    return {
+      token,
+      expireTime,
+      user: u ? clone(u) : null,
+      nickName: acc.nickName,
+      role: (u && u.role) || 'user',
+      isAdmin: !!u && (u.role === 'admin' || u.role === 'debugger'),
+      isDebugger: !!u && u.role === 'debugger'
+    }
+  },
+  'account.logout': d => {
+    const tk = String((d && d.__token) || '')
+    for (let i = sessions.length - 1; i >= 0; i--) { if (sessions[i].token === tk) sessions.splice(i, 1) }
+    return { ok: true }
+  },
+  'account.me': () => {
+    if (!currentOpenid) return { account: null, user: null, role: 'user', isAdmin: false, isDebugger: false }
+    const u = userMap[currentOpenid]
+    return {
+      account: { accountId: currentOpenid, expireTime: 0 },
+      user: u ? clone(u) : null,
+      role: (u && u.role) || 'user',
+      isAdmin: !!u && (u.role === 'admin' || u.role === 'debugger'),
+      isDebugger: !!u && u.role === 'debugger'
+    }
+  },
+
   'admin.check': () => ({ isAdmin: me().role === 'admin' || me().role === 'debugger', isDebugger: me().role === 'debugger', role: me().role }),
 
   'admin.stats': d => {
@@ -1729,6 +1827,17 @@ function addCredit(openid, change, reason, reasonText, orderId) {
  * @param {Object} data   { action, ...payload }
  */
 async function dispatch(name, data) {
+  /*
+   * ★ 与真实云端 wrap() 对齐：按本次请求的令牌重算身份。
+   *   每次都先清空，避免上一次请求的状态残留（真实云端是请求隔离的）。
+   *   不带令牌 → 回到默认演示用户，等价于「微信身份」。
+   */
+  currentOpenid = ''
+  if (data && data.__token) {
+    const s = sessions.find(x => x.token === data.__token && Number(x.expireTime) > Date.now())
+    if (s) currentOpenid = s.accountOpenid
+  }
+
   const key = `${name}.${data.action}`
   const fn = handlers[key]
   if (!fn) {
@@ -1739,4 +1848,4 @@ async function dispatch(name, data) {
   return fn(data || {})
 }
 
-module.exports = { dispatch, MockError, store: { users, skills, orders, reviews, chats, messages, notices, categories, reports, banners, config, walletLogs, creditLogs } }
+module.exports = { dispatch, MockError, store: { users, skills, orders, reviews, chats, messages, notices, categories, reports, banners, config, walletLogs, creditLogs, favorites, accounts, sessions } }

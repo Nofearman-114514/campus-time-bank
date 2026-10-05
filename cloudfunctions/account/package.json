@@ -1,0 +1,10 @@
+{
+  "name": "account",
+  "version": "1.0.0",
+  "description": "校园时间银行 · 内部账户（账号密码登录，不绑定微信号）",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

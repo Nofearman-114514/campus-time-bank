@@ -33,7 +33,10 @@ const C = {
   // ★ 第 14 个集合：技能收藏关系。单独建集合而不是在 skills 上挂数组字段 ——
   //   这样「我的收藏」是一次 where 查询、取消收藏是删文档，
   //   技能文档也不会因为收藏人数增长而无限膨胀。
-  FAVORITES: 'favorites'
+  FAVORITES: 'favorites',
+  // ★ 第 15/16 个集合：内部账户与会话（见下方「内部账户」一节）
+  ACCOUNTS: 'accounts',
+  SESSIONS: 'sessions'
 }
 
 /* ============================ 统一返回 ============================ */
@@ -132,9 +135,94 @@ async function paginateQuery(query, opts) {
   }
 }
 
+/* ============================ 内部账户 ============================ */
+/*
+ * 背景：普通用户的身份来自 wx.login 换到的 openid，与微信号绑定。
+ * 但**内部账户**（校方/运维）需要在没有微信绑定的情况下登录 ——
+ * 所以他们走「账号 + 密码」，登录后拿到一个会话令牌。
+ *
+ * ★ 关键设计：整个后端都是按 openid 索引的（每个 action 都调 getOpenId()）。
+ *   所以这里**不去改那 8 个云函数**，而是让 getOpenId() 在「带有效令牌」时
+ *   返回该账户的**合成 openid**。业务层一行都不用动。
+ */
+const identityStore = require('async_hooks').AsyncLocalStorage
+const nodeCrypto = require('crypto')
+
+const identityAls = new identityStore()
+
+/** 合成 openid 前缀 —— 与微信 openid（o 开头）天然不冲突 */
+const ACCOUNT_PREFIX = 'acct_'
+
+/** 会话有效期：7 天 */
+const SESSION_TTL = 7 * 24 * 3600 * 1000
+/** PBKDF2 迭代次数：够用又不至于拖慢云函数 */
+const PBKDF2_ITER = 50000
+const PBKDF2_LEN = 32
+
+function newSalt() {
+  return nodeCrypto.randomBytes(16).toString('hex')
+}
+
+function newToken() {
+  return nodeCrypto.randomBytes(32).toString('hex')
+}
+
+/** 口令 → PBKDF2-SHA256 哈希（十六进制）。**绝不存明文。** */
+function hashPassword(password, salt) {
+  return nodeCrypto
+    .pbkdf2Sync(String(password), String(salt), PBKDF2_ITER, PBKDF2_LEN, 'sha256')
+    .toString('hex')
+}
+
+/**
+ * 定长时间比较。
+ * ★ 不用 === 是因为字符串比较遇到第一个不同字符就返回，
+ *   理论上能通过响应耗时逐字节猜出哈希。
+ */
+function safeEqual(a, b) {
+  const ba = Buffer.from(String(a), 'utf8')
+  const bb = Buffer.from(String(b), 'utf8')
+  if (ba.length !== bb.length) return false
+  return nodeCrypto.timingSafeEqual(ba, bb)
+}
+
+/**
+ * 用令牌换会话；令牌无效/过期返回 null。
+ *
+ * ★ 解析失败**不抛错**：调用方回退到微信身份。
+ *   这样「令牌过期」不会把人锁在门外，也不会造成权限提升
+ *   （拿不到有效令牌 = 只能是微信本人）。
+ */
+async function resolveSession(token) {
+  const tk = String(token || '').trim()
+  if (tk.length < 32 || tk.length > 128) return null
+  try {
+    const res = await db.collection(C.SESSIONS).where({ token: tk }).limit(1).get()
+    const s = (res.data && res.data[0]) || null
+    if (!s) return null
+    if (Number(s.expireTime) && Number(s.expireTime) < Date.now()) return null
+    return { openid: s.accountOpenid, session: s }
+  } catch (e) {
+    return null
+  }
+}
+
+/** 当前请求是否来自内部账户（不是则返回 null） */
+function currentAccount() {
+  const store = identityAls.getStore()
+  return (store && store.account) || null
+}
+
 /* ============================ 用户 ============================ */
-/** 当前调用者的 openid */
+/**
+ * 当前调用者的 openid。
+ *
+ * ★ 优先级：内部账户会话 > 微信身份。
+ *   「带令牌」是一个显式声明「以谁的身份操作」，比隐式的微信上下文更具体。
+ */
 function getOpenId() {
+  const store = identityAls.getStore()
+  if (store && store.openid) return store.openid
   const ctx = cloud.getWXContext()
   return ctx.OPENID || ctx.FROM_OPENID || ''
 }
@@ -480,7 +568,22 @@ function wrap(handler) {
   return async (event, context) => {
     const action = (event && event.action) || ''
     try {
-      const data = await handler(event || {}, context || {})
+      /*
+       * ★ 只有**带了令牌**才去查会话。
+       *
+       *   两个理由：
+       *   ① 性能：绝大多数请求（普通微信用户）没有令牌，不该白白多一次异步挂起。
+       *   ② 正确性：无令牌时保持「进入 handler 前不挂起」，
+       *      这样 getOpenId() 在 handler 的第一个 await 之前就能拿到身份。
+       *      （测试桩的 __setOpenId 是模块级变量、不隔离；真实云开发的
+       *        getWXContext() 虽是请求隔离的，但少一次挂起总是更稳。）
+       */
+      const token = event && event.__token
+      const sess = token ? await resolveSession(token) : null
+      const data = await identityAls.run(
+        sess ? { openid: sess.openid, account: sess.session } : {},
+        () => handler(event || {}, context || {})
+      )
       return ok(data)
     } catch (e) {
       // 业务异常：消息本来就是写给用户看的，原样返回
@@ -540,6 +643,9 @@ module.exports = {
   parsePage, paginateQuery,
   getOpenId, getUser, requireUser, requireVerified, requireAdmin, requireDebugger,
   ROLE, isAdminUser, isDebuggerUser,
+  // 内部账户
+  ACCOUNT_PREFIX, SESSION_TTL, newSalt, newToken, hashPassword, safeEqual,
+  resolveSession, currentAccount,
   getConfig, DEFAULT_CONFIG,
   creditLevelOf, orderLimitOf, changeCredit, CREDIT_LEVELS,
   addWalletLog, addNotice, sendSubscribe,

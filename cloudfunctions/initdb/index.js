@@ -17,7 +17,8 @@
 const {
   db, C, _,
   wrap, bizError, assert,
-  now, getOpenId, requireAdmin, requireDebugger
+  now, getOpenId, requireAdmin, requireDebugger,
+  newSalt, hashPassword
 } = require('./shared')
 
 /* ============================ 常量 ============================ */
@@ -26,7 +27,11 @@ const {
 const ALL_COLLECTIONS = [
   C.USERS, C.CATEGORIES, C.SKILLS, C.ORDERS, C.REVIEWS,
   C.WALLET_LOGS, C.CREDIT_LOGS, C.CHATS, C.MESSAGES,
-  C.NOTICES, C.REPORTS, C.BANNERS, C.CONFIG, C.FAVORITES
+  C.NOTICES, C.REPORTS, C.BANNERS, C.CONFIG, C.FAVORITES,
+  // ★ 第 15/16 个集合：内部账户与会话（账号密码登录，不绑定微信号）
+  //   注意它们不在 BUSINESS_COLLECTIONS 里 —— clear 不该把内部账户删掉，
+  //   否则就再也登不进来了（只能去控制台手工重建）。
+  C.ACCOUNTS, C.SESSIONS
 ]
 
 /** clear 清空的业务集合（users 只删非 admin） */
@@ -309,6 +314,71 @@ const GRADE_NOW = (() => {
 })()
 /** yearsAgo: 0=大一 1=大二 2=大三 3=大四 */
 const gradeAt = (yearsAgo) => (GRADE_NOW - yearsAgo) + '级'
+
+/* ============================ 内部账户（账号密码，不绑定微信号） ============================ */
+/*
+ * ★ 这是**唯一**不需要微信号的登录方式，供校方 / 运维使用。
+ *
+ *   口令只存 PBKDF2-SHA256 哈希（盐随机、5 万次迭代、32 字节），**不存明文**。
+ *
+ *   ⚠️ 默认口令写在下面的 SEED_ACCOUNTS 里，会随仓库一起公开。
+ *      正式使用前**必须改掉** —— 最省事的方式是改这里再跑一次 repair，
+ *      或者直接在控制台改 accounts 集合里的 salt / passwordHash
+ *      （用 _shared 的 hashPassword(新口令, 新盐) 现算）。
+ */
+const ACCT_ADMIN_OPENID = 'acct_internal_admin'
+const ACCT_DEBUG_OPENID = 'acct_internal_debugger'
+
+const SEED_ACCOUNTS = [
+  { username: 'admin', password: 'Admin@2026', openid: ACCT_ADMIN_OPENID, nickName: '内部管理员' },
+  { username: 'debugger', password: 'Debug@2026', openid: ACCT_DEBUG_OPENID, nickName: '内部调试员' }
+]
+
+/**
+ * 内部账户对应的 users 文档。
+ * ★ 业务层全部按 openid 索引，所以必须有这条记录 ——
+ *   会话令牌解析出来的 openid 要能查到人。
+ */
+const INTERNAL_USERS = [
+  { _id: 'user_acct_admin', _openid: ACCT_ADMIN_OPENID, nickName: '内部管理员', role: 'admin' },
+  { _id: 'user_acct_debug', _openid: ACCT_DEBUG_OPENID, nickName: '内部调试员', role: 'debugger' }
+].map(u => Object.assign({
+  avatarUrl: '', gender: 0, phone: '',
+  campus: '广东职业技术学院', college: '', major: '', grade: '',
+  studentNo: '', realName: u.nickName,
+  bio: '系统内部账户（账号密码登录，不绑定微信号）',
+  tags: [],
+  authStatus: 2, authImages: [], authRemark: '', authTime: 0,
+  coins: 0, frozenCoins: 0, totalEarned: 0, totalSpent: 0,
+  creditScore: 100, creditLevel: 'good',
+  badges: [],
+  stats: {
+    publishCount: 0, serveCount: 0, buyCount: 0,
+    reviewCount: 0, ratingSum: 0, avgRating: 0, ontimeStreak: 0
+  },
+  location: null, locationName: '', locationTime: null,
+  status: 1, createTime: 0, updateTime: 0, lastLoginTime: 0
+}, u))
+
+/** 生成 accounts 种子文档：每次现算哈希，盐是随机的 */
+function accountDocs() {
+  return SEED_ACCOUNTS.map(a => {
+    const salt = newSalt()
+    return {
+      _id: 'acc_' + a.username,
+      username: a.username,
+      salt,
+      passwordHash: hashPassword(a.password, salt),
+      openid: a.openid,
+      nickName: a.nickName,
+      status: 1,
+      failCount: 0,
+      lockUntil: 0,
+      createTime: now(),
+      lastLoginTime: 0
+    }
+  })
+}
 
 const DEMO_USERS = [
   {
@@ -760,6 +830,9 @@ async function actionInit(event) {
   seeded.config = await seedDocs(C.CONFIG, [SEED_CONFIG], '全局配置')
   seeded.banners = await seedDocs(C.BANNERS, SEED_BANNERS, '首页轮播')
   seeded.users = await seedDocs(C.USERS, DEMO_USERS, '演示用户')
+  // ★ 内部账户：users 记录 + accounts 登录凭据
+  seeded.internalUsers = await seedDocs(C.USERS, INTERNAL_USERS, '内部账户用户')
+  seeded.accounts = await seedDocs(C.ACCOUNTS, accountDocs(), '内部账户')
   seeded.skills = await seedDocs(C.SKILLS, DEMO_SKILLS, '演示技能')
   seeded.orders = await seedDocs(C.ORDERS, DEMO_ORDERS, '演示订单')
   seeded.reviews = await seedDocs(C.REVIEWS, DEMO_REVIEWS, '演示评价')

@@ -152,6 +152,13 @@
         <text class="cell__arrow">›</text>
       </view>
 
+      <!-- 内部账户登录（校方/运维）—— 普通用户不需要，用微信身份即可 -->
+      <view class="cell" bindtap="goAccountLogin">
+        <view class="cell__icon">🔑</view>
+        <text class="cell__label">内部账户登录</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
       <!-- 退出登录 -->
       <view class="cell" bindtap="onLogout">
         <view class="cell__icon">🚪</view>

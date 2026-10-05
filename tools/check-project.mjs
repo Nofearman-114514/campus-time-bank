@@ -404,7 +404,7 @@ for (const wf of wxmlFiles) {
 /* ------------------------------------------------------------------ */
 /* 7. 云函数结构                                                        */
 /* ------------------------------------------------------------------ */
-const EXPECT_FUNCS = ['login', 'skill', 'order', 'wallet', 'user', 'message', 'admin', 'initdb']
+const EXPECT_FUNCS = ['login', 'skill', 'order', 'wallet', 'user', 'message', 'admin', 'initdb', 'account']
 if (exists(CF)) {
   const dirs = fs.readdirSync(CF, { withFileTypes: true })
     .filter(d => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))

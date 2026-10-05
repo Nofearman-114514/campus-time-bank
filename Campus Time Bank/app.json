@@ -11,6 +11,7 @@
     "pages/wallet/wallet",
     "pages/mine/mine",
     "pages/user/profile/profile",
+    "pages/account/login/login",
     "pages/user/home/home",
     "pages/user/skills/skills",
     "pages/user/favorites/favorites",

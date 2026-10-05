@@ -133,6 +133,8 @@ Page({
   goNotice() { this.go('/pages/notice/list/list') },
   /** 管理端在分包里，同样用 navigateTo */
   goAdmin() { this.go('/packageAdmin/pages/dashboard/dashboard') },
+  /** 内部账户登录（校方/运维）：账号密码，不绑定微信号 */
+  goAccountLogin() { this.go('/pages/account/login/login') },
 
   /** 钱包 / 订单是 tab 页，必须 switchTab */
   goWallet() { util.switchTab(TAB_WALLET) },
@@ -158,6 +160,12 @@ Page({
         if (!res.confirm) return
         // 只清业务缓存，保留设备级设置（例如管理员开的调试模式）
         try { wx.removeStorageSync('pickedLocation') } catch (e) { /* 忽略 */ }
+        /*
+         * ★ 内部账户令牌必须一起清。
+         *   否则「退出登录」只是清了个缓存 —— 下一个请求仍会带着令牌，
+         *   云端照样以那个内部账户的身份操作，等于没退。
+         */
+        try { require('../../utils/api').setToken('') } catch (e) { /* 忽略 */ }
         const app = getApp()
         if (app && app.globalData) {
           app.globalData.userInfo = null

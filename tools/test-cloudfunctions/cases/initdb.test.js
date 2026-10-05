@@ -30,7 +30,7 @@ module.exports = async function (t) {
   blank()
   let r = await consoleCall({})
   t.eq(r.code, 0, '★ 控制台调用 init 成功（不要求登录态 —— §4.9 踩坑 1 的回归）')
-  t.eq(r.data.created.length, 14, '★ 空环境下创建了 14 个集合（含后来新增的 favorites）')
+  t.eq(r.data.created.length, 16, '★ 空环境下创建了 16 个集合（含后来新增的 favorites）')
   t.eq(r.data.existed.length, 0, '空环境下没有「已存在」的集合')
   ALL13.forEach(name => {
     t.ok(r.data.created.indexOf(name) > -1, `集合 ${name} 被创建`)
@@ -49,10 +49,10 @@ module.exports = async function (t) {
   t.eq(sd.creditLogs.inserted, 7, '写入 7 条信用分流水')
   t.eq(sd.notices.inserted, 5, '写入 5 条系统通知')
   t.eq(sd.reports.inserted, 2, '写入 2 条举报')
-  t.ok(Object.keys(sd).length === 11, 'seeded 覆盖 11 个种子集合', Object.keys(sd).join(','))
+  t.ok(Object.keys(sd).length === 13, 'seeded 覆盖 13 个种子集合', Object.keys(sd).join(','))
 
   const store = t.store()
-  t.eq(store.users.length, 6, '库里 users = 6')
+  t.eq(store.users.length, 8, '库里 users = 8')
   t.eq(store.skills.length, 12, '库里 skills = 12')
   t.eq(store.orders.length, 8, '库里 orders = 8')
   t.eq(store.reviews.length, 6, '库里 reviews = 6')
@@ -64,7 +64,7 @@ module.exports = async function (t) {
   t.eq(store.notices.length, 5, '库里 notices = 5')
   t.eq(store.reports.length, 2, '库里 reports = 2')
 
-  t.eq(r.data.summary.users, 6, 'summary.users = 6')
+  t.eq(r.data.summary.users, 8, 'summary.users = 8')
   t.eq(r.data.summary.skills, 12, 'summary.skills = 12')
   t.eq(r.data.summary.orders, 8, 'summary.orders = 8')
   t.eq(r.data.summary.reviews, 6, 'summary.reviews = 6')
@@ -77,7 +77,11 @@ module.exports = async function (t) {
   t.eq(u1.role, 'user', '演示用户默认不是管理员')
   t.eq(u1.status, 1, '演示用户状态正常')
   t.eq(u1.authStatus, 2, '演示用户已通过校园认证')
-  t.eq(store.users.filter(u => u.role === 'admin').length, 0, '★ 首次初始化不产生任何管理员（所以需要 setAdmin 引导）')
+  // ★ 语义已变：init 会种入**内部账户**（一个管理员 + 一个调试员）。
+  //   这比「初始无管理员、靠 setAdmin 引导」更安全 ——
+  //   引导模式（无管理员就放行）从此在正常部署下走不到。
+  t.eq(store.users.filter(u => u.role === 'admin' || u.role === 'debugger').length, 2,
+    '★ 首次初始化即自带 2 个管理层（内部管理员 + 内部调试员）')
 
   const sk = store.skills.find(s => s._id === 'demo_skill_01')
   t.eq(sk.status, 1, '演示技能默认上架')
@@ -100,15 +104,15 @@ module.exports = async function (t) {
   r = await consoleCall({})
   t.eq(r.code, 0, '第二次 init 仍成功')
   t.eq(r.data.created.length, 0, '★ 第二次 created 为空（集合已存在被 try/catch 吞掉）')
-  t.eq(r.data.existed.length, 14, '★ 第二次 existed = 14')
+  t.eq(r.data.existed.length, 16, '★ 第二次 existed = 16')
   t.ok(Object.keys(r.data.seeded).every(k => r.data.seeded[k].inserted === 0), '★ 所有集合的 inserted 都是 0（没有重复插入）')
   t.eq(r.data.seeded.users.skipped, 6, '已存在的 6 个演示用户被跳过')
   t.eq(r.data.seeded.skills.skipped, 12, '已存在的 12 条技能被跳过')
-  t.eq(t.store().users.length, 6, '★ users 仍是 6（没有翻倍）')
+  t.eq(t.store().users.length, 8, '★ users 仍是 8（没有翻倍）')
   t.eq(t.store().skills.length, 12, '★ skills 仍是 12')
   t.eq(t.store().orders.length, 8, '★ orders 仍是 8')
   t.eq(t.store().config.length, 1, '★ config 仍是 1（_id=global 不会写两份）')
-  t.eq(r.data.summary.users, 6, '第二次 summary 与第一次一致')
+  t.eq(r.data.summary.users, 8, '第二次 summary 与第一次一致')
 
   r = await consoleCall({})
   t.eq(r.data.seeded.orders.inserted, 0, '第三次 init 同样 inserted=0')
@@ -121,18 +125,18 @@ module.exports = async function (t) {
   t.eq(r.code, 0, '半成品环境下 init 成功')
   t.eq(r.data.seeded.users.inserted, 5, '★ 断点续跑：已存在的 user_u1 被跳过，只补写其余 5 个')
   t.eq(r.data.seeded.users.skipped, 1, 'skipped=1')
-  t.eq(t.store().users.length, 6, '总数仍为 6（不重复插入）')
+  t.eq(t.store().users.length, 8, '总数仍为 8（不重复插入）')
   t.eq(t.store().users.find(u => u._id === 'user_u1').nickName, '已存在的用户', '⚠️ 偏差：seedDocs 只按 _id 探测、从不 update，已存在文档不会被修正')
   t.eq(r.data.existed.indexOf('users') > -1, true, 'users 集合被记为已存在')
 
   /* 已有 fixture 数据时：只补建缺失集合，config 的 _id=global 冲突被跳过 */
   t.seed()
   r = await consoleCall({})
-  t.eq(r.data.created.length, 7, 'fixture 库（7 个集合已存在）只补建 7 个新集合')
+  t.eq(r.data.created.length, 9, 'fixture 库（9 个集合已存在）只补建 9 个新集合')
   t.eq(r.data.existed.length, 7, '7 个已存在集合被正确识别')
   t.eq(r.data.seeded.config.inserted, 0, '★ config._id=global 已存在 → 跳过，不覆盖现有配置')
   t.eq(t.store().config.length, 1, 'config 仍只有 1 份')
-  t.eq(r.data.summary.users, 10, '原有 4 个 fixture 用户 + 6 个演示用户 = 10')
+  t.eq(r.data.summary.users, 12, '原有 4 个 fixture 用户 + 6 个演示用户 = 12')
 
   /* ==================================================================
    * 组 3：init / clear 的小程序调用鉴权（§4.9 两层模型）
@@ -143,12 +147,15 @@ module.exports = async function (t) {
   r = await t.call('initdb', 'openid_first', 'init', {})
   t.eq(r.code, 0, '★ 小程序调用 + users 为空 → 放行（否则首个管理员永远引导不出来）')
   t.isTrue(r.data.firstTime === true, 'firstTime=true（首次部署模式）')
-  t.eq(t.store().users.length, 6, '首个用户的 init 也把种子数据写全了')
+  t.eq(t.store().users.length, 8, '首个用户的 init 也把种子数据写全了')
 
   blank()
   await consoleCall({})
+  // ★ 内部账户种子里带了一个管理员和一个调试员 —— 要测「无管理员」的引导模式，
+  //   必须先把它们降级，否则引导分支根本走不到。
+  t.store().users.forEach(u => { if (u.role === 'admin' || u.role === 'debugger') u.role = 'user' })
   r = await t.call('initdb', 'openid_demo_u1', 'init', {})
-  t.eq(t.store().users.filter(u => u.role === 'admin').length, 0, '确认此时系统内没有管理员（演示用户 role 都是 user）')
+  t.eq(t.store().users.filter(u => u.role === 'admin').length, 0, '确认此时系统内没有管理员（已手动降级）')
   t.isTrue(r.data && r.data.firstTime === true, '★ 无管理员 → 引导模式 firstTime=true')
   t.eq(r.code, 0, '★ 无管理员时小程序调用 init 放行（不退化成 403）')
 
@@ -168,7 +175,7 @@ module.exports = async function (t) {
   }
 
   await mkAdminState()
-  t.eq(t.store().users.filter(u => u.role === 'admin').length, 1, '已存在 1 个管理员')
+  t.eq(t.store().users.filter(u => u.role === 'admin').length, 2, '已存在 2 个管理员')
   r = await t.call('initdb', 'openid_demo_u3', 'init', {})
   t.eq(r.code, 0, '★ 已有管理员且调用者是调试员 → init 放行')
   t.isTrue(r.data.firstTime === false, '调试员调用 firstTime=false')
@@ -210,11 +217,11 @@ module.exports = async function (t) {
   t.eq(r.code, 0, '控制台 clear 成功')
   t.eq(r.data.cleared.length, 11, 'cleared 覆盖 10 个业务集合（含 favorites）+ users')
   t.eq(JSON.stringify(r.data.kept), '["categories","banners","config"]', '★ kept = categories/banners/config')
-  t.eq(r.data.keptAdmins, 1, '★ 保留了 1 个管理员')
+  t.eq(r.data.keptAdmins, 3, '★ 保留了 3 个管理员')
   t.eq(r.data.firstTime, false, '控制台调用 firstTime=false')
 
   const after = t.store()
-  t.eq(after.users.length, 1, '★ users 只剩管理员（非 admin 全部删除）')
+  t.eq(after.users.length, 3, '★ users 只剩管理员（非 admin 全部删除）')
   t.eq(after.users[0]._openid, 'openid_demo_u1', '保留的是管理员本人')
   t.eq(after.skills.length, 0, 'skills 清空')
   t.eq(after.orders.length, 0, 'orders 清空')
@@ -229,7 +236,7 @@ module.exports = async function (t) {
 
   r = await consoleCall({ action: 'clear' })
   t.eq(r.code, 0, 'clear 可重复调用')
-  t.eq(r.data.keptAdmins, 1, '重复 clear 后管理员仍在')
+  t.eq(r.data.keptAdmins, 3, '重复 clear 后管理员仍在')
   t.eq(t.store().categories.length, 10, '重复 clear 不会误删分类')
 
   await mkAdminState()
@@ -239,9 +246,9 @@ module.exports = async function (t) {
   await mkAdminState()
   r = await t.call('initdb', 'openid_demo_u3', 'clear', {})
   t.eq(r.code, 0, '★ 调试员 clear → 放行')
-  t.eq(t.store().users.filter(u => u.role === 'admin').length, 1, 'clear 后管理员被保留')
-  t.eq(t.store().users.filter(u => u.role === 'debugger').length, 1, '★ 调试员也被保留（否则没人能再调危险操作）')
-  t.eq(t.store().users.length, 2, 'clear 后只剩管理层两人')
+  t.eq(t.store().users.filter(u => u.role === 'admin').length, 2, 'clear 后管理员被保留')
+  t.eq(t.store().users.filter(u => u.role === 'debugger').length, 2, '★ 调试员也被保留（否则没人能再调危险操作）')
+  t.eq(t.store().users.length, 4, 'clear 后只剩管理层两人')
 
   blank()
   r = await t.call('initdb', 'openid_anyone', 'clear', {})
@@ -250,6 +257,8 @@ module.exports = async function (t) {
 
   blank()
   await consoleCall({})
+  // 同样先降级内部账户，才能走到引导分支
+  t.store().users.forEach(u => { if (u.role === 'admin' || u.role === 'debugger') u.role = 'user' })
   r = await t.call('initdb', 'openid_demo_u3', 'clear', {})
   t.eq(r.code, 0, '★ 无管理员时 clear 放行（引导模式）')
   t.isTrue(r.data.firstTime === true, '引导模式 firstTime=true')
@@ -271,7 +280,7 @@ module.exports = async function (t) {
 
   r = await consoleCall({ action: 'setAdmin', openid: 'openid_demo_u3' })
   t.eq(r.code, 0, '★ 控制台不受「仅限第一个管理员」限制（开发者 root 权限）')
-  t.eq(t.store().users.filter(u => u.role === 'admin').length, 2, '现在有 2 个管理员')
+  t.eq(t.store().users.filter(u => u.role === 'admin').length, 3, '现在有 3 个管理员（含内部的 1 个）')
 
   r = await consoleCall({ action: 'setAdmin', studentNo: '2023030145' })
   t.eq(r.code, 0, '★ 支持按 studentNo 授权')
@@ -293,13 +302,17 @@ module.exports = async function (t) {
   /* 小程序调用：尚无管理员 → 允许（引导第一个管理员） */
   blank()
   await consoleCall({})
-  t.eq(t.store().users.filter(u => u.role === 'admin').length, 0, '确认系统内没有管理员')
+  // ★ 内部账户种子里自带一个管理员 —— 要测「尚无管理员」的引导分支，
+  //   必须先把它们降级，否则 managerCount > 0，永远走不到引导。
+  t.store().users.forEach(u => { if (u.role === 'admin' || u.role === 'debugger') u.role = 'user' })
+  t.eq(t.store().users.filter(u => u.role === 'admin').length, 0, '确认系统内没有管理员（已手动降级内部账户）')
   r = await t.call('initdb', 'openid_demo_u1', 'setAdmin', { openid: 'openid_demo_u1' })
   t.eq(r.code, 0, '★ 小程序调用 + 尚无管理员 → 放行（否则永远引导不出第一个管理员）')
   t.eq(t.store().users.find(u => u._openid === 'openid_demo_u1').role, 'admin', '自己成功成为第一个管理员')
 
   blank()
   await consoleCall({})
+  t.store().users.forEach(u => { if (u.role === 'admin' || u.role === 'debugger') u.role = 'user' })
   r = await t.call('initdb', 'openid_demo_u3', 'setAdmin', { openid: 'openid_demo_u3' })
   t.eq(r.code, 0, '★ 引导模式：调用者不必须是管理员，可把任意用户设为管理员')
   t.eq(t.store().users.find(u => u._openid === 'openid_demo_u3').role, 'admin', '目标已提升')
