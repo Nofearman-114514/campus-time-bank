@@ -653,6 +653,15 @@ async function actionReport(event) {
   // 补充说明：≤200 字，超出直接截断（避免用户填多了提交失败）
   const remark = trimAll(event.remark).slice(0, 200)
 
+  /*
+   * ★ 内容安全：举报理由和补充说明**也是用户写的 UGC**。
+   *   而且举报是「直接送到管理员眼前」的通道 —— 比普通内容更不该不过滤：
+   *   有人可以在理由里骂人、发违规内容，管理员被迫看到却没有一道拦截。
+   *   （空内容 checkText 会直接跳过，不白调接口。）
+   */
+  await checkText(reason, { scene: SEC_SCENE.COMMENT, openid, label: '举报原因' })
+  await checkText(remark, { scene: SEC_SCENE.COMMENT, openid, label: '补充说明' })
+
   const images = cleanArray(event.images, MAX_REPORT_IMAGES, 500)
 
   // ② 冗余被举报人 / 标题，便于管理端列表直接展示

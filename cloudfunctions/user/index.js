@@ -225,7 +225,14 @@ async function reviews(event) {
   const role = event.role === 'sent' ? 'sent' : 'received'
   const { page, size } = parsePage(event, 10)
 
-  const where = role === 'received' ? { toId: openid } : { fromId: openid }
+  /*
+   * ★ 过滤被隐藏的评价（举报核实成立后会打 hidden 标记）。
+   *   用 _.neq(true) 而不是 _.eq(false)：历史数据**没有 hidden 字段**，
+   *   严格相等会把它们全部漏掉。
+   */
+  const where = role === 'received'
+    ? { toId: openid, hidden: _.neq(true) }
+    : { fromId: openid, hidden: _.neq(true) }
   const res = await paginateQuery(
     db.collection(C.REVIEWS).where(where),
     { page, size, orderBy: [['createTime', 'desc']] }

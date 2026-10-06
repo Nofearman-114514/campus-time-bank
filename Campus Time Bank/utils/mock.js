@@ -1437,7 +1437,8 @@ const handlers = {
   'user.reviews': d => {
     const openid = d.openid || OPENID.me
     const role = d.role || 'received'
-    const list = reviews.filter(r => (role === 'received' ? r.toId : r.fromId) === openid)
+    // 过滤被隐藏的评价（与云端 _.neq(true) 同口径）
+    const list = reviews.filter(r => !r.hidden && (role === 'received' ? r.toId : r.fromId) === openid)
       .slice().sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
     return paginate(list, d.page, d.size)
   },

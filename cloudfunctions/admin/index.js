@@ -615,6 +615,70 @@ async function reports(event) {
 }
 
 /** handleReport —— result 1=核实成立（对被举报人 -10 信用分 + 通知举报人）；2=驳回 */
+/**
+ * ★ 举报「核实成立」时必须**顺带把内容处理掉**。
+ *
+ *   原来的行为是「扣被举报人 10 信用分 + 通知举报人」—— 然后**内容还在**。
+ *   举报人刷新一下广场，被举报的技能照样挂着；管理员还得再手动去
+ *   「技能审核」里下架一遍。**处理完 ≠ 内容消失**，处理链路没闭环。
+ *
+ * 各类型的处置方式（刻意不同）：
+ *   · skill  → 与 auditSkill 的「违规下架」**同一语义**：status=3 + 记录原因 + 通知作者
+ *   · review → reviews 没有 status 字段，用 hidden 标记；评价列表查询会过滤掉
+ *   · user   → **不自动处置**。封禁比扣分重得多，不该由**一次**举报自动触发，
+ *              交给管理员在用户管理里判断
+ *   · order  → 不适用（订单没有「下架」这个概念）
+ *
+ * @returns {Object} { handled, kind, note } —— 回给管理端，让它看到做了什么
+ */
+async function takeDownReported(r, why) {
+  const reason = why || r.reason || '举报核实成立'
+
+  if (r.targetType === 'skill') {
+    let sk = null
+    try { sk = (await db.collection(C.SKILLS).doc(r.targetId).get()).data } catch (e) { sk = null }
+    if (!sk) return { handled: false, kind: 'skill', note: '技能已不存在，无需下架' }
+    if (sk.status === 3) return { handled: false, kind: 'skill', note: '技能已是下架状态' }
+    await db.collection(C.SKILLS).doc(sk._id).update({
+      data: { status: 3, auditRemark: reason, updateTime: now() }
+    })
+    await addNotice({
+      openid: sk.authorId || sk._openid,
+      type: 'system',
+      title: '技能已被下架',
+      content: `你的技能「${sk.title}」因举报核实成立已被下架：${reason}`,
+      orderId: ''
+    })
+    return { handled: true, kind: 'skill', note: '技能已下架' }
+  }
+
+  if (r.targetType === 'review') {
+    let rv = null
+    try { rv = (await db.collection(C.REVIEWS).doc(r.targetId).get()).data } catch (e) { rv = null }
+    if (!rv) return { handled: false, kind: 'review', note: '评价已不存在，无需隐藏' }
+    if (rv.hidden) return { handled: false, kind: 'review', note: '评价已是隐藏状态' }
+    await db.collection(C.REVIEWS).doc(rv._id).update({
+      data: { hidden: true, hiddenReason: reason, hiddenTime: now() }
+    })
+    await addNotice({
+      openid: rv.fromId,
+      type: 'system',
+      title: '评价已被隐藏',
+      content: `你的一条评价因举报核实成立已被隐藏：${reason}`,
+      orderId: ''
+    })
+    return { handled: true, kind: 'review', note: '评价已隐藏' }
+  }
+
+  return {
+    handled: false,
+    kind: r.targetType,
+    note: r.targetType === 'user'
+      ? '用户类举报不做自动处置（封禁比扣分重，留给管理员判断）'
+      : '该类型不需要处置'
+  }
+}
+
 async function handleReport(event) {
   const admin = await requireAdmin()
   assert(event.id, '缺少举报 id', 400)
@@ -636,12 +700,24 @@ async function handleReport(event) {
   assert(result === 1 || result === 2, '处理结果只能是 1（成立）或 2（驳回）', 400)
   const remark = event.remark ? String(event.remark).slice(0, 200) : ''
 
+  /*
+   * ★ 核实成立时**先处置被举报的内容**，再更新举报单与记账。
+   *   顺序理由：「让违规内容消失」比记账更紧急 ——
+   *   即使后面某一步失败，内容也已经下架了，不会出现「扣了分但内容还在」。
+   */
+  let takeDown = { handled: false, note: '' }
+  if (result === 1) {
+    takeDown = await takeDownReported(r, remark || r.reason)
+  }
+
   await db.collection(C.REPORTS).doc(r._id).update({
     data: {
       status: result,
       handleRemark: remark,
       handlerId: admin._openid,
-      handleTime: now()
+      handleTime: now(),
+      // ★ 把「对内容做了什么」一并留痕：以后复查能看出这条举报当时是否真的下架了内容
+      takeDown: takeDown.handled ? takeDown.kind : ''
     }
   })
 
@@ -665,7 +741,7 @@ async function handleReport(event) {
       orderId: ''
     })
   }
-  return { ok: true }
+  return { ok: true, takeDown }
 }
 
 /* ============================ 轮播图 ============================ */
