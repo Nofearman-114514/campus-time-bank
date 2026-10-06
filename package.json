@@ -1,6 +1,6 @@
 {
   "name": "campus-time-bank",
-  "version": "0.5.0",
+  "version": "0.6.3",
   "private": true,
   "description": "校园时间银行 —— 基于微信云开发的大学生技能互助平台（微信小程序毕业设计）",
   "keywords": [
