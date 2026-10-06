@@ -205,8 +205,6 @@
       <switch checked="{{debugMode}}" disabled="{{debugSwitching}}" bindchange="onToggleDebug" />
     </view>
 
-    </view>
-
     <view wx:if="{{debugMode}}" class="dbg-warn">
       当前处于调试模式：你看到的全部数据都是本地模拟的，**不是真实数据**。
     </view>

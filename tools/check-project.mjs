@@ -18,6 +18,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import url from 'node:url'
+// ★ WXML 标签配对检查（见该文件头的真实事故说明）
+import { checkTags } from './check-wxml.mjs'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -456,6 +458,24 @@ console.log(`${C.b}规模统计${C.r}`)
 console.log(`  页面/分包页面     ${C.b}${allPages.length}${C.r} 个`)
 console.log(`  组件引用          ${C.b}${compRefs}${C.r} 处`)
 console.log(`  api 调用点        ${C.b}${apiCalls}${C.r} 处`)
+/* ==================================================================
+ * §5.7 WXML 标签配对
+ * ------------------------------------------------------------------
+ * ★ 真实事故：删一行开关时用正则删掉了注释、标签和 <switch />，
+ *   但漏掉了外面两层 </view>，留下孤立闭合标签。
+ *   开发者工具上传时报 `unexpected end tag: view`，
+ *   而当时门禁一项都没拦住 —— 因为它们只查绑定，不查配对。
+ * ================================================================== */
+let wxmlPairBad = 0
+for (const wf of wxmlFiles) {
+  const errs = checkTags(read(wf))
+  if (!errs.length) continue
+  wxmlPairBad++
+  const rel = path.relative(ROOT, wf).replace(/\\/g, '/')
+  errs.forEach(e => errors.push(`WXML 标签不配对 → ${rel} ${e}`))
+}
+const wxmlCount = wxmlFiles.length
+
 console.log(`  已定义 action     ${C.b}${definedActions.size}${C.r} 个`)
 console.log(`  mock 覆盖         ${C.b}${definedActions.size - missingMock.length}/${definedActions.size}${C.r}`)
 console.log(`  require 相对引用  ${C.b}${requireCount}${C.r} 处`)
@@ -464,6 +484,8 @@ console.log(`  wx:for 检查       ${C.b}${forRefs}${C.r} 处`)
 console.log(`  <text> 跨行检查   ${C.b}${textWrapHits}${C.r} 处违规`)
 console.log(`  app.* 调用检查    ${C.b}${appRefs}${C.r} 处`)
 console.log(`  模板变量检查      ${C.b}${tplVars}${C.r} 个引用`)
+console.log(`  WXML 标签配对     ${C.b}${wxmlCount}${C.r} 个文件${wxmlPairBad ? `  ${C.red}${wxmlPairBad} 个不配对${C.r}` : ''}`)
+
 console.log('')
 for (const [ext, s] of Object.entries(stats).sort((a, b) => b[1].lines - a[1].lines)) {
   console.log(`  ${ext.padEnd(8)} ${String(s.files).padStart(4)} 个文件  ${String(s.lines).padStart(7)} 行`)
