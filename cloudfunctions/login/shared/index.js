@@ -212,6 +212,47 @@ async function checkText(content, opts) {
   }
 }
 
+/**
+ * ★ 可疑快单：绝对下限（毫秒）。
+ *   真实服务不可能 10 分钟就完成 —— 这是**不依赖任何用户填写字段**的硬判据。
+ *
+ *   ⚠️ 为什么必须有一个「绝对」下限，不能只看比例：
+ *   技能的 duration 是**发布者自己填的**。刷子只要把 duration 填成 1 分钟，
+ *   任何比例判据都会失效。绝对下限堵住这条路。
+ */
+const SUSPICIOUS_FAST_MS = 10 * 60 * 1000
+
+/** ★ 可疑快单：相对声明时长的比例（实际 < 声明 × 此比例即可疑） */
+const SUSPICIOUS_FAST_RATIO = 0.3
+
+/**
+ * 判断订单是不是「可疑快单」——**只标记 + 不给信用分，不拒绝订单**。
+ *
+ * 【为什么不能拒绝订单】
+ *   最常见的误报是「线下已经服务完了，事后补下单」—— 那笔订单的耗时极短，
+ *   但服务是真的。拒绝它会把真实用户挡在门外。
+ *   所以处理是：币**照常结算**（平台没权力没收用户的币），只是不给信用分。
+ *   代价很小（用户少 2 分），而刷子失去了主要收益。
+ *
+ * 两条判据**取较严格的**（任一命中即可疑）。
+ *
+ * @returns {Object} { fast, minutes, byAbsence, byRatio }
+ */
+function isSuspiciouslyFast(order, declaredMinutes) {
+  // 时间戳拿不准就不判断 —— 宁可漏判也不误伤
+  const start = Number(order && order.createTime) || 0
+  const end = Number(order && order.finishTime) || Number(order && order.confirmTime) || 0
+  if (!start || !end || end < start) return { fast: false, minutes: 0, byAbs: false, byRatio: false }
+
+  const elapsed = end - start
+  const minutes = Math.round(elapsed / 60000)
+  const byAbs = elapsed < SUSPICIOUS_FAST_MS
+  const declared = Number(declaredMinutes) || 0
+  const byRatio = declared > 0 && elapsed < declared * 60000 * SUSPICIOUS_FAST_RATIO
+
+  return { fast: byAbs || byRatio, minutes, byAbs, byRatio }
+}
+
 /* ==================== 防刷单：订单信用分日上限 ==================== */
 /**
  * ★ 每日订单信用分收益递减 —— 防刷单，但**刻意不误伤真实用户**。
@@ -788,7 +829,8 @@ module.exports = {
   // 内容安全
   checkText, SEC_SCENE,
   // 防刷单
-  orderCreditFactor, scaleCredit, ORDER_CREDIT_TIERS,
+  orderCreditFactor, scaleCredit, ORDER_CREDIT_TIERS, isSuspiciouslyFast,
+  SUSPICIOUS_FAST_MS, SUSPICIOUS_FAST_RATIO,
   // 内部账户
   ACCOUNT_PREFIX, SESSION_TTL, newSalt, newToken, hashPassword, safeEqual,
   resolveSession, currentAccount,

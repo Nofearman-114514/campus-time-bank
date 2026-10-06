@@ -112,6 +112,13 @@ module.exports = async function (t) {
   t.seed({ streak: 4 })
   r = await t.call('order', 'o_buy', 'create', { skillId: 'sk1' })
   const f1 = r.data.orderId
+  /*
+   * ★ 把 createTime 回拨 2 小时。
+   *   防刷单的「可疑快单」判据会拦下 10 分钟内完成的订单，而测试里
+   *   下单→完成是**瞬间**发生的（0 毫秒）。不回拨的话每一单都会被判可疑 ——
+   *   那是**测试数据不真实**，不是功能坏了。
+   */
+  t.order(f1).createTime = Date.now() - 120 * 60000
   await t.call('order', 'o_sel', 'accept', { orderId: f1 })
 
   t.eq((await t.call('order', 'o_buy', 'finish', { orderId: f1 })).code, 403, '买家标记完成 → 403')

@@ -22,7 +22,7 @@ const {
   creditLevelOf, orderLimitOf, changeCredit, addWalletLog, addNotice, sendSubscribe,
   partySnapshot, canOrderSkill,
   isAdminUser, checkText, SEC_SCENE,
-  orderCreditFactor, scaleCredit
+  orderCreditFactor, scaleCredit, isSuspiciouslyFast
 } = require('./shared')
 
 /* ============================ 本地常量 ============================ */
@@ -606,10 +606,23 @@ async function settleOrder(orderId, opt) {
    *   真实用户一天碰不到上限；刷子刷再多也只有这么多。
    *   时间币**不受影响**，照常结算（见 _shared 里的说明）。
    */
+  /*
+   * ★ 防刷单 ②：可疑快单 —— 判据见 _shared 的 isSuspiciouslyFast。
+   *   命中则**双方都不给信用分**（币照常结算），并给订单打标记便于人工复查。
+   */
+  const fast = isSuspiciouslyFast(r.order, (r.order.skillSnapshot || {}).duration)
+
+  // 给订单打标记：将来管理端可以直接查「可疑快单」，不用全表扫
+  if (fast.fast) {
+    await bestEffort('settle.markSuspect', () => db.collection(C.ORDERS).doc(r.order._id).update({
+      data: { suspectFast: true, suspectMinutes: fast.minutes, suspectTime: now() }
+    }))
+  }
+
   const bFactor = await orderCreditFactor(r.order.buyerId)
   const sFactor = await orderCreditFactor(r.order.sellerId)
-  const bGain = scaleCredit(2, bFactor.factor)
-  const sGain = scaleCredit(2, sFactor.factor)
+  const bGain = fast.fast ? 0 : scaleCredit(2, bFactor.factor)
+  const sGain = fast.fast ? 0 : scaleCredit(2, sFactor.factor)
 
   let buyerCredit = Math.min(150, r.buyerCreditBefore + bGain)
   let sellerCredit = Math.min(150, r.sellerCreditBefore + sGain)
@@ -620,7 +633,9 @@ async function settleOrder(orderId, opt) {
     ))
     if (typeof bc === 'number') buyerCredit = bc
   } else {
-    await bestEffort('settle.buyerCreditCapped', () => addCappedLog(r.order.buyerId, bFactor.done))
+    await bestEffort('settle.buyerCreditCapped', () => addNoCreditLog(
+      r.order.buyerId, fast, bFactor.done
+    ))
   }
 
   if (sGain > 0) {
@@ -629,13 +644,15 @@ async function settleOrder(orderId, opt) {
     ))
     if (typeof sc === 'number') sellerCredit = sc
   } else {
-    await bestEffort('settle.sellerCreditCapped', () => addCappedLog(r.order.sellerId, sFactor.done))
+    await bestEffort('settle.sellerCreditCapped', () => addNoCreditLog(
+      r.order.sellerId, fast, sFactor.done
+    ))
   }
 
   // —— 事务外补写 ③：连续 5 单按时完成奖励（同样受日上限约束）——
   const streak = (r.sellerStats && r.sellerStats.ontimeStreak) || 0
   if (streak > 0 && streak % 5 === 0) {
-    const gain = scaleCredit(3, sFactor.factor)
+    const gain = fast.fast ? 0 : scaleCredit(3, sFactor.factor)
     // 里程碑奖励也走同一档位 —— 否则刷子可以靠「每 5 单 +3」持续拿分
     if (gain > 0) {
       await bestEffort('settle.streakBonus', () => changeCredit(
@@ -861,14 +878,22 @@ async function actionCounts(event, openid) {
  *   否则这条 0 分记录会被计入「24 小时已完成单数」，计数只增不减，
  *   用户一旦封顶就永远拿不到信用分了。
  */
-async function addCappedLog(openid, done) {
+async function addNoCreditLog(openid, fast, done) {
+  /*
+   * ★ 用 order_finish_suspect / order_finish_capped，**绝不能用 order_finish** ——
+   *   否则这些 0 分记录会被计入「24 小时已完成单数」，计数只增不减，
+   *   用户一旦封顶就永远拿不到信用分了。
+   */
+  const suspect = !!(fast && fast.fast)
   await db.collection(C.CREDIT_LOGS).add({
     data: {
       _openid: openid,
       change: 0,
       score: (await getUser(openid) || {}).creditScore || 100,
-      reason: 'order_finish_capped',
-      reasonText: '本单信用分已达今日上限（24 小时内已完成 ' + done + ' 单）',
+      reason: suspect ? 'order_finish_suspect' : 'order_finish_capped',
+      reasonText: suspect
+        ? '本单完成过快（约 ' + fast.minutes + ' 分钟），暂不计信用分。如有疑问可发起申诉'
+        : '本单信用分已达今日上限（24 小时内已完成 ' + done + ' 单）',
       orderId: '',
       createTime: now()
     }

@@ -105,6 +105,25 @@ function orderCreditFactor(openid) {
   return { done: done, factor: tier.factor }
 }
 
+/* ★ 可疑快单：与云端 _shared 同一套判据（绝对下限 + 相对比例，取较严格的） */
+const SUSPICIOUS_FAST_MS = 10 * 60 * 1000
+const SUSPICIOUS_FAST_RATIO = 0.3
+
+/**
+ * ★ 绝对下限是必需的：duration 是发布者自己填的，
+ *   填成 1 分钟就能绕开任何比例判据。
+ */
+function isSuspiciouslyFast(order, declaredMinutes) {
+  const start = Number(order && order.createTime) || 0
+  const end = Number(order && order.finishTime) || Number(order && order.confirmTime) || 0
+  if (!start || !end || end < start) return { fast: false, minutes: 0 }
+  const elapsed = end - start
+  const byAbs = elapsed < SUSPICIOUS_FAST_MS
+  const declared = Number(declaredMinutes) || 0
+  const byRatio = declared > 0 && elapsed < declared * 60000 * SUSPICIOUS_FAST_RATIO
+  return { fast: byAbs || byRatio, minutes: Math.round(elapsed / 60000) }
+}
+
 /** 按倍率折算（向上取整：2 减半仍是 1） */
 function scaleCredit(gain, factor) {
   const g = Number(gain) || 0
@@ -113,14 +132,21 @@ function scaleCredit(gain, factor) {
   return Math.ceil(g * factor)
 }
 
-/** 封顶时写一条说明流水（change=0），让用户看得懂为什么没加分 */
-function addCappedLog(openid, done) {
+/**
+ * 没拿到信用分时写一条说明流水（change=0），让用户看得懂原因。
+ * ★ reason 用 order_finish_suspect / order_finish_capped，**绝不能是 order_finish** ——
+ *   否则会被计入「24 小时已完成单数」，计数只增不减，封顶后永远拿不到分。
+ */
+function addNoCreditLog(openid, fast, done) {
   const u = userMap[openid]
+  const suspect = !!(fast && fast.fast)
   creditLogs.unshift({
     _id: rid('cl'), _openid: openid, change: 0,
     score: u ? u.creditScore : 100,
-    reason: 'order_finish_capped',
-    reasonText: '本单信用分已达今日上限（24 小时内已完成 ' + done + ' 单）',
+    reason: suspect ? 'order_finish_suspect' : 'order_finish_capped',
+    reasonText: suspect
+      ? '本单完成过快（约 ' + fast.minutes + ' 分钟），暂不计信用分。如有疑问可发起申诉'
+      : '本单信用分已达今日上限（24 小时内已完成 ' + done + ' 单）',
     orderId: '', createTime: now()
   })
 }
@@ -1311,14 +1337,22 @@ const handlers = {
      *   与云端同一套档位（前 3 单全额 / 第 4~6 单减半 / 第 7 单起不计分）。
      *   ★ 时间币**不受影响** —— 上面 buyer.coins / seller.coins 的结算是照常的。
      */
+    /* ★ 可疑快单：完成太快则双方都不给信用分（币照常结算） */
+    const fast = isSuspiciouslyFast(o, (o.skillSnapshot || {}).duration)
+    if (fast.fast) {
+      o.suspectFast = true
+      o.suspectMinutes = fast.minutes
+      o.suspectTime = now()
+    }
+
     const bf = orderCreditFactor(o.buyerId)
     const sf = orderCreditFactor(o.sellerId)
-    const bGain = scaleCredit(2, bf.factor)
-    const sGain = scaleCredit(2, sf.factor)
+    const bGain = fast.fast ? 0 : scaleCredit(2, bf.factor)
+    const sGain = fast.fast ? 0 : scaleCredit(2, sf.factor)
     if (bGain > 0) addCredit(o.buyerId, bGain, 'order_finish', '订单顺利完成', o._id)
-    else addCappedLog(o.buyerId, bf.done)
+    else addNoCreditLog(o.buyerId, fast, bf.done)
     if (sGain > 0) addCredit(o.sellerId, sGain, 'order_finish', '订单顺利完成', o._id)
-    else addCappedLog(o.sellerId, sf.done)
+    else addNoCreditLog(o.sellerId, sf.done)
     notices.unshift({
       _id: rid('n'), _openid: o.sellerId, type: 'order', title: '时间币已到账',
       content: `「${o.skillSnapshot.title}」已完成，${o.amount} 枚时间币已到账。记得和对方互评哦～`,
