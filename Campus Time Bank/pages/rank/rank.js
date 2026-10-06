@@ -43,7 +43,9 @@ Page({
        */
       const list = (res.list || []).map(it => Object.assign({}, it, {
         medal: it.rank === 1 ? '🥇' : (it.rank === 2 ? '🥈' : (it.rank === 3 ? '🥉' : '')),
-        avatarText: (it.nickName || '?').slice(0, 1),
+        // ★ 同样不能用 slice：昵称首字可能是 emoji（占两个码元），
+        //   切半个会渲染成「�」。脱敏后的昵称最短只有 1 个字，这条路走得到。
+        avatarText: (Array.from(it.nickName || '?')[0]) || '?',
         subText: (it.college ? it.college + ' · ' : '') +
           '服务 ' + (it.serveCount || 0) + ' 次 · 信用分 ' + (it.creditScore || 0)
       }))

@@ -158,9 +158,11 @@ function addNoCreditLog(openid, fast, done) {
  */
 function maskName(name) {
   const s = String(name || '').trim()
-  if (s.length <= 1) return s || '同学'
-  if (s.length === 2) return s.slice(0, 1) + '*'
-  return s.slice(0, 1) + '*' + s.slice(-1)
+  // ★ 按码点切，不用 slice —— emoji 占两个码元，slice 会把它劈成半个（渲染成「�」）
+  const chars = Array.from(s)
+  if (chars.length <= 1) return s || '同学'
+  if (chars.length === 2) return chars[0] + '*'
+  return chars[0] + '*' + chars[chars.length - 1]
 }
 
 const SEC_DEMO_WORDS = ['违禁词', '代考', '代写论文', '刷单', '办证', '博彩', '赌博']

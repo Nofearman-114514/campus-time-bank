@@ -63,6 +63,30 @@ module.exports = async function (t) {
   r = await t.call('user', 'o_weak', 'leaderboard', { limit: 20 })
   t.eq(r.data.list.filter(x => x.totalEarned === 500)[0].nickName, '欧*明', '四字昵称 → 欧*明（只保留首末字）')
 
+  t.seed()
+  u('o_sel').totalEarned = 500; u('o_sel').nickName = '欧阳娜娜娜'
+  r = await t.call('user', 'o_weak', 'leaderboard', { limit: 20 })
+  t.eq(r.data.list.filter(x => x.totalEarned === 500)[0].nickName, '欧*娜',
+    '★ 五字以上也是首末各留一个 —— 脱敏后**最多 3 个字符**，既不会泄露也不会撑破布局')
+
+  /* ---- ★ emoji：JS 的 slice 按 UTF-16 码元切，会把 emoji 劈成半个 ---- */
+  t.seed()
+  u('o_sel').totalEarned = 500; u('o_sel').nickName = '🐱喵喵'
+  r = await t.call('user', 'o_weak', 'leaderboard', { limit: 20 })
+  let em = r.data.list.filter(x => x.totalEarned === 500)[0].nickName
+  t.eq(em, '🐱*喵', '★★ emoji 开头的昵称：首字必须是**完整的** emoji')
+  t.eq(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(em), false,
+    '★★ 输出里**不能有孤立的代理码元** —— 那在界面上就是「�」。' +
+    '微信昵称里 emoji 非常常见，用 slice 一定会踩到')
+
+  t.seed()
+  u('o_sel').totalEarned = 500; u('o_sel').nickName = '喵喵🐱'
+  r = await t.call('user', 'o_weak', 'leaderboard', { limit: 20 })
+  em = r.data.list.filter(x => x.totalEarned === 500)[0].nickName
+  t.eq(em, '喵*🐱', '★ emoji 结尾的昵称：末字也必须是完整的')
+  t.eq(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(em), false,
+    '同样没有孤立代理码元')
+
   /* ==================================================================
    * 组 3 · ★ 可以退出（隐私底线）
    * ================================================================== */

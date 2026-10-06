@@ -508,12 +508,23 @@ async function reviewReply(event) {
  */
 const RANK_LIMIT = 20
 
-/** 昵称脱敏：王小明 → 王*明；两字 → 王*；一字 → 原样 */
+/**
+ * 昵称脱敏：王小明 → 王*明；两字 → 王*；一字 → 原样；四字以上 → 首字*末字。
+ *
+ * ★ 必须用 Array.from 按**码点**切，不能用 slice / 下标。
+ *   JS 的字符串下标是按 UTF-16 码元的，而 emoji（以及部分生僻字）占**两个码元**，
+ *   slice(0,1) 会把一个 emoji 劈成半个，渲染出来就是「�」。
+ *   微信昵称里 emoji 非常常见，这个坑一定会踩到。
+ *
+ *   实测：'🐱喵喵'.slice(0,1) → '\ud83d'（半个）✗
+ *         Array.from('🐱喵喵')[0] → '🐱' ✓
+ */
 function maskName(name) {
   const s = String(name || '').trim()
-  if (s.length <= 1) return s || '同学'
-  if (s.length === 2) return s.slice(0, 1) + '*'
-  return s.slice(0, 1) + '*' + s.slice(-1)
+  const chars = Array.from(s)          // ★ 按码点切分，emoji 不会被劈开
+  if (chars.length <= 1) return s || '同学'
+  if (chars.length === 2) return chars[0] + '*'
+  return chars[0] + '*' + chars[chars.length - 1]
 }
 
 /** leaderboard —— 贡献排行榜（前 N 名 + 我的名次） */
