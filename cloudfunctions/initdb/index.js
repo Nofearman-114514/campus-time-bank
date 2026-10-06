@@ -140,7 +140,14 @@ async function seedDocs(name, docs, label) {
   let inserted = 0
   let skipped = 0
   let updated = 0
-  await mapLimit(docs, 8, async (d) => {
+  /*
+   * ★ 并发从 8 提到 16。
+   *   每个文档要两次往返（先 get 探测是否已存在，再 set 写入），
+   *   100 多条种子在并发 8 下要跑 25 轮以上 —— 很容易撞上云函数超时。
+   *   提到 16 相当于把轮数砍半。
+   *   再往上提有被数据库限流的风险，所以只到 16。
+   */
+  await mapLimit(docs, 16, async (d) => {
     // 幂等：★ 这一点很重要 —— 如果上一次 init 因为超时中断，
     // 重跑时必须能跳过已写入的，从断点继续，而不是重复插入
     let exists = false
