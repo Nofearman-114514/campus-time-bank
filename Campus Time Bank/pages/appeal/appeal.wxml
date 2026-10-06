@@ -1,0 +1,60 @@
+<view class="page appeal-page">
+
+  <!-- 申诉对象 -->
+  <view class="card">
+    <view class="sec-title"><text class="sec-title__text">申诉对象</text></view>
+    <view class="ap-row">
+      <text class="ap-row__k">{{typeText}}</text>
+      <text class="ap-row__v">{{targetTitle || targetId}}</text>
+    </view>
+    <view class="ap-tip">请如实说明情况。申诉会提交给管理员人工复核，成立后系统会撤销原处置。</view>
+  </view>
+
+  <!-- 申诉理由 -->
+  <view class="card">
+    <view class="sec-title">
+      <text class="sec-title__text">申诉理由</text>
+      <text class="sec-title__more">{{reasonLen}}/200</text>
+    </view>
+    <textarea
+      class="ap-textarea"
+      value="{{reason}}"
+      maxlength="200"
+      placeholder="说清楚当时的情况，例如：服务确实完成了，只是忘了点确认"
+      placeholder-class="ap-ph"
+      bindinput="onReasonInput"
+    />
+
+    <view class="ap-imgs">
+      <view class="ap-img" wx:for="{{images}}" wx:key="*this" data-index="{{index}}" bindtap="onRemoveImage">
+        <image class="ap-img__inner" src="{{item}}" mode="aspectFill" />
+        <text class="ap-img__del">×</text>
+      </view>
+      <view wx:if="{{images.length < maxImages}}" class="ap-img ap-img--add" bindtap="onPickImage">
+        <text class="ap-img__plus">+</text>
+        <text class="ap-img__hint">凭证</text>
+      </view>
+    </view>
+
+    <view class="btn btn--primary ap-submit {{submitting ? 'is-disabled' : ''}}" bindtap="onSubmit">
+      {{submitting ? '提交中…' : '提交申诉'}}
+    </view>
+  </view>
+
+  <!-- 我的申诉 -->
+  <view class="card">
+    <view class="sec-title"><text class="sec-title__text">我的申诉</text></view>
+    <view wx:if="{{loading}}" class="ap-empty">加载中…</view>
+    <view wx:elif="{{!list.length}}" class="ap-empty">还没有提交过申诉</view>
+    <view wx:else class="ap-item" wx:for="{{list}}" wx:key="_id">
+      <view class="ap-item__head">
+        <text class="ap-item__type">{{item.typeText}}</text>
+        <text class="tag tag--{{item.statusTone}}">{{item.statusText}}</text>
+      </view>
+      <text class="ap-item__reason">{{item.reason}}</text>
+      <text class="ap-item__time">{{item.timeText}}</text>
+      <view wx:if="{{item.handleRemark}}" class="ap-item__reply">管理员：{{item.handleRemark}}</view>
+    </view>
+  </view>
+
+</view>

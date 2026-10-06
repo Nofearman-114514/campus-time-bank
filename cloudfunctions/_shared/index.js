@@ -36,7 +36,11 @@ const C = {
   FAVORITES: 'favorites',
   // ★ 第 15/16 个集合：内部账户与会话（见下方「内部账户」一节）
   ACCOUNTS: 'accounts',
-  SESSIONS: 'sessions'
+  SESSIONS: 'sessions',
+  // ★ 第 17 个集合：申诉。与 reports 分开 —— 语义不同：
+  //   reports 是「用户举报别人」，appeals 是「用户对**已作出的处置**申辩」。
+  //   混在一张表里会让两套状态机纠缠。
+  APPEALS: 'appeals'
 }
 
 /* ============================ 统一返回 ============================ */

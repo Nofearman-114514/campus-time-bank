@@ -12,6 +12,7 @@
     "pages/mine/mine",
     "pages/user/profile/profile",
     "pages/account/login/login",
+    "pages/appeal/appeal",
     "pages/user/home/home",
     "pages/user/skills/skills",
     "pages/user/favorites/favorites",
@@ -38,6 +39,7 @@
         "pages/skills/skills",
         "pages/orders/orders",
         "pages/reports/reports",
+        "pages/appeals/appeals",
         "pages/settings/settings"
       ]
     }

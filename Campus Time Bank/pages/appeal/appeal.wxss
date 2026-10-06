@@ -1,0 +1,74 @@
+/* 申诉 */
+.appeal-page { padding: var(--sp); }
+
+.ap-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12rpx 0;
+}
+.ap-row__k { width: 200rpx; color: var(--c-t3); font-size: var(--fs-mini); }
+.ap-row__v { flex: 1; color: var(--c-t1); font-size: var(--fs-body); }
+.ap-tip {
+  margin-top: 12rpx;
+  padding: 16rpx;
+  background: var(--c-bg, #F5F6F8);
+  border-radius: 12rpx;
+  color: var(--c-t3);
+  font-size: var(--fs-mini);
+  line-height: 1.6;
+}
+
+.ap-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  margin-top: 12rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+  background: var(--c-bg, #F5F6F8);
+  border-radius: 12rpx;
+  font-size: var(--fs-body);
+}
+.ap-ph { color: var(--c-t3); }
+
+.ap-imgs { display: flex; flex-direction: row; flex-wrap: wrap; margin-top: 20rpx; }
+.ap-img {
+  position: relative;
+  width: 160rpx; height: 160rpx;
+  margin: 0 16rpx 16rpx 0;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: var(--c-bg, #F5F6F8);
+}
+.ap-img__inner { width: 100%; height: 100%; }
+.ap-img__del {
+  position: absolute; top: 0; right: 0;
+  width: 40rpx; height: 40rpx;
+  line-height: 36rpx; text-align: center;
+  background: rgba(0,0,0,.5); color: #fff; font-size: 28rpx;
+}
+.ap-img--add {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border: 2rpx dashed var(--c-line, #DDD);
+  background: #fff;
+}
+.ap-img__plus { font-size: 48rpx; color: var(--c-t3); line-height: 1; }
+.ap-img__hint { margin-top: 6rpx; font-size: 22rpx; color: var(--c-t3); }
+
+.ap-submit { margin-top: 24rpx; }
+.ap-submit.is-disabled { opacity: .6; }
+
+.ap-empty { padding: 60rpx 0; text-align: center; color: var(--c-t3); font-size: var(--fs-mini); }
+.ap-item { padding: 20rpx 0; border-bottom: 2rpx solid var(--c-line, #F0F0F0); }
+.ap-item:last-child { border-bottom: none; }
+.ap-item__head { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+.ap-item__type { font-size: var(--fs-body); color: var(--c-t1); font-weight: 600; }
+.ap-item__reason { display: block; margin-top: 10rpx; font-size: var(--fs-mini); color: var(--c-t2); line-height: 1.6; }
+.ap-item__time { display: block; margin-top: 8rpx; font-size: 22rpx; color: var(--c-t3); }
+.ap-item__reply {
+  margin-top: 12rpx; padding: 14rpx;
+  background: var(--c-bg, #F5F6F8);
+  border-radius: 10rpx;
+  font-size: var(--fs-mini); color: var(--c-t2);
+}

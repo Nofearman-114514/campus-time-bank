@@ -384,6 +384,9 @@ const accounts = INTERNAL_ACCOUNTS.map(a => ({
 
 const sessions = []
 
+/* ★ 申诉：与 reports 分开 —— 语义不同（举报是「指控别人」，申诉是「为自己申辩」） */
+const appeals = []
+
 /** 当前 mock 身份：内部账户带令牌时会被换成它的合成 openid */
 let currentOpenid = ''
 
@@ -1350,6 +1353,54 @@ const handlers = {
   },
 
   /* ================= user ================= */
+  /* ---------------- 申诉（最小闭环） ---------------- */
+  'user.appealCreate': d => {
+    const type = String(d.type || '')
+    if (['credit', 'skill'].indexOf(type) < 0) fail(400, '申诉类型不正确')
+    const reason = String(d.reason == null ? '' : d.reason).trim()
+    if (!reason) fail(400, '请填写申诉理由')
+    secCheck(reason, '申诉理由')
+
+    let targetTitle = ''
+    let createTime = 0
+    let restore = null
+
+    if (type === 'credit') {
+      const log = creditLogs.find(x => x._id === d.targetId)
+      if (!log) fail(404, '信用分记录不存在')
+      if (log._openid !== OPENID.me) fail(403, '只能申诉自己的信用分变动')
+      if (Number(log.change) >= 0) fail(400, '只有被扣分的记录可以申诉')
+      targetTitle = (log.reasonText || '信用分变动') + ' ' + Number(log.change)
+      createTime = Number(log.createTime) || 0
+      restore = { scoreChange: Math.abs(Number(log.change)) || 0, prevStatus: 0 }
+    } else {
+      const sk = skills.find(x => x._id === d.targetId)
+      if (!sk) fail(404, '技能不存在')
+      if (sk.authorId !== OPENID.me && sk._openid !== OPENID.me) fail(403, '只能申诉自己发布的技能')
+      if (Number(sk.status) !== 3) fail(400, '只有被违规下架的技能可以申诉')
+      targetTitle = String(sk.title || '').slice(0, 60)
+      createTime = Number(sk.updateTime) || Number(sk.createTime) || 0
+      restore = { scoreChange: 0, prevStatus: 1 }
+    }
+
+    if (createTime && (Date.now() - createTime) / 86400000 > 7) fail(409, '已超过 7 天申诉期，无法再申诉')
+    if (appeals.some(x => x._openid === OPENID.me && x.type === type && x.targetId === d.targetId && x.status === 0)) {
+      fail(409, '你已就这条记录提交过申诉，正在处理中')
+    }
+
+    const row = {
+      _id: rid('ap'), _openid: OPENID.me, type, targetId: d.targetId, targetTitle,
+      reason, images: Array.isArray(d.images) ? d.images.slice(0, 3) : [], restore,
+      status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: now()
+    }
+    appeals.unshift(row)
+    return { ok: true, id: row._id }
+  },
+  'user.appealList': d => paginate(
+    appeals.filter(x => x._openid === OPENID.me),
+    d.page, d.size
+  ),
+
   'user.cancel': () => {
     const u = me()
     if (u.canceled) fail(409, '该账号已注销，无需重复操作')
@@ -1645,6 +1696,71 @@ const handlers = {
       isAdmin: !!u && (u.role === 'admin' || u.role === 'debugger'),
       isDebugger: !!u && u.role === 'debugger'
     }
+  },
+
+  /* ---------------- 管理端申诉 ---------------- */
+  'admin.appeals': d => {
+    let list = appeals.slice()
+    if (d.status !== undefined && d.status !== '' && d.status !== null) {
+      list = list.filter(x => Number(x.status) === Number(d.status))
+    }
+    list = list.slice().sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
+    return paginate(list, d.page, d.size)
+  },
+  'admin.handleAppeal': d => {
+    const a = appeals.find(x => x._id === d.id)
+    if (!a) fail(404, '申诉不存在')
+    if (Number(a.status) !== 0) return { ok: true, undo: { handled: false, note: '已结案' } }
+    const result = Number(d.result)
+    if (result !== 1 && result !== 2) fail(400, '处理结果只能是 1（成立）或 2（驳回）')
+
+    let undo = { handled: false, kind: a.type, note: '' }
+    if (result === 1) {
+      const restore = a.restore || {}
+      if (a.type === 'credit') {
+        const back = Number(restore.scoreChange) || 0
+        if (back > 0) {
+          const u = userMap[a._openid]
+          if (u) {
+            const base = Number.isFinite(u.creditScore) ? u.creditScore : 100
+            u.creditScore = Math.min(150, base + back)
+            creditLogs.unshift({
+              _id: rid('cl'), _openid: a._openid, change: back, score: u.creditScore,
+              reason: 'appeal_ok', reasonText: '申诉成立，信用分已恢复', orderId: '', createTime: now()
+            })
+          }
+          undo = { handled: true, kind: 'credit', note: '信用分已加回 ' + back }
+        }
+      } else if (a.type === 'skill') {
+        const sk = skills.find(x => x._id === a.targetId)
+        if (sk && Number(sk.status) !== 1) {
+          sk.status = 1
+          sk.updateTime = now()
+          notices.unshift({
+            _id: rid('n'), _openid: sk.authorId || sk._openid, type: 'system',
+            title: '技能已恢复上架',
+            content: '你的技能「' + sk.title + '」经申诉核实已恢复上架。',
+            orderId: '', read: false, createTime: now()
+          })
+          undo = { handled: true, kind: 'skill', note: '技能已恢复上架' }
+        }
+      }
+    }
+
+    a.status = result
+    a.handleRemark = String(d.remark || '').slice(0, 200)
+    a.handlerId = OPENID.me
+    a.handleTime = now()
+    a.undo = undo.handled ? undo.kind : ''
+    notices.unshift({
+      _id: rid('n'), _openid: a._openid, type: 'appeal',
+      title: result === 1 ? '申诉已成立' : '申诉未成立',
+      content: result === 1
+        ? '你提交的申诉已核实成立，我们已撤销相应处置。'
+        : '你提交的申诉经核实未予成立。',
+      orderId: '', read: false, createTime: now()
+    })
+    return { ok: true, undo }
   },
 
   'admin.check': () => ({ isAdmin: me().role === 'admin' || me().role === 'debugger', isDebugger: me().role === 'debugger', role: me().role }),
@@ -1979,7 +2095,7 @@ async function dispatch(name, data) {
 module.exports = {
   dispatch,
   MockError,
-  store: { users, skills, orders, reviews, chats, messages, notices, categories, reports, banners, config, walletLogs, creditLogs, favorites, accounts, sessions },
+  store: { users, skills, orders, reviews, chats, messages, notices, categories, reports, banners, config, walletLogs, creditLogs, favorites, accounts, sessions, appeals },
   /* 调试模式的身份预览（见文件内说明） */
   preview: {
     options: PREVIEW_ROLES,

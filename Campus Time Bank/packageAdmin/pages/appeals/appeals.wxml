@@ -1,0 +1,45 @@
+<view class="page adm-appeals">
+
+  <!-- 待处理计数 -->
+  <view class="ap-banner">
+    <text class="ap-banner__num">{{pendingCount}}</text>
+    <text class="ap-banner__text">条申诉待处理</text>
+  </view>
+
+  <!-- 状态筛选 -->
+  <view class="ap-tabs">
+    <view
+      class="ap-tab {{status === item.v ? 'ap-tab--on' : ''}}"
+      wx:for="{{statusOptions}}"
+      wx:key="v"
+      data-v="{{item.v}}"
+      bindtap="onStatusTab"
+    >{{item.t}}</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="ap-empty">加载中…</view>
+  <view wx:elif="{{!list.length}}" class="ap-empty">没有符合条件的申诉</view>
+
+  <view wx:else class="card ap-item" wx:for="{{list}}" wx:key="_id">
+    <view class="ap-item__head">
+      <text class="ap-item__type">{{item.typeText}}</text>
+      <text class="tag tag--{{item.statusTone}}">{{item.statusText}}</text>
+    </view>
+
+    <view class="ap-kv"><text class="ap-kv__k">申诉对象</text><text class="ap-kv__v">{{item.targetTitle || item.targetId}}</text></view>
+    <view class="ap-kv"><text class="ap-kv__k">申诉理由</text><text class="ap-kv__v">{{item.reason}}</text></view>
+    <view class="ap-kv"><text class="ap-kv__k">提交时间</text><text class="ap-kv__v">{{item.timeText}}</text></view>
+    <view class="ap-kv"><text class="ap-kv__k">成立后</text><text class="ap-kv__v ap-kv__v--warn">{{item.restoreText}}</text></view>
+
+    <view wx:if="{{item.handleRemark}}" class="ap-reply">处理说明：{{item.handleRemark}}</view>
+
+    <view wx:if="{{item.status === 0}}" class="ap-actions">
+      <view class="btn btn--sm btn--primary" data-id="{{item._id}}" bindtap="onPass">申诉成立</view>
+      <view class="btn btn--sm btn--gray" data-id="{{item._id}}" bindtap="onReject">驳回</view>
+    </view>
+  </view>
+
+  <view wx:if="{{loadingMore}}" class="ap-empty">加载中…</view>
+  <view wx:elif="{{!hasMore && list.length}}" class="ap-empty ap-empty--end">没有更多了</view>
+
+</view>

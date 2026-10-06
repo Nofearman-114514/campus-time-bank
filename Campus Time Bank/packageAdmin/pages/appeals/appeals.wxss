@@ -1,0 +1,39 @@
+/* 申诉处理 */
+.adm-appeals { padding: var(--sp); }
+
+.ap-banner {
+  display: flex; flex-direction: row; align-items: baseline;
+  padding: 28rpx var(--sp); margin-bottom: 20rpx;
+  background: var(--c-primary-l, #E8F6F1);
+  border-radius: 16rpx;
+}
+.ap-banner__num { font-size: 56rpx; font-weight: 700; color: var(--c-primary); }
+.ap-banner__text { margin-left: 12rpx; font-size: var(--fs-mini); color: var(--c-t2); }
+
+.ap-tabs { display: flex; flex-direction: row; margin-bottom: 20rpx; }
+.ap-tab {
+  padding: 12rpx 28rpx; margin-right: 16rpx;
+  border-radius: 999rpx;
+  background: #fff; color: var(--c-t2); font-size: var(--fs-mini);
+}
+.ap-tab--on { background: var(--c-primary); color: #fff; font-weight: 600; }
+
+.ap-item { margin-bottom: 20rpx; }
+.ap-item__head { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+.ap-item__type { font-size: var(--fs-body); font-weight: 600; color: var(--c-t1); }
+
+.ap-kv { display: flex; flex-direction: row; margin-top: 12rpx; }
+.ap-kv__k { width: 150rpx; flex-shrink: 0; font-size: var(--fs-mini); color: var(--c-t3); }
+.ap-kv__v { flex: 1; font-size: var(--fs-mini); color: var(--c-t2); line-height: 1.6; }
+.ap-kv__v--warn { color: var(--c-warn, #E8912D); }
+
+.ap-reply {
+  margin-top: 14rpx; padding: 14rpx;
+  background: var(--c-bg, #F5F6F8); border-radius: 10rpx;
+  font-size: var(--fs-mini); color: var(--c-t2);
+}
+.ap-actions { display: flex; flex-direction: row; margin-top: 20rpx; }
+.ap-actions .btn { margin-right: 16rpx; }
+
+.ap-empty { padding: 60rpx 0; text-align: center; color: var(--c-t3); font-size: var(--fs-mini); }
+.ap-empty--end { padding: 24rpx 0; }

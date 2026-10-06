@@ -30,7 +30,7 @@ module.exports = async function (t) {
   blank()
   let r = await consoleCall({})
   t.eq(r.code, 0, '★ 控制台调用 init 成功（不要求登录态 —— §4.9 踩坑 1 的回归）')
-  t.eq(r.data.created.length, 16, '★ 空环境下创建了 16 个集合（含后来新增的 favorites）')
+  t.eq(r.data.created.length, 17, '★ 空环境下创建了 17 个集合（含后来新增的 favorites）')
   t.eq(r.data.existed.length, 0, '空环境下没有「已存在」的集合')
   ALL13.forEach(name => {
     t.ok(r.data.created.indexOf(name) > -1, `集合 ${name} 被创建`)
@@ -104,7 +104,7 @@ module.exports = async function (t) {
   r = await consoleCall({})
   t.eq(r.code, 0, '第二次 init 仍成功')
   t.eq(r.data.created.length, 0, '★ 第二次 created 为空（集合已存在被 try/catch 吞掉）')
-  t.eq(r.data.existed.length, 16, '★ 第二次 existed = 16')
+  t.eq(r.data.existed.length, 17, '★ 第二次 existed = 17')
   t.ok(Object.keys(r.data.seeded).every(k => r.data.seeded[k].inserted === 0), '★ 所有集合的 inserted 都是 0（没有重复插入）')
   t.eq(r.data.seeded.users.skipped, 6, '已存在的 6 个演示用户被跳过')
   t.eq(r.data.seeded.skills.skipped, 12, '已存在的 12 条技能被跳过')
@@ -132,7 +132,7 @@ module.exports = async function (t) {
   /* 已有 fixture 数据时：只补建缺失集合，config 的 _id=global 冲突被跳过 */
   t.seed()
   r = await consoleCall({})
-  t.eq(r.data.created.length, 9, 'fixture 库（9 个集合已存在）只补建 9 个新集合')
+  t.eq(r.data.created.length, 10, 'fixture 库（10 个集合已存在）只补建 10 个新集合')
   t.eq(r.data.existed.length, 7, '7 个已存在集合被正确识别')
   t.eq(r.data.seeded.config.inserted, 0, '★ config._id=global 已存在 → 跳过，不覆盖现有配置')
   t.eq(t.store().config.length, 1, 'config 仍只有 1 份')

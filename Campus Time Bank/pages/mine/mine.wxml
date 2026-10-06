@@ -164,6 +164,13 @@
         <text class="cell__arrow">›</text>
       </view>
 
+      <!-- 申诉：对已作出的处置申辩（在此之前平台只有举报，没有申辩渠道） -->
+      <view class="cell" bindtap="goAppeal">
+        <view class="cell__icon">⚖️</view>
+        <text class="cell__label">我的申诉</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
       <!-- 注销账号（不可逆，三步确认） -->
       <view class="cell" bindtap="onCancelAccount">
         <view class="cell__icon">🗑️</view>

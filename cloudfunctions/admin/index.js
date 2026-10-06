@@ -615,6 +615,127 @@ async function reports(event) {
 }
 
 /** handleReport —— result 1=核实成立（对被举报人 -10 信用分 + 通知举报人）；2=驳回 */
+/* ============================ 申诉（最小闭环） ============================ */
+/*
+ * 与举报相反的方向：举报是「用户指控别人」，申诉是「用户对**已作出的处置**申辩」。
+ * 平台在此之前只有前者 —— 被扣分、被下架的只有一条通知，没有申辩渠道。
+ *
+ * 最小闭环覆盖两类处置：credit（信用分被扣）、skill（技能被违规下架）。
+ */
+
+/** appeals —— 申诉列表 */
+async function appeals(event) {
+  await requireAdmin()
+  const where = {}
+  if (event.status !== undefined && event.status !== '' && event.status !== null) {
+    where.status = Number(event.status)
+  }
+  const { page, size } = parsePage(event, 10)
+  const res = await paginateQuery(db.collection(C.APPEALS).where(where), {
+    page, size, orderBy: [['createTime', 'desc']]
+  })
+  return { list: res.list, total: res.total, hasMore: res.hasMore }
+}
+
+/**
+ * ★ 撤销原处置 —— 申诉「成立」时执行。
+ *
+ * 【为什么不删掉原来那条记录】
+ *   扣分记录、下架动作都是**已经发生的事实**。删掉它会让人以为从来没扣过，
+ *   也让「这条分是怎么回来的」变得不可追溯。
+ *   所以一律**写一条反向记录**：
+ *     · credit → 加回分数，并在 credit_logs 里写一条 appeal_ok 的正向流水
+ *     · skill  → 把 status 恢复为上架，下架原因保留在 auditRemark 里
+ *   这样账本始终是「只增不改」的，对得上。
+ *
+ * 【为什么按提交时固化的 restore 来恢复】
+ *   处理可能在几天后发生，那时原记录可能已被别的操作改动。
+ *   所以恢复量在**提交申诉时**就固定下来，而不是处理时再算。
+ *
+ * @returns {Object} { handled, kind, note }
+ */
+async function undoByAppeal(a) {
+  const restore = a.restore || {}
+
+  if (a.type === 'credit') {
+    const back = Number(restore.scoreChange) || 0
+    if (back <= 0) return { handled: false, kind: 'credit', note: '未记录可恢复的分数，未处理' }
+    /*
+     * ★ 注意：changeCredit 会把分数钳制在 0~150。
+     *   如果用户在申诉期间又攒了分，加回后可能触顶 —— 那时恢复不满额。
+     *   这是**分数上限**的正确行为，不是 bug；流水里仍会如实记下加了多少。
+     */
+    await changeCredit(a._openid, back, 'appeal_ok', '申诉成立，信用分已恢复')
+    return { handled: true, kind: 'credit', note: '信用分已加回 ' + back }
+  }
+
+  if (a.type === 'skill') {
+    let sk = null
+    try { sk = (await db.collection(C.SKILLS).doc(a.targetId).get()).data } catch (e) { sk = null }
+    if (!sk) return { handled: false, kind: 'skill', note: '技能已不存在' }
+    const want = Number(restore.prevStatus) || 1
+    if (Number(sk.status) === want) return { handled: false, kind: 'skill', note: '技能已是该状态' }
+    await db.collection(C.SKILLS).doc(sk._id).update({
+      // 保留 auditRemark：它记录了当初为什么被下架，是历史的一部分
+      data: { status: want, updateTime: now() }
+    })
+    await addNotice({
+      openid: sk.authorId || sk._openid,
+      type: 'system',
+      title: '技能已恢复上架',
+      content: '你的技能「' + sk.title + '」经申诉核实已恢复上架。感谢你的耐心等待。',
+      orderId: ''
+    })
+    return { handled: true, kind: 'skill', note: '技能已恢复上架' }
+  }
+
+  return { handled: false, kind: a.type, note: '该类型不支持自动撤销' }
+}
+
+/** handleAppeal —— result 1=成立（撤销原处置 + 通知）；2=驳回 */
+async function handleAppeal(event) {
+  const admin = await requireAdmin()
+  assert(event.id, '缺少申诉 id', 400)
+
+  let a = null
+  try { a = (await db.collection(C.APPEALS).doc(event.id).get()).data } catch (e) { a = null }
+  if (!a) throw bizError(404, '申诉不存在')
+
+  // ★ 幂等：已结案的不重复撤销、不重复发通知
+  if (Number(a.status) !== 0) return { ok: true, undo: { handled: false, note: '已结案' } }
+
+  const result = Number(event.result)
+  assert(result === 1 || result === 2, '处理结果只能是 1（成立）或 2（驳回）', 400)
+  const remark = event.remark ? String(event.remark).slice(0, 200) : ''
+
+  // ★ 先撤销、再更改申诉单状态：与举报处理同一原则 ——
+  //   「让处置真正被纠正」比记账紧急
+  let undo = { handled: false, kind: a.type, note: '' }
+  if (result === 1) undo = await undoByAppeal(a)
+
+  await db.collection(C.APPEALS).doc(a._id).update({
+    data: {
+      status: result,
+      handleRemark: remark,
+      handlerId: admin._openid,
+      handleTime: now(),
+      undo: undo.handled ? undo.kind : ''
+    }
+  })
+
+  await addNotice({
+    openid: a._openid,
+    type: 'appeal',
+    title: result === 1 ? '申诉已成立' : '申诉未成立',
+    content: result === 1
+      ? '你提交的申诉已核实成立，我们已撤销相应处置' + (remark ? '：' + remark : '。')
+      : '你提交的申诉经核实未予成立' + (remark ? '：' + remark : '。'),
+    orderId: ''
+  })
+
+  return { ok: true, undo }
+}
+
 /**
  * ★ 举报「核实成立」时必须**顺带把内容处理掉**。
  *
@@ -899,6 +1020,8 @@ exports.main = wrap(async (event, context) => {
     case 'orders': return await orders(event)
 
     case 'reports': return await reports(event)
+  case 'appeals': return await appeals(event)
+  case 'handleAppeal': return await handleAppeal(event)
     case 'handleReport': return await handleReport(event)
 
     case 'banners': await requireAdmin(); return await banners()

@@ -160,7 +160,11 @@ const user = {
    * ★ 不可逆：云端会把个人身份信息匿名化并禁用账号。
    *   调用前必须走完多步确认（见 pages/mine/mine.js 的 onCancelAccount）。
    */
-  cancel: p => call('user', 'cancel', p)
+  cancel: p => call('user', 'cancel', p),
+  /** 提交申诉（对已作出的处置申辩）→ { ok, id } */
+  appealCreate: p => call('user', 'appealCreate', p),
+  /** 我的申诉列表 → { list, total, hasMore } */
+  appealList: p => call('user', 'appealList', p)
 }
 
 /* ==================================================================
@@ -219,7 +223,11 @@ const admin = {
   deleteBanner: p => call('admin', 'deleteBanner', p),
 
   config: p => call('admin', 'config', p),
-  saveConfig: p => call('admin', 'saveConfig', p)
+  saveConfig: p => call('admin', 'saveConfig', p),
+  /** 申诉列表 → { list, total, hasMore } */
+  appeals: p => call('admin', 'appeals', p),
+  /** 处理申诉（1 成立 / 2 驳回）→ { ok, undo } */
+  handleAppeal: p => call('admin', 'handleAppeal', p)
 }
 
 /* ==================================================================

@@ -31,7 +31,10 @@ const ALL_COLLECTIONS = [
   // ★ 第 15/16 个集合：内部账户与会话（账号密码登录，不绑定微信号）
   //   注意它们不在 BUSINESS_COLLECTIONS 里 —— clear 不该把内部账户删掉，
   //   否则就再也登不进来了（只能去控制台手工重建）。
-  C.ACCOUNTS, C.SESSIONS
+  C.ACCOUNTS, C.SESSIONS,
+  // ★ 第 17 个集合：申诉（清空业务数据时不动它 —— 申诉是「处置的凭证」，
+  //   和 accounts 一样属于不该被 clear 抹掉的东西）
+  C.APPEALS
 ]
 
 /** clear 清空的业务集合（users 只删非 admin） */

@@ -21,6 +21,114 @@ const {
   changeCredit, addNotice, checkText, SEC_SCENE
 } = require('./shared')
 
+/* ============================ 申诉（最小闭环） ============================ */
+/*
+ * 为什么要有：平台在此之前是**单向**的 —— 只有举报，没有申辩。
+ *   举报核实成立直接扣 10 信用分、技能被判违规直接下架，
+ *   被处置的人只收到一条通知，没有任何表达异议的渠道。
+ *
+ * 最小闭环只覆盖两件影响最直接的处置：
+ *   · credit —— 信用分被扣（读 credit_logs 里那条扣分记录）
+ *   · skill  —— 技能被违规下架（status=3）
+ *   封禁暂不开放申诉：它比扣分重得多，涉及的风险也更高，
+ *   先让流程跑顺再扩。
+ *
+ * 三道约束（缺一个都会让管理端被淹没）：
+ *   ① 窗口期 —— 处置后 7 天内才能申诉
+ *   ② 只能申诉**自己的**处置
+ *   ③ 同一处置只能有一条未结案的申诉
+ */
+const APPEAL_WINDOW_MS = 7 * 24 * 3600 * 1000
+/** 可申诉的处置类型 */
+const APPEAL_TYPES = ['credit', 'skill']
+
+/** appealCreate —— 提交申诉 */
+async function appealCreate(event) {
+  const me = await requireUser()
+
+  const type = String(event.type || '')
+  assert(APPEAL_TYPES.indexOf(type) > -1, '申诉类型不正确', 400)
+
+  const targetId = String(event.targetId || '')
+  assert(targetId, '缺少申诉对象', 400)
+
+  const reason = String(event.reason == null ? '' : event.reason).trim().slice(0, 200)
+  assert(reason, '请填写申诉理由', 400)
+  const images = Array.isArray(event.images) ? event.images.slice(0, 3) : []
+
+  // ★ 申诉理由也是用户写的 UGC，而且管理员必看 —— 和举报同理
+  await checkText(reason, { scene: SEC_SCENE.COMMENT, openid: me._openid, label: '申诉理由' })
+
+  let targetTitle = ''
+  let createTime = 0
+  let restore = null
+
+  if (type === 'credit') {
+    let log = null
+    try { log = (await db.collection(C.CREDIT_LOGS).doc(targetId).get()).data } catch (e) { log = null }
+    assert(log, '信用分记录不存在', 404)
+    assert(log._openid === me._openid, '只能申诉自己的信用分变动', 403)
+    // 只允许申诉**扣分**记录
+    assert(Number(log.change) < 0, '只有被扣分的记录可以申诉', 400)
+    targetTitle = (log.reasonText || '信用分变动') + ' ' + Number(log.change)
+    createTime = Number(log.createTime) || 0
+    // ★ 把「恢复多少分」在提交时就固化下来 ——
+    //   处理时原记录可能已经变了，不能那时候再算
+    restore = { scoreChange: Math.abs(Number(log.change)) || 0, prevStatus: 0 }
+  } else {
+    let sk = null
+    try { sk = (await db.collection(C.SKILLS).doc(targetId).get()).data } catch (e) { sk = null }
+    assert(sk, '技能不存在', 404)
+    assert(sk.authorId === me._openid || sk._openid === me._openid, '只能申诉自己发布的技能', 403)
+    assert(Number(sk.status) === 3, '只有被违规下架的技能可以申诉', 400)
+    targetTitle = String(sk.title || '').slice(0, 60)
+    createTime = Number(sk.updateTime) || Number(sk.createTime) || 0
+    // 申诉成立则恢复上架
+    restore = { scoreChange: 0, prevStatus: 1 }
+  }
+
+  // ① 窗口期
+  if (createTime) {
+    const days = Math.floor((Date.now() - createTime) / 86400000)
+    assert(days <= 7, '已超过 7 天申诉期，无法再申诉', 409)
+  }
+
+  // ② 同一处置只允许一条未结案的申诉
+  const dup = await db.collection(C.APPEALS)
+    .where({ _openid: me._openid, type, targetId, status: 0 })
+    .count()
+  assert((dup.total || 0) === 0, '你已就这条记录提交过申诉，正在处理中', 409)
+
+  const res = await db.collection(C.APPEALS).add({
+    data: {
+      _openid: me._openid,
+      type,
+      targetId,
+      targetTitle,
+      reason,
+      images,
+      restore,
+      status: 0,
+      handleRemark: '',
+      handlerId: '',
+      handleTime: null,
+      createTime: now()
+    }
+  })
+  return { ok: true, id: res._id }
+}
+
+/** appealList —— 我的申诉（含处理结果） */
+async function appealList(event) {
+  const me = await requireUser()
+  const { page, size } = parsePage(event, 10)
+  const res = await paginateQuery(
+    db.collection(C.APPEALS).where({ _openid: me._openid }),
+    { page, size, orderBy: [['createTime', 'desc']] }
+  )
+  return { list: res.list, total: res.total, hasMore: res.hasMore }
+}
+
 /* ==================================================================
  * 徽章定义
  * ------------------------------------------------------------------
@@ -455,6 +563,8 @@ exports.main = wrap(async (event, context) => {
     case 'reviewCreate': return await reviewCreate(event)
     case 'reviewReply': return await reviewReply(event)
     case 'cancel': return await cancelAccount(event)
+    case 'appealCreate': return await appealCreate(event)
+    case 'appealList': return await appealList(event)
     default: throw bizError(400, `未知 action: ${action}`)
   }
 })
