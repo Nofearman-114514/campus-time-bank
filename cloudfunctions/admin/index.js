@@ -623,6 +623,122 @@ async function reports(event) {
  * 最小闭环覆盖两类处置：credit（信用分被扣）、skill（技能被违规下架）。
  */
 
+/* ==================== 异常增长监控（风控） ==================== */
+/**
+ * ★ 找出「收入增长结构可疑」的账户，交给管理员人工判断。
+ *
+ * 【为什么不看「排名突然上升」】
+ *   卖出一个 20 枚的高价技能同样会让排名暴涨 —— 那完全合法。
+ *   排名只说明**结果**，说明不了**来源**。所以这里看的是增长的结构。
+ *
+ * 【核心判据：来源集中度】
+ *   一个人 7 天内赚了 15 枚，含义可能完全不同：
+ *     · 来自 5 个不同买家 → 正常，他服务了 5 个人
+ *     · 来自 2 个买家（占 80% 以上）→ **可疑**，这正是「5 人供 1 人」的特征
+ *   所以判据是「前 2 个买家占总收入的比例」，不是收入本身。
+ *
+ * 【其余信号】
+ *   · 可疑快单（第 2 条防线打的 suspectFast 标记，直接读，不重复造轮子）
+ *   · 规模：交易太少的人没有统计意义，不报
+ *
+ * ★ 这里**只输出证据，不做处罚**。是否刷单需要人看聊天、看评价内容才能判断 ——
+ *   自动处罚一定会误伤良性固定搭子（长期教同一个学生，数据上和刷单一样）。
+ */
+
+/** 至少这么多单才有统计意义，否则 2 单就能凑出 100% 集中度 */
+const ANOMALY_MIN_ORDERS = 3
+/** 前 2 个买家占总收入的比例达到此值即可疑 */
+const ANOMALY_TOP2_RATIO = 0.8
+
+async function anomalies(event) {
+  await requireAdmin()
+
+  const days = Math.min(30, Math.max(1, Number(event.days) || 7))
+  const since = Date.now() - days * 24 * 3600 * 1000
+
+  /*
+   * ★ 数据源用**订单**而不是余额流水：buyerId 直接挂在订单上，
+   *   算来源集中度不用联查（云开发不支持跨集合 JOIN）。
+   */
+  let orders = []
+  try {
+    const res = await db.collection(C.ORDERS)
+      .where({ status: 'finished', confirmTime: _.gt(since) })
+      .orderBy('confirmTime', 'desc')
+      .limit(1000)
+      .get()
+    orders = res.data || []
+  } catch (e) {
+    // 历史订单可能没有 confirmTime，退化成按 createTime 再查一次
+    try {
+      const res2 = await db.collection(C.ORDERS)
+        .where({ status: 'finished', createTime: _.gt(since) })
+        .orderBy('createTime', 'desc')
+        .limit(1000)
+        .get()
+      orders = res2.data || []
+    } catch (e2) { orders = [] }
+  }
+
+  /* 按卖家聚合：总收入 / 单数 / 每个买家贡献 / 可疑快单数 */
+  const bySeller = {}
+  orders.forEach(o => {
+    const id = o.sellerId
+    if (!id) return
+    if (!bySeller[id]) bySeller[id] = { openid: id, total: 0, count: 0, buyers: {}, suspect: 0 }
+    const s = bySeller[id]
+    const amt = Number(o.amount) || 0
+    s.total += amt
+    s.count += 1
+    s.buyers[o.buyerId] = (s.buyers[o.buyerId] || 0) + amt
+    if (o.suspectFast) s.suspect += 1
+  })
+
+  const list = []
+  const ids = Object.keys(bySeller)
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i]
+    const s = bySeller[id]
+    if (s.count < ANOMALY_MIN_ORDERS) continue          // 样本太少，不报
+
+    const contrib = Object.keys(s.buyers).map(k => s.buyers[k]).sort((a, b) => b - a)
+    const top2 = contrib.slice(0, 2).reduce((a, b) => a + b, 0)
+    const top2Ratio = s.total > 0 ? top2 / s.total : 0
+    const buyerCount = contrib.length
+
+    /* ★ 只列信号，不做黑箱评分 —— 管理员要看的是依据 */
+    const signals = []
+    if (top2Ratio >= ANOMALY_TOP2_RATIO) {
+      signals.push('仅来自 ' + buyerCount + ' 个买家，前 2 人占 ' + Math.round(top2Ratio * 100) + '%')
+    }
+    if (s.suspect > 0) signals.push(s.suspect + ' 单完成过快（已标记可疑）')
+    if (!signals.length) continue
+
+    const u = await getUser(id)
+    list.push({
+      openid: id,
+      nickName: (u && u.nickName) || '未知用户',
+      avatarUrl: (u && u.avatarUrl) || '',
+      creditScore: (u && u.creditScore) || 0,
+      total: s.total,
+      count: s.count,
+      buyerCount: buyerCount,
+      top2Ratio: Math.round(top2Ratio * 100),
+      suspect: s.suspect,
+      signals: signals,
+      /* 排序权重：集中度越高、规模越大越靠前（仅用于排序，不是判定） */
+      score: top2Ratio * 100 + Math.min(s.count, 20) + s.suspect * 10
+    })
+  }
+
+  list.sort((a, b) => b.score - a.score)
+  return {
+    days: days,
+    scanned: orders.length,
+    list: list.slice(0, 50)
+  }
+}
+
 /** appeals —— 申诉列表 */
 async function appeals(event) {
   await requireAdmin()
@@ -1020,6 +1136,7 @@ exports.main = wrap(async (event, context) => {
     case 'orders': return await orders(event)
 
     case 'reports': return await reports(event)
+  case 'anomalies': return await anomalies(event)
   case 'appeals': return await appeals(event)
   case 'handleAppeal': return await handleAppeal(event)
     case 'handleReport': return await handleReport(event)

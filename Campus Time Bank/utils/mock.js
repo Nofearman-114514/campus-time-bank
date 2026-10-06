@@ -1788,6 +1788,53 @@ const handlers = {
     }
   },
 
+  /* ---------------- 异常增长监控（与云端同一套判据） ---------------- */
+  'admin.anomalies': d => {
+    const days = Math.min(30, Math.max(1, Number(d.days) || 7))
+    const since = Date.now() - days * 24 * 3600 * 1000
+    const done = orders.filter(o =>
+      o.status === 'finished' &&
+      new Date(o.confirmTime || o.createTime).getTime() > since
+    )
+
+    const bySeller = {}
+    done.forEach(o => {
+      if (!o.sellerId) return
+      if (!bySeller[o.sellerId]) bySeller[o.sellerId] = { total: 0, count: 0, buyers: {}, suspect: 0 }
+      const s = bySeller[o.sellerId]
+      const amt = Number(o.amount) || 0
+      s.total += amt
+      s.count += 1
+      s.buyers[o.buyerId] = (s.buyers[o.buyerId] || 0) + amt
+      if (o.suspectFast) s.suspect += 1
+    })
+
+    const list = []
+    Object.keys(bySeller).forEach(id => {
+      const s = bySeller[id]
+      if (s.count < 3) return                    // 样本太少不报，与云端一致
+      const contrib = Object.keys(s.buyers).map(k => s.buyers[k]).sort((a, b) => b - a)
+      const top2 = contrib.slice(0, 2).reduce((a, b) => a + b, 0)
+      const top2Ratio = s.total > 0 ? top2 / s.total : 0
+      const signals = []
+      if (top2Ratio >= 0.8) {
+        signals.push('仅来自 ' + contrib.length + ' 个买家，前 2 人占 ' + Math.round(top2Ratio * 100) + '%')
+      }
+      if (s.suspect > 0) signals.push(s.suspect + ' 单完成过快（已标记可疑）')
+      if (!signals.length) return
+      const u = userMap[id] || {}
+      list.push({
+        openid: id, nickName: u.nickName || '未知用户', avatarUrl: u.avatarUrl || '',
+        creditScore: u.creditScore || 0, total: s.total, count: s.count,
+        buyerCount: contrib.length, top2Ratio: Math.round(top2Ratio * 100),
+        suspect: s.suspect, signals: signals,
+        score: top2Ratio * 100 + Math.min(s.count, 20) + s.suspect * 10
+      })
+    })
+    list.sort((a, b) => b.score - a.score)
+    return { days: days, scanned: done.length, list: list.slice(0, 50) }
+  },
+
   /* ---------------- 管理端申诉 ---------------- */
   'admin.appeals': d => {
     let list = appeals.slice()

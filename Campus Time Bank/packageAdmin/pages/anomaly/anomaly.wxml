@@ -1,0 +1,48 @@
+<view class="page adm-anomaly">
+
+  <view class="an-note">
+    <text class="an-note__title">只看增长的结构，不看排名</text>
+    <text class="an-note__text">收入来自多个买家 = 正常；来自少数买家且高度集中 = 可疑。本页只提供证据，是否违规由你判断。</text>
+  </view>
+
+  <view class="an-tabs">
+    <view
+      class="an-tab {{days === item.v ? 'an-tab--on' : ''}}"
+      wx:for="{{rangeOptions}}"
+      wx:key="v"
+      data-v="{{item.v}}"
+      bindtap="onRange"
+    >{{item.t}}</view>
+  </view>
+
+  <view class="an-scanned">已扫描 {{scanned}} 笔已完成订单，命中 {{list.length}} 个可疑账户</view>
+
+  <view wx:if="{{loading}}" class="an-empty">分析中…</view>
+  <view wx:elif="{{!list.length}}" class="an-empty">这个区间没有可疑账户</view>
+
+  <view wx:else class="card an-item" wx:for="{{list}}" wx:key="openid">
+    <view class="an-item__head">
+      <view class="an-avatar">{{item.avatarText}}</view>
+      <view class="an-item__who">
+        <text class="an-item__name">{{item.nickName}}</text>
+        <text class="an-item__id">尾号 {{item.shortId}} · 信用分 {{item.creditScore}}</text>
+      </view>
+    </view>
+
+    <view class="an-stats">
+      <view class="an-stat"><text class="an-stat__num">{{item.total}}</text><text class="an-stat__k">收入币</text></view>
+      <view class="an-stat"><text class="an-stat__num">{{item.count}}</text><text class="an-stat__k">单数</text></view>
+      <view class="an-stat"><text class="an-stat__num">{{item.buyerCount}}</text><text class="an-stat__k">买家数</text></view>
+      <view class="an-stat"><text class="an-stat__num an-stat__num--warn">{{item.top2Ratio}}%</text><text class="an-stat__k">前2人占比</text></view>
+    </view>
+
+    <view class="an-signals">
+      <text class="tag tag--warn an-signal" wx:for="{{item.signals}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <view class="an-actions">
+      <view class="btn btn--sm btn--gray" data-id="{{item.openid}}" bindtap="goUser">查看该用户</view>
+    </view>
+  </view>
+
+</view>

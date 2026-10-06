@@ -43,6 +43,7 @@ const ENTRIES = [
   { icon: '📦', name: '订单管理', url: '/packageAdmin/pages/orders/orders' },
   { icon: '🚨', name: '举报处理', url: '/packageAdmin/pages/reports/reports' },
   { icon: '⚖️', name: '申诉处理', url: '/packageAdmin/pages/appeals/appeals' },
+  { icon: '🔍', name: '异常监控', url: '/packageAdmin/pages/anomaly/anomaly' },
   { icon: '⚙️', name: '参数配置', url: '/packageAdmin/pages/settings/settings' }
 ]
 

@@ -40,6 +40,7 @@
         "pages/orders/orders",
         "pages/reports/reports",
         "pages/appeals/appeals",
+        "pages/anomaly/anomaly",
         "pages/settings/settings"
       ]
     }

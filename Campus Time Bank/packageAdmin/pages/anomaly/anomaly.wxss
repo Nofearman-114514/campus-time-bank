@@ -1,0 +1,43 @@
+/* 异常增长监控 */
+.adm-anomaly { padding: var(--sp); }
+
+.an-note {
+  padding: 20rpx; margin-bottom: 20rpx;
+  background: var(--c-warn-l, #FDF3E5);
+  border-radius: 14rpx;
+}
+.an-note__title { display: block; font-size: var(--fs-body); font-weight: 600; color: var(--c-warn, #E8912D); }
+.an-note__text { display: block; margin-top: 8rpx; font-size: var(--fs-mini); color: var(--c-t2); line-height: 1.6; }
+
+.an-tabs { display: flex; flex-direction: row; margin-bottom: 16rpx; }
+.an-tab {
+  padding: 12rpx 28rpx; margin-right: 16rpx;
+  border-radius: 999rpx; background: #fff; color: var(--c-t2); font-size: var(--fs-mini);
+}
+.an-tab--on { background: var(--c-primary); color: #fff; font-weight: 600; }
+
+.an-scanned { margin-bottom: 16rpx; font-size: var(--fs-mini); color: var(--c-t3); }
+
+.an-item { margin-bottom: 20rpx; }
+.an-item__head { display: flex; flex-direction: row; align-items: center; }
+.an-avatar {
+  width: 76rpx; height: 76rpx; margin-right: 18rpx;
+  border-radius: 50%; background: var(--c-primary-l, #E8F6F1);
+  color: var(--c-primary); font-size: 34rpx; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.an-item__who { flex: 1; }
+.an-item__name { display: block; font-size: var(--fs-body); font-weight: 600; color: var(--c-t1); }
+.an-item__id { display: block; margin-top: 6rpx; font-size: 22rpx; color: var(--c-t3); }
+
+.an-stats { display: flex; flex-direction: row; margin-top: 20rpx; }
+.an-stat { flex: 1; text-align: center; }
+.an-stat__num { display: block; font-size: 34rpx; font-weight: 700; color: var(--c-t1); }
+.an-stat__num--warn { color: var(--c-warn, #E8912D); }
+.an-stat__k { display: block; margin-top: 4rpx; font-size: 22rpx; color: var(--c-t3); }
+
+.an-signals { margin-top: 18rpx; }
+.an-signal { margin: 0 12rpx 10rpx 0; }
+.an-actions { display: flex; flex-direction: row; margin-top: 12rpx; }
+
+.an-empty { padding: 60rpx 0; text-align: center; color: var(--c-t3); font-size: var(--fs-mini); }

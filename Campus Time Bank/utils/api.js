@@ -226,6 +226,8 @@ const admin = {
   saveConfig: p => call('admin', 'saveConfig', p),
   /** 申诉列表 → { list, total, hasMore } */
   appeals: p => call('admin', 'appeals', p),
+  /** ★ 异常增长监控 → { days, scanned, list }（只输出证据，不做处罚） */
+  anomalies: p => call('admin', 'anomalies', p),
   /** 处理申诉（1 成立 / 2 驳回）→ { ok, undo } */
   handleAppeal: p => call('admin', 'handleAppeal', p)
 }
