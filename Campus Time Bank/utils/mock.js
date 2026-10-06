@@ -80,6 +80,51 @@ const fail = (code, msg) => { throw new MockError(code, msg) }
  * ★ 失败策略同样是保守的：这里不会失败，所以不存在云端那个
  *   「接口挂了怎么办」的问题 —— 云端是 fail-open + 记日志，见 _shared。
  */
+/* ==================== 防刷单：订单信用分日上限（离线镜像） ==================== */
+/*
+ * ★ 与云端 _shared 的 ORDER_CREDIT_TIERS 同一套档位，必须保持一致 ——
+ *   离线模式是答辩演示用的，如果这里不递减，演示时刷单看不出被限制。
+ *   云端还额外有一层「查询失败按全额放行」的兜底；离线是本地数组，不会失败。
+ */
+const ORDER_CREDIT_TIERS = [
+  { under: 3, factor: 1 },
+  { under: 6, factor: 0.5 },
+  { under: Infinity, factor: 0 }
+]
+
+/** 滚动 24 小时内已完成的订单数 → 本单的信用分倍率 */
+function orderCreditFactor(openid) {
+  const since = Date.now() - 24 * 3600 * 1000
+  // ★ 只统计 order_finish：封顶说明流水用的是 order_finish_capped，
+  //   绝不能计入次数，否则一旦封顶就永远拿不到信用分
+  const done = creditLogs.filter(x =>
+    x._openid === openid && x.reason === 'order_finish' && new Date(x.createTime).getTime() > since
+  ).length
+  const tier = ORDER_CREDIT_TIERS.filter(t => done < t.under)[0] ||
+    ORDER_CREDIT_TIERS[ORDER_CREDIT_TIERS.length - 1]
+  return { done: done, factor: tier.factor }
+}
+
+/** 按倍率折算（向上取整：2 减半仍是 1） */
+function scaleCredit(gain, factor) {
+  const g = Number(gain) || 0
+  if (factor >= 1) return g
+  if (factor <= 0) return 0
+  return Math.ceil(g * factor)
+}
+
+/** 封顶时写一条说明流水（change=0），让用户看得懂为什么没加分 */
+function addCappedLog(openid, done) {
+  const u = userMap[openid]
+  creditLogs.unshift({
+    _id: rid('cl'), _openid: openid, change: 0,
+    score: u ? u.creditScore : 100,
+    reason: 'order_finish_capped',
+    reasonText: '本单信用分已达今日上限（24 小时内已完成 ' + done + ' 单）',
+    orderId: '', createTime: now()
+  })
+}
+
 const SEC_DEMO_WORDS = ['违禁词', '代考', '代写论文', '刷单', '办证', '博彩', '赌博']
 
 /** 命中示例词表就抛 400；空内容直接跳过 */
@@ -1261,8 +1306,19 @@ const handlers = {
       balance: seller.coins, frozen: seller.frozenCoins,
       orderId: o._id, orderNo: o.orderNo, remark: '服务收入：' + o.skillSnapshot.title, createTime: now()
     })
-    addCredit(o.buyerId, 2, 'order_finish', '订单顺利完成', o._id)
-    addCredit(o.sellerId, 2, 'order_finish', '订单顺利完成', o._id)
+    /*
+     * ★ 防刷单：按「滚动 24 小时内已完成单数」递减信用分收益。
+     *   与云端同一套档位（前 3 单全额 / 第 4~6 单减半 / 第 7 单起不计分）。
+     *   ★ 时间币**不受影响** —— 上面 buyer.coins / seller.coins 的结算是照常的。
+     */
+    const bf = orderCreditFactor(o.buyerId)
+    const sf = orderCreditFactor(o.sellerId)
+    const bGain = scaleCredit(2, bf.factor)
+    const sGain = scaleCredit(2, sf.factor)
+    if (bGain > 0) addCredit(o.buyerId, bGain, 'order_finish', '订单顺利完成', o._id)
+    else addCappedLog(o.buyerId, bf.done)
+    if (sGain > 0) addCredit(o.sellerId, sGain, 'order_finish', '订单顺利完成', o._id)
+    else addCappedLog(o.sellerId, sf.done)
     notices.unshift({
       _id: rid('n'), _openid: o.sellerId, type: 'order', title: '时间币已到账',
       content: `「${o.skillSnapshot.title}」已完成，${o.amount} 枚时间币已到账。记得和对方互评哦～`,

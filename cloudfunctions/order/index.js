@@ -21,7 +21,8 @@ const {
   getOpenId, getUser, requireUser, getConfig,
   creditLevelOf, orderLimitOf, changeCredit, addWalletLog, addNotice, sendSubscribe,
   partySnapshot, canOrderSkill,
-  isAdminUser, checkText, SEC_SCENE
+  isAdminUser, checkText, SEC_SCENE,
+  orderCreditFactor, scaleCredit
 } = require('./shared')
 
 /* ============================ 本地常量 ============================ */
@@ -598,24 +599,49 @@ async function settleOrder(orderId, opt) {
     remark: `服务收入：${title}`
   }))
 
-  // —— 事务外补写 ②：双方 +2 信用分（订单顺利完成）——
-  let buyerCredit = Math.min(150, r.buyerCreditBefore + 2)
-  let sellerCredit = Math.min(150, r.sellerCreditBefore + 2)
-  const bc = await bestEffort('settle.buyerCredit', () => changeCredit(
-    r.order.buyerId, 2, 'order_finish', '订单顺利完成', r.order._id
-  ))
-  if (typeof bc === 'number') buyerCredit = bc
-  const sc = await bestEffort('settle.sellerCredit', () => changeCredit(
-    r.order.sellerId, 2, 'order_finish', '订单顺利完成', r.order._id
-  ))
-  if (typeof sc === 'number') sellerCredit = sc
+  /*
+   * —— 事务外补写 ②：双方 +2 信用分（订单顺利完成）——
+   *
+   * ★ 防刷单：按「滚动 24 小时内已完成单数」递减收益。
+   *   真实用户一天碰不到上限；刷子刷再多也只有这么多。
+   *   时间币**不受影响**，照常结算（见 _shared 里的说明）。
+   */
+  const bFactor = await orderCreditFactor(r.order.buyerId)
+  const sFactor = await orderCreditFactor(r.order.sellerId)
+  const bGain = scaleCredit(2, bFactor.factor)
+  const sGain = scaleCredit(2, sFactor.factor)
 
-  // —— 事务外补写 ③：连续 5 单按时完成奖励 ——
+  let buyerCredit = Math.min(150, r.buyerCreditBefore + bGain)
+  let sellerCredit = Math.min(150, r.sellerCreditBefore + sGain)
+
+  if (bGain > 0) {
+    const bc = await bestEffort('settle.buyerCredit', () => changeCredit(
+      r.order.buyerId, bGain, 'order_finish', '订单顺利完成', r.order._id
+    ))
+    if (typeof bc === 'number') buyerCredit = bc
+  } else {
+    await bestEffort('settle.buyerCreditCapped', () => addCappedLog(r.order.buyerId, bFactor.done))
+  }
+
+  if (sGain > 0) {
+    const sc = await bestEffort('settle.sellerCredit', () => changeCredit(
+      r.order.sellerId, sGain, 'order_finish', '订单顺利完成', r.order._id
+    ))
+    if (typeof sc === 'number') sellerCredit = sc
+  } else {
+    await bestEffort('settle.sellerCreditCapped', () => addCappedLog(r.order.sellerId, sFactor.done))
+  }
+
+  // —— 事务外补写 ③：连续 5 单按时完成奖励（同样受日上限约束）——
   const streak = (r.sellerStats && r.sellerStats.ontimeStreak) || 0
   if (streak > 0 && streak % 5 === 0) {
-    await bestEffort('settle.streakBonus', () => changeCredit(
-      r.order.sellerId, 3, 'ontime_streak', '连续 5 单按时完成', r.order._id
-    ))
+    const gain = scaleCredit(3, sFactor.factor)
+    // 里程碑奖励也走同一档位 —— 否则刷子可以靠「每 5 单 +3」持续拿分
+    if (gain > 0) {
+      await bestEffort('settle.streakBonus', () => changeCredit(
+        r.order.sellerId, gain, 'ontime_streak', '连续 5 单按时完成', r.order._id
+      ))
+    }
   }
 
   // —— 事务外补写 ④：徽章补发（去重写入卖家 badges 数组）——
@@ -824,6 +850,29 @@ async function actionCounts(event, openid) {
     finished: finished.total || 0,
     canceled: canceled.total || 0
   }
+}
+
+/**
+ * 封顶时写一条**说明性流水**（change = 0）。
+ *
+ * ★ 为什么不静默跳过：用户完成订单却发现信用分没涨，会以为是 bug。
+ *   写一条 0 分流水把原因说清楚，他查信用分明细时就能看到。
+ * ★ reason 刻意用 order_finish_capped（**不是** order_finish）——
+ *   否则这条 0 分记录会被计入「24 小时已完成单数」，计数只增不减，
+ *   用户一旦封顶就永远拿不到信用分了。
+ */
+async function addCappedLog(openid, done) {
+  await db.collection(C.CREDIT_LOGS).add({
+    data: {
+      _openid: openid,
+      change: 0,
+      score: (await getUser(openid) || {}).creditScore || 100,
+      reason: 'order_finish_capped',
+      reasonText: '本单信用分已达今日上限（24 小时内已完成 ' + done + ' 单）',
+      orderId: '',
+      createTime: now()
+    }
+  })
 }
 
 /* ============================ 入口 ============================ */

@@ -81,7 +81,7 @@ const CREDIT_LEVELS = [
 
 /** 信用分规则文案（与云函数 credit 逻辑一一对应） */
 const CREDIT_RULES = [
-  { key: 'order_finish', change: 2, text: '订单顺利完成（双方各 +2）' },
+  { key: 'order_finish', change: 2, text: '订单顺利完成（双方各 +2；24 小时内第 4~6 单减半、第 7 单起不计分）' },
   { key: 'review_5', change: 1, text: '收到 5 星好评' },
   { key: 'review_4', change: 0, text: '收到 4 星评价' },
   { key: 'review_3', change: -1, text: '收到 3 星评价' },
@@ -89,7 +89,7 @@ const CREDIT_RULES = [
   { key: 'review_1', change: -3, text: '收到 1 星评价' },
   { key: 'cancel_after_accept', change: -5, text: '接单后取消 / 爽约' },
   { key: 'report_valid', change: -10, text: '被举报且核实成立' },
-  { key: 'ontime_streak', change: 3, text: '连续 5 单按时完成' }
+  { key: 'ontime_streak', change: 3, text: '连续 5 单按时完成（同样受每日上限约束）' }
 ]
 
 /* ============================ 徽章 ============================ */

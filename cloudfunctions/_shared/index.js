@@ -212,6 +212,67 @@ async function checkText(content, opts) {
   }
 }
 
+/* ==================== 防刷单：订单信用分日上限 ==================== */
+/**
+ * ★ 每日订单信用分收益递减 —— 防刷单，但**刻意不误伤真实用户**。
+ *
+ * 【要防的是什么】
+ *   一个宿舍 6 人、5 人发单 1 人全接，或者一个「老大」让手下收币 ——
+ *   时间币总额是守恒的（**不会通胀**），但**刷出来的币可以买走真实的劳动**：
+ *   刷子拿假服务换来的币去买别人货真价实的服务，等于用假币消费。
+ *   而且刷单还有**实打实的收益**：每单 +2 信用分（还有每 5 单 +3），
+ *   刷到 150 上限就解锁了「同时进行更多订单」的权益。
+ *
+ * 【为什么用「限制收益」而不是「判断谁是刷子」】
+ *   良性固定搭子（一个吉他老师长期教同一个学生）和刷单在数据上
+ *   **长得一模一样**：同一个人、多次交易、金额固定。
+ *   任何基于「和谁交易 / 交易了几次」的判据，都会把项目最想要的用户
+ *   一起打掉。所以这里**不判断意图，只限制收益** ——
+ *   真实用户一天根本碰不到上限，而刷子刷再多也只有这么多，动机自然消失。
+ *
+ * 【档位】按**滚动 24 小时**内已完成的订单数：
+ *   前 3 单 → 全额；第 4~6 单 → 减半；第 7 单起 → 不计分
+ *   ★ **时间币始终照常结算** —— 平台没有权力没收用户的币，
+ *     而且币的转移本身不产生新币，不影响总额守恒。
+ */
+const ORDER_CREDIT_TIERS = [
+  { under: 3, factor: 1 },
+  { under: 6, factor: 0.5 },
+  { under: Infinity, factor: 0 }
+]
+
+/**
+ * 查「滚动 24 小时内已完成的订单数」并给出本单的信用分倍率。
+ *
+ * ⚠️ 只统计 reason === order_finish 的流水。封顶时写的那条说明流水用的是
+ *    order_finish_capped —— **绝不能让它被计入次数**，否则计数只增不减，
+ *    用户一旦封顶就再也拿不到信用分了。
+ */
+async function orderCreditFactor(openid) {
+  try {
+    const since = Date.now() - 24 * 3600 * 1000
+    const res = await db.collection(C.CREDIT_LOGS)
+      .where({ _openid: openid, reason: 'order_finish', createTime: _.gt(since) })
+      .count()
+    const done = res.total || 0
+    const tier = ORDER_CREDIT_TIERS.filter(t => done < t.under)[0] ||
+      ORDER_CREDIT_TIERS[ORDER_CREDIT_TIERS.length - 1]
+    return { done, factor: tier.factor }
+  } catch (e) {
+    // ★ 查询失败时**按全额放行**：不能因为一次查询抖动让所有人的信用分停掉
+    console.error('[防刷单] 统计 24 小时订单数失败，按全额处理：', (e && e.message) || e)
+    return { done: 0, factor: 1 }
+  }
+}
+
+/** 按倍率折算收益（向上取整：2 减半仍是 1，不会变成 0） */
+function scaleCredit(gain, factor) {
+  const g = Number(gain) || 0
+  if (factor >= 1) return g
+  if (factor <= 0) return 0
+  return Math.ceil(g * factor)
+}
+
 /* ============================ 内部账户 ============================ */
 /*
  * 背景：普通用户的身份来自 wx.login 换到的 openid，与微信号绑定。
@@ -726,6 +787,8 @@ module.exports = {
   ROLE, isAdminUser, isDebuggerUser,
   // 内容安全
   checkText, SEC_SCENE,
+  // 防刷单
+  orderCreditFactor, scaleCredit, ORDER_CREDIT_TIERS,
   // 内部账户
   ACCOUNT_PREFIX, SESSION_TTL, newSalt, newToken, hashPassword, safeEqual,
   resolveSession, currentAccount,
