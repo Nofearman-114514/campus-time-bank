@@ -542,6 +542,13 @@ async function leaderboard(event) {
     totalEarned: Number(u.totalEarned) || 0,
     serveCount: (u.stats && Number(u.stats.serveCount)) || 0,
     creditScore: Number(u.creditScore) || 0,
+    /*
+     * ★ 学院照常展示，不做脱敏。
+     *   依据：学院信息**本来就在用户主页公开**（_shared 的 publicUser 保留了
+     *   campus / college / major / grade），加到榜单不增加任何新的泄露。
+     *   而且它正是榜单的价值之一 —— 「我们学院有人上榜」比一个光秃秃的昵称更有意义。
+     */
+    college: u.college || '',
     isMe: u._openid === me._openid
   }))
 

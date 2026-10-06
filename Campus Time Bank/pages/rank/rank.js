@@ -36,9 +36,16 @@ Page({
     this.setData({ loading: true })
     try {
       const res = (await api.user.leaderboard({ limit: 20 })) || {}
+      /*
+       * ★ 展示文本在这里拼好，不写在 WXML 里。
+       *   三元 + 字符串拼接堆在模板里，改一次要看半天；拼在 JS 里还能被测试覆盖。
+       *   学院缺失时不留一个孤零零的分隔点。
+       */
       const list = (res.list || []).map(it => Object.assign({}, it, {
         medal: it.rank === 1 ? '🥇' : (it.rank === 2 ? '🥈' : (it.rank === 3 ? '🥉' : '')),
-        avatarText: (it.nickName || '?').slice(0, 1)
+        avatarText: (it.nickName || '?').slice(0, 1),
+        subText: (it.college ? it.college + ' · ' : '') +
+          '服务 ' + (it.serveCount || 0) + ' 次 · 信用分 ' + (it.creditScore || 0)
       }))
       this.setData({ list: list, me: res.me || null, loading: false })
     } catch (e) {

@@ -1479,6 +1479,8 @@ const handlers = {
       totalEarned: Number(u.totalEarned) || 0,
       serveCount: (u.stats && Number(u.stats.serveCount)) || 0,
       creditScore: Number(u.creditScore) || 0,
+      // 学院照常展示（它本来就在用户主页公开），与云端出参一致
+      college: u.college || '',
       isMe: u._openid === OPENID.me
     }))
     const mine = me()

@@ -161,4 +161,30 @@ module.exports = async function (t) {
   t.eq(one.creditScore, u('o_sel').creditScore, '带信用分')
   t.eq(JSON.stringify(one).indexOf('_openid') < 0, true,
     '★★ 出参里**不含 openid** —— 榜单不该暴露账号标识')
+
+  /* ==================================================================
+   * 组 7 · 学院：照常展示，**不脱敏**
+   * ================================================================== */
+  t.group('组 7 · 展示学院，且刻意不脱敏')
+
+  t.seed()
+  u('o_sel').totalEarned = 500
+  u('o_sel').nickName = '王小明'
+  u('o_sel').college = '信息工程学院'
+
+  r = await t.call('user', 'o_weak', 'leaderboard', { limit: 20 })
+  const c = r.data.list.filter(x => x.totalEarned === 500)[0]
+  t.eq(c.college, '信息工程学院', '★ 出参带学院')
+  t.eq(c.nickName, '王*明', '（对照）昵称仍然是脱敏的')
+  t.eq(c.college.indexOf('*') < 0, true,
+    '★★ 学院**不脱敏** —— 它本来就写在用户主页上（publicUser 保留 college），' +
+    '加到榜单不增加任何新的泄露；而且「我们学院有人上榜」正是榜单的价值之一')
+
+  /* 没填学院时不崩，也不留一个孤零零的分隔点 */
+  t.seed()
+  u('o_sel').totalEarned = 500
+  u('o_sel').college = ''
+  r = await t.call('user', 'o_weak', 'leaderboard', { limit: 20 })
+  const c2 = r.data.list.filter(x => x.totalEarned === 500)[0]
+  t.eq(c2.college, '', '★ 没填学院时返回空串（前端据此省略，不留空分隔点）')
 }

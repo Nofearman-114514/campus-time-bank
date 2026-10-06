@@ -33,7 +33,7 @@
       <view class="rk-avatar">{{item.avatarText}}</view>
       <view class="rk-item__body">
         <text class="rk-item__name">{{item.nickName}}{{item.isMe ? '（我）' : ''}}</text>
-        <text class="rk-item__sub">服务 {{item.serveCount}} 次 · 信用分 {{item.creditScore}}</text>
+        <text class="rk-item__sub">{{item.subText}}</text>
       </view>
       <view class="rk-item__num">
         <text class="rk-item__earn">{{item.totalEarned}}</text>
