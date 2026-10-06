@@ -164,6 +164,13 @@
         <text class="cell__arrow">›</text>
       </view>
 
+      <!-- 贡献榜：按累计收入排名（不是余额）—— 鼓励提供服务而不是囤积 -->
+      <view class="cell" bindtap="goRank">
+        <view class="cell__icon">🏆</view>
+        <text class="cell__label">贡献榜</text>
+        <text class="cell__arrow">›</text>
+      </view>
+
       <!-- 申诉：对已作出的处置申辩（在此之前平台只有举报，没有申辩渠道） -->
       <view class="cell" bindtap="goAppeal">
         <view class="cell__icon">⚖️</view>

@@ -151,6 +151,18 @@ function addNoCreditLog(openid, fast, done) {
   })
 }
 
+/**
+ * 昵称脱敏，与云端 maskName 同一规则：王小明 → 王*明；两字 → 王*；一字 → 原样。
+ * ★ 真实环境里这一步必须在**服务端**做 —— 只在客户端遮是没用的，
+ *   接口照样返回真名，抓个包就看见了。
+ */
+function maskName(name) {
+  const s = String(name || '').trim()
+  if (s.length <= 1) return s || '同学'
+  if (s.length === 2) return s.slice(0, 1) + '*'
+  return s.slice(0, 1) + '*' + s.slice(-1)
+}
+
 const SEC_DEMO_WORDS = ['违禁词', '代考', '代写论文', '刷单', '办证', '博彩', '赌博']
 
 /** 命中示例词表就抛 400；空内容直接跳过 */
@@ -1016,7 +1028,17 @@ const handlers = {
   'login.login': () => ({ user: clone(me()), isNew: false, config: clone(config) }),
 
   'login.updateProfile': d => {
-    Object.assign(me(), d || {})
+    /*
+     * ★ 参与排行榜是隐私设置，只接受布尔（与云端同一套规范化）。
+     *
+     * ⚠️ 已知与云端的差异：云端有 PROFILE_FIELDS 白名单，**未知字段一律忽略**；
+     *    这里直接 Object.assign，会照单全收。离线环境没有真实的越权风险
+     *    （数据都在本地、改坏了刷新即恢复），但这个差异记在这里 ——
+     *    如果将来要做「越权改写 coins/role」的防御性测试，必须连云端跑。
+     */
+    const patch = Object.assign({}, d || {})
+    if (patch.leaderboardHidden !== undefined) patch.leaderboardHidden = !!patch.leaderboardHidden
+    Object.assign(me(), patch)
     me().updateTime = now()
     return { user: clone(me()) }
   },
@@ -1444,6 +1466,36 @@ const handlers = {
 
   /* ================= user ================= */
   /* ---------------- 申诉（最小闭环） ---------------- */
+  /* ---------------- 贡献排行榜 ---------------- */
+  'user.leaderboard': d => {
+    const limit = Math.min(50, Math.max(1, Number(d.limit) || 20))
+    /* ★ 与云端同一条规则：只统计没退出 + 账号正常的 */
+    const pool = users.filter(u => u.leaderboardHidden !== true && Number(u.status) === 1)
+    pool.sort((a, b) => (Number(b.totalEarned) || 0) - (Number(a.totalEarned) || 0))
+    const list = pool.slice(0, limit).map((u, i) => ({
+      rank: i + 1,
+      nickName: maskName(u.nickName),
+      avatarUrl: u.avatarUrl || '',
+      totalEarned: Number(u.totalEarned) || 0,
+      serveCount: (u.stats && Number(u.stats.serveCount)) || 0,
+      creditScore: Number(u.creditScore) || 0,
+      isMe: u._openid === OPENID.me
+    }))
+    const mine = me()
+    const myEarned = Number(mine.totalEarned) || 0
+    const higher = pool.filter(u => (Number(u.totalEarned) || 0) > myEarned).length
+    return {
+      list: list,
+      limit: limit,
+      me: {
+        rank: mine.leaderboardHidden ? 0 : higher + 1,
+        totalEarned: myEarned,
+        serveCount: (mine.stats && Number(mine.stats.serveCount)) || 0,
+        hidden: !!mine.leaderboardHidden
+      }
+    }
+  },
+
   'user.appealCreate': d => {
     const type = String(d.type || '')
     if (['credit', 'skill'].indexOf(type) < 0) fail(400, '申诉类型不正确')

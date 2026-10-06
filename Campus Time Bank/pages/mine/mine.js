@@ -135,6 +135,8 @@ Page({
   goAdmin() { this.go('/packageAdmin/pages/dashboard/dashboard') },
   /** 内部账户登录（校方/运维）：账号密码，不绑定微信号 */
   goAccountLogin() { this.go('/pages/account/login/login') },
+  /** 贡献榜：按累计收入排名 */
+  goRank() { this.go('/pages/rank/rank') },
   /** 我的申诉：查看已提交的申诉与处理结果 */
   goAppeal() { this.go('/pages/appeal/appeal') },
 

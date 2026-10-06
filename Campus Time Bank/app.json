@@ -13,6 +13,7 @@
     "pages/user/profile/profile",
     "pages/account/login/login",
     "pages/appeal/appeal",
+    "pages/rank/rank",
     "pages/user/home/home",
     "pages/user/skills/skills",
     "pages/user/favorites/favorites",

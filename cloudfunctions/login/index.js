@@ -19,7 +19,14 @@ const {
 
 /** 资料可编辑字段白名单（其它字段一律忽略，防止越权改写 coins/role） */
 const PROFILE_FIELDS = [
-  'nickName', 'avatarUrl', 'gender', 'bio', 'campus', 'college', 'major', 'grade', 'tags'
+  'nickName', 'avatarUrl', 'gender', 'bio', 'campus', 'college', 'major', 'grade', 'tags',
+  /*
+   * ★ 参与排行榜的开关虽然放在资料白名单里，但它**不是普通资料字段** ——
+   *   它是隐私设置。校园是熟人圈，不是所有人都愿意被公开比较，
+   *   所以必须让用户能退出（这也是隐私合规的基本要求）。
+   *   下面会和 gender 一样做**类型规范化**，不接受客户端传来的任意值。
+   */
+  'leaderboardHidden'
 ]
 
 /** 校园认证字段白名单 */
@@ -257,6 +264,8 @@ async function actionUpdateProfile(event) {
   if (data.avatarUrl !== undefined) data.avatarUrl = cut(str(data.avatarUrl), 500)
   if (data.gender !== undefined) data.gender = [0, 1, 2].indexOf(num(data.gender, 0)) > -1 ? num(data.gender, 0) : 0
   if (data.bio !== undefined) data.bio = cut(str(data.bio), 200)
+  // 只接受布尔：强制转成 true / false，不存客户端传进来的任意值
+  if (data.leaderboardHidden !== undefined) data.leaderboardHidden = !!data.leaderboardHidden
   if (data.campus !== undefined) data.campus = cut(str(data.campus), 40)
   if (data.college !== undefined) data.college = cut(str(data.college), 40)
   if (data.major !== undefined) data.major = cut(str(data.major), 40)

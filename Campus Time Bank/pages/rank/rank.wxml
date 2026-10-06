@@ -1,0 +1,47 @@
+<view class="page rank-page">
+
+  <!-- 我的名次 -->
+  <view class="rk-me" wx:if="{{me}}">
+    <view class="rk-me__left">
+      <text class="rk-me__label">我的排名</text>
+      <text class="rk-me__rank">{{me.hidden ? '—' : me.rank}}</text>
+    </view>
+    <view class="rk-me__right">
+      <view class="rk-me__row"><text class="rk-me__k">累计收入</text><text class="rk-me__v">{{me.totalEarned}} 枚</text></view>
+      <view class="rk-me__row"><text class="rk-me__k">服务次数</text><text class="rk-me__v">{{me.serveCount}} 次</text></view>
+    </view>
+  </view>
+
+  <!-- 参与开关（隐私设置） -->
+  <view class="card rk-switch">
+    <view class="rk-switch__body">
+      <text class="rk-switch__title">参与排行榜</text>
+      <text class="rk-switch__desc">关闭后你不会出现在榜单上，别人看不到你的名次。榜单只显示昵称脱敏后的结果（如「王*明」）。</text>
+    </view>
+    <switch checked="{{me && !me.hidden}}" disabled="{{switching}}" bindchange="onToggleJoin" />
+  </view>
+
+  <view class="rk-tip">按**累计收入**排名 —— 鼓励提供服务，而不是囤积时间币。</view>
+
+  <!-- 榜单 -->
+  <view wx:if="{{loading}}" class="rk-empty">加载中…</view>
+  <view wx:elif="{{!list.length}}" class="rk-empty">暂时还没有人上榜</view>
+
+  <view wx:else class="card rk-list">
+    <view class="rk-item {{item.isMe ? 'rk-item--me' : ''}}" wx:for="{{list}}" wx:key="rank">
+      <text class="rk-item__rank">{{item.medal || item.rank}}</text>
+      <view class="rk-avatar">{{item.avatarText}}</view>
+      <view class="rk-item__body">
+        <text class="rk-item__name">{{item.nickName}}{{item.isMe ? '（我）' : ''}}</text>
+        <text class="rk-item__sub">服务 {{item.serveCount}} 次 · 信用分 {{item.creditScore}}</text>
+      </view>
+      <view class="rk-item__num">
+        <text class="rk-item__earn">{{item.totalEarned}}</text>
+        <text class="rk-item__unit">枚</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="rk-foot">榜单只显示前 20 名。排名靠后不代表贡献小 —— 每个人起步时间不同。</view>
+
+</view>

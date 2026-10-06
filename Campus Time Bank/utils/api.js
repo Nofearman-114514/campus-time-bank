@@ -161,6 +161,11 @@ const user = {
    *   调用前必须走完多步确认（见 pages/mine/mine.js 的 onCancelAccount）。
    */
   cancel: p => call('user', 'cancel', p),
+  /**
+   * 贡献排行榜 → { list, limit, me }
+   * ★ 昵称已在**服务端脱敏**；按累计收入排序（不是时间币余额）
+   */
+  leaderboard: p => call('user', 'leaderboard', p),
   /** 提交申诉（对已作出的处置申辩）→ { ok, id } */
   appealCreate: p => call('user', 'appealCreate', p),
   /** 我的申诉列表 → { list, total, hasMore } */

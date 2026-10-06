@@ -483,6 +483,90 @@ async function reviewReply(event) {
   return { ok: true }
 }
 
+/* ==================== 贡献排行榜 ==================== */
+/**
+ * ★ 排行榜按「累计收入」而不是「时间币余额」—— 这个选择很关键。
+ *
+ *   按**余额**排：靠前的人更有动力**不花出去**，币越堆越集中。
+ *   一个全站只有 30 枚币的平台，前 3 名囤了 25 枚，剩下的人就没币交易了 ——
+ *   **排行本身会加剧市场停摆**。
+ *
+ *   按**累计收入**排：收入 = 提供了多少服务。鼓励提供服务而不是囤积，
+ *   与「用技能换技能」的初衷一致。而且花掉币不影响名次。
+ *
+ * 【匿名化必须在**服务端**做】
+ *   只在客户端遮名字是没用的 —— 接口照样返回真名，抓个包就看见了。
+ *   所以这里返回的 nickName 已经是脱敏后的。
+ *
+ * 【可退出】
+ *   个人资料页可以关闭「参与排行榜」（leaderboardHidden = true）。
+ *   校园是熟人圈，不是所有人都愿意被公开比较。
+ *
+ * 【为什么只给前 N 名】
+ *   展示全站排名会让靠后的人被「公开处刑」—— 而新用户恰恰最需要鼓励。
+ *   所以只给前 20 名 + 自己的名次。
+ */
+const RANK_LIMIT = 20
+
+/** 昵称脱敏：王小明 → 王*明；两字 → 王*；一字 → 原样 */
+function maskName(name) {
+  const s = String(name || '').trim()
+  if (s.length <= 1) return s || '同学'
+  if (s.length === 2) return s.slice(0, 1) + '*'
+  return s.slice(0, 1) + '*' + s.slice(-1)
+}
+
+/** leaderboard —— 贡献排行榜（前 N 名 + 我的名次） */
+async function leaderboard(event) {
+  const me = await requireUser()
+  const limit = Math.min(50, Math.max(1, Number(event.limit) || RANK_LIMIT))
+
+  /** 参与排行的条件：没退出 + 账号正常 */
+  const base = { leaderboardHidden: _.neq(true), status: 1 }
+
+  let list = []
+  try {
+    const res = await db.collection(C.USERS)
+      .where(base)
+      .orderBy('totalEarned', 'desc')
+      .limit(limit)
+      .get()
+    list = res.data || []
+  } catch (e) { list = [] }
+
+  /* ★ 脱敏在服务端做；排名序也在服务端定，避免客户端各自算出错位 */
+  const rows = list.map((u, i) => ({
+    rank: i + 1,
+    nickName: maskName(u.nickName),
+    avatarUrl: u.avatarUrl || '',
+    totalEarned: Number(u.totalEarned) || 0,
+    serveCount: (u.stats && Number(u.stats.serveCount)) || 0,
+    creditScore: Number(u.creditScore) || 0,
+    isMe: u._openid === me._openid
+  }))
+
+  /* 我的名次：比我收入高的人数 + 1（不依赖我是否在前 N 名里） */
+  const myEarned = Number(me.totalEarned) || 0
+  let myRank = 0
+  try {
+    const higher = await db.collection(C.USERS)
+      .where({ leaderboardHidden: _.neq(true), status: 1, totalEarned: _.gt(myEarned) })
+      .count()
+    myRank = (higher.total || 0) + 1
+  } catch (e) { myRank = 0 }
+
+  return {
+    list: rows,
+    limit: limit,
+    me: {
+      rank: me.leaderboardHidden ? 0 : myRank,
+      totalEarned: myEarned,
+      serveCount: (me.stats && Number(me.stats.serveCount)) || 0,
+      hidden: !!me.leaderboardHidden
+    }
+  }
+}
+
 /* ============================ cancel —— 注销账号 ============================ */
 /**
  * 注销账号：**匿名化**，不做物理删除。
@@ -556,6 +640,7 @@ exports.main = wrap(async (event, context) => {
   const action = event.action || ''
   switch (action) {
     case 'mine': return await mine()
+    // 注：参与排行的开关走 login.updateProfile 的 leaderboardHidden 字段
     case 'home': return await home(event)
     case 'creditLogs': return await creditLogs(event)
     case 'badges': return await badges(event)
@@ -563,6 +648,7 @@ exports.main = wrap(async (event, context) => {
     case 'reviewCreate': return await reviewCreate(event)
     case 'reviewReply': return await reviewReply(event)
     case 'cancel': return await cancelAccount(event)
+    case 'leaderboard': return await leaderboard(event)
     case 'appealCreate': return await appealCreate(event)
     case 'appealList': return await appealList(event)
     default: throw bizError(400, `未知 action: ${action}`)
