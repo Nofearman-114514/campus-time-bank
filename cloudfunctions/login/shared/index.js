@@ -135,6 +135,79 @@ async function paginateQuery(query, opts) {
   }
 }
 
+/* ============================ 内容安全 ============================ */
+/**
+ * 内容安全场景（对应微信 msgSecCheck 的 scene 参数）。
+ * 选对场景会影响模型的判定取向，别随手填。
+ */
+const SEC_SCENE = {
+  PROFILE: 1,   // 资料类：昵称、简介、技能标题/描述
+  COMMENT: 2,   // 评论类：评价、留言
+  FORUM: 3,     // 论坛类
+  LOG: 4        // 社交日志：聊天消息
+}
+
+/** 微信内容安全的「违规」错误码 */
+const SEC_RISKY_CODE = 87014
+
+/**
+ * ★ 内容安全检测（微信 security.msgSecCheck）。
+ *
+ * 【为什么要有】
+ *   这是个 UGC 平台 —— 技能标题、简介、留言、聊天、评价全都是用户自己写的。
+ *   平台有义务过滤违法违规内容；微信提供了这个接口，小程序上线审核也会看。
+ *   客户端的输入校验拦不住绕过（直接调云函数），**所以这一层必须在服务端**。
+ *
+ * 【★ 失败时为什么「放行 + 记日志」而不是「一律拒绝」】
+ *   接口会因为没配 openapi 权限、配额用尽、网络抖动而失败。
+ *   如果失败就拒绝，一次接口抖动会让**所有人都发不出内容** ——
+ *   那比漏掉一条违规内容严重得多。
+ *   放行的兜底是人工审核：技能有审核、评价/聊天有举报处理，
+ *   违规内容仍然会被下架、扣分、封禁。
+ *   但每次失败都会打日志，避免「检测静默失效」而没人发现。
+ *
+ * 【review 怎么处理】
+ *   suggest 有三个值：pass / review / risky。
+ *   只有 risky 拦下；review 是「疑似」，放行并留给人工审核 ——
+ *   一刀切会误伤大量正常内容。
+ *
+ * @param {String} content 待检测文本
+ * @param {Object} opts    { scene, openid, label }
+ *        label 是出错文案里的名词，例如「技能标题」，让提示更具体
+ * @returns {Promise<Object>} { ok, suggest?, skipped?, failed? }
+ */
+async function checkText(content, opts) {
+  const text = String(content == null ? '' : content).trim()
+  // 空内容没什么可检的
+  if (!text) return { ok: true, skipped: 'empty' }
+
+  const o = opts || {}
+  const label = o.label || '内容'
+
+  try {
+    const res = await cloud.openapi.security.msgSecCheck({
+      content: text.slice(0, 2500),          // 接口上限 2500 字
+      version: 2,
+      scene: Number(o.scene) || SEC_SCENE.PROFILE,
+      openid: o.openid || getOpenId()
+    })
+    const suggest = (res && res.result && res.result.suggest) || 'pass'
+    if (suggest === 'risky') throw bizError(400, label + '包含违规信息，请修改后再试')
+    return { ok: true, suggest }
+  } catch (e) {
+    // ① 上面自己抛的「违规」必须冒泡，不能被下面的兜底吞掉
+    if (e && e.__biz) throw e
+    // ② 接口把违规直接表达成错误码的情况
+    const code = (e && (e.errCode || e.code)) || 0
+    if (Number(code) === SEC_RISKY_CODE || /87014/.test(String((e && e.message) || ''))) {
+      throw bizError(400, label + '包含违规信息，请修改后再试')
+    }
+    // ③ 其余失败一律放行，但必须留下痕迹
+    console.error('[内容安全] 「' + label + '」检测失败，已放行：', (e && e.message) || e)
+    return { ok: true, failed: true }
+  }
+}
+
 /* ============================ 内部账户 ============================ */
 /*
  * 背景：普通用户的身份来自 wx.login 换到的 openid，与微信号绑定。
@@ -647,6 +720,8 @@ module.exports = {
   parsePage, paginateQuery,
   getOpenId, getUser, requireUser, requireVerified, requireAdmin, requireDebugger,
   ROLE, isAdminUser, isDebuggerUser,
+  // 内容安全
+  checkText, SEC_SCENE,
   // 内部账户
   ACCOUNT_PREFIX, SESSION_TTL, newSalt, newToken, hashPassword, safeEqual,
   resolveSession, currentAccount,

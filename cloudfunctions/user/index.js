@@ -18,7 +18,7 @@ const {
   wrap, bizError, assert,
   now, parsePage, paginateQuery,
   requireUser, getUser, publicUser, getOpenId,
-  changeCredit, addNotice
+  changeCredit, addNotice, checkText, SEC_SCENE
 } = require('./shared')
 
 /* ==================================================================
@@ -260,6 +260,10 @@ async function reviewCreate(event) {
   const rawContent = event.content == null ? '' : String(event.content)
   assert(rawContent.length <= 200, '评价内容不超过 200 字', 400)
   const content = rawContent.trim()
+
+  // ★ 内容安全：评价挂在对方主页上，是典型的他人可见 UGC
+  await checkText(content, { scene: SEC_SCENE.COMMENT, openid: me._openid, label: '评价内容' })
+
   const tags = Array.isArray(event.tags) ? event.tags.slice(0, 10) : []
 
   const toId = isBuyer ? order.sellerId : order.buyerId

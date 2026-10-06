@@ -21,7 +21,7 @@ const {
   getOpenId, getUser, requireUser, getConfig,
   creditLevelOf, orderLimitOf, changeCredit, addWalletLog, addNotice, sendSubscribe,
   partySnapshot, canOrderSkill,
-  isAdminUser
+  isAdminUser, checkText, SEC_SCENE
 } = require('./shared')
 
 /* ============================ 本地常量 ============================ */
@@ -217,6 +217,9 @@ async function actionCreate(event, openid) {
   const remark = String(event.remark || '').slice(0, 200)
   const expectTime = String(event.expectTime || '').slice(0, 50)
   const contact = String(event.contact || '').slice(0, 50)
+
+  // ★ 内容安全：留言会被服务方看到（空内容 checkText 会直接跳过，不白调接口）
+  await checkText(remark, { scene: SEC_SCENE.COMMENT, openid: buyer._openid, label: '留言' })
   const sellerInfo = seller
     ? partySnapshot(seller)
     : partySnapshot({

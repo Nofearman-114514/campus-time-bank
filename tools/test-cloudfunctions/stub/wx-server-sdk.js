@@ -483,6 +483,16 @@ async function runTransaction(fn) {
 let CURRENT_OPENID = ''
 let currentPhone = '13800000000'
 let phoneFailFlag = false
+
+/*
+ * 内容安全的测试状态（security.msgSecCheck）
+ * ★ stub 必须实现这个接口：否则任何接了 checkText 的云函数一调就
+ *   「Cannot read properties of undefined (reading 'msgSecCheck')」，
+ *   整片用例挂掉 —— 与当初 phonenumber 踩的是同一个坑。
+ */
+let secFailFlag = false          // true → 接口直接抛错（测「失败放行」分支）
+let secRiskyWords = []           // 含这些词 → risky（应被拦下）
+let secReviewWords = []          // 含这些词 → review（疑似，应放行）
 const database = () => ({
   collection: name => makeCollection(name),
   command,
@@ -520,6 +530,34 @@ module.exports = {
      *   真实接口返回的是**当前登录用户**的手机号（与 code 无关），
      *   所以这里返回固定号码，测试可用 `__setPhone()` 改、`__failPhone()` 模拟失败。
      */
+    /**
+     * 内容安全（security.msgSecCheck）。
+     *
+     * 真实接口返回 result.suggest = pass / review / risky。
+     * 这里用「关键词命中」来模拟，方便用例精确控制：
+     *   __secRisky(['违禁词'])  含这些词 → risky
+     *   __secReview(['疑似'])   含这些词 → review
+     *   __secFail(true)         接口直接抛错（测「失败放行」）
+     *   __secReset()            恢复默认（全部 pass）
+     */
+    security: {
+      msgSecCheck: async (opt) => {
+        stats.secCalls = (stats.secCalls || 0) + 1
+        const content = String((opt && opt.content) || '')
+        if (secFailFlag) {
+          const e = new Error('security.msgSecCheck:fail system error')
+          e.errCode = -1
+          throw e
+        }
+        if (secRiskyWords.some(w => w && content.indexOf(w) >= 0)) {
+          return { errCode: 0, errMsg: 'ok', result: { suggest: 'risky', label: 20001 } }
+        }
+        if (secReviewWords.some(w => w && content.indexOf(w) >= 0)) {
+          return { errCode: 0, errMsg: 'ok', result: { suggest: 'review', label: 100 } }
+        }
+        return { errCode: 0, errMsg: 'ok', result: { suggest: 'pass', label: 100 } }
+      }
+    },
     phonenumber: {
       getPhoneNumber: async () => {
         stats.phoneCalls++
@@ -549,6 +587,17 @@ module.exports = {
   __setPhone: (p) => { currentPhone = p || '13800000000' },
   /** 模拟换手机号失败（用于测 bindPhone 的降级分支） */
   __failPhone: (v) => { phoneFailFlag = v !== false },
+  /* —— 内容安全的后门 —— */
+  /** 含这些词的内容判为 risky */
+  __secRisky: (words) => { secRiskyWords = Array.isArray(words) ? words : (words ? [words] : []) },
+  /** 含这些词的内容判为 review */
+  __secReview: (words) => { secReviewWords = Array.isArray(words) ? words : (words ? [words] : []) },
+  /** 让接口直接抛错（测「检测失败」时的放行策略） */
+  __secFail: (v) => { secFailFlag = v !== false },
+  /** 恢复默认 + 清零调用计数 */
+  __secReset: () => { secFailFlag = false; secRiskyWords = []; secReviewWords = []; stats.secCalls = 0 },
+  /** 接口被调用了几次 */
+  __secCalls: () => stats.secCalls || 0,
   __reset: () => { store.collections = {}; commitSeq = 0; seq = 0 },
   __resetStats: () => {
     totals.transactions += stats.transactions

@@ -19,7 +19,7 @@ const {
   db, _, C,
   wrap, bizError, assert,
   now, parsePage, paginateQuery,
-  requireUser, getUser
+  requireUser, getUser, checkText, SEC_SCENE
 } = require('./shared')
 
 /** 单次 get 上限：云函数内 db.get() 默认最多返回 100 条，超出需 skip 分页 */
@@ -255,6 +255,14 @@ async function send(event) {
   assert(content.length <= 1000, '消息内容不能超过 1000 字', 400)
   // 类型必须是 §3.9 定义的枚举：否则 'video' 之类会原样落库并写进 lastMsgType
   assert(['text', 'image', 'system'].indexOf(type) > -1, '不支持的消息类型', 400)
+
+  /*
+   * ★ 内容安全：聊天属「社交日志」场景。
+   *   只检文本 —— 图片走的是另一套接口（imgSecCheck），本项目暂未接入。
+   */
+  if (type === 'text') {
+    await checkText(content, { scene: SEC_SCENE.LOG, openid: me._openid, label: '消息' })
+  }
 
   const toId = event.toId || (chat.members || []).find(m => m !== me._openid)
   assert((chat.members || []).indexOf(toId) > -1, '接收者不在该会话中', 400)

@@ -13,7 +13,7 @@ const {
   now, getOpenId, getUser, requireVerified,
   parsePage, paginateQuery,
   authorSnapshot, publicUser,
-  assertInsideCampus
+  assertInsideCampus, checkText, SEC_SCENE
 } = require('./shared')
 
 /* ============================ 常量 ============================ */
@@ -315,6 +315,14 @@ async function actionCreate(event) {
 
   const desc = cut(str(event.desc), MAX_DESC)
   assert(desc.length > 0, '请填写技能详情')
+
+  /*
+   * ★ 内容安全：标题和详情是**他人可见**的 UGC。
+   *   客户端的输入校验拦不住绕过（有人直接调云函数），所以这一层必须在服务端。
+   *   检测失败时放行并记日志，理由见 _shared 里 checkText 的说明。
+   */
+  await checkText(title, { scene: SEC_SCENE.PROFILE, openid: user._openid, label: '技能标题' })
+  await checkText(desc, { scene: SEC_SCENE.PROFILE, openid: user._openid, label: '技能详情' })
 
   const categoryId = str(event.categoryId)
   assert(categoryId, '请选择技能分类')

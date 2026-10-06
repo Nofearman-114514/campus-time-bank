@@ -294,6 +294,43 @@ async function run() {
     failed.push(`订单/聊天流程断言 → ${e.message}`)
   }
 
+  /* ------------------------------------------------------------------ */
+  /* 内容安全（离线镜像的行为断言）                                        */
+  /* ------------------------------------------------------------------ */
+  /*
+   * ★ 为什么单独验它：check-project 只能证明「mock 覆盖了这个 action」，
+   *   证明不了「行为与云端一致」。离线镜像若没生效，演示时一条违规内容
+   *   会畅通无阻 —— 而演示恰恰是最容易被看到的时候。
+   *   这里直接打 mock 的派发入口，断言它真的会拒。
+   */
+  let secChecked = 0
+  const secCases = [
+    ['skill', { action: 'create', title: '违禁词一条', desc: '正常描述', categoryId: 'c1', price: 1, duration: 30, longitude: 112.823601, latitude: 23.001079 },
+      '技能标题含违规词'],
+    ['skill', { action: 'create', title: '正常标题', desc: '详情里有违禁词', categoryId: 'c1', price: 1, duration: 30, longitude: 112.823601, latitude: 23.001079 },
+      '技能详情含违规词'],
+    ['order', { action: 'create', skillId: (S.skills.find(x => x._openid !== ME) || {})._id, remark: '帮我办证' },
+      '下单留言含违规词'],
+    ['user', { action: 'reviewCreate', orderId: (findOrder('finished') || {})._id, score: 5, content: '涉及赌博' },
+      '评价内容含违规词']
+  ]
+  for (const [fn, payload, label] of secCases) {
+    secChecked++
+    let threw = null
+    try { await mock.dispatch(fn, payload) } catch (e) { threw = e }
+    if (!threw) failed.push('内容安全镜像 → ' + label + ' 应被拦下（400），实际放行了')
+    else if (threw.code !== 400) failed.push('内容安全镜像 → ' + label + ' 应报 400，实际 ' + threw.code + '：' + threw.message)
+  }
+  console.log(`  ${C.green}✓${C.r} 内容安全镜像：${secChecked} 个入口的违规内容都被拦下`)
+
+  /* 正常内容必须能通过（否则镜像就成了「什么都拒」） */
+  let secPassOk = false
+  try {
+    await mock.dispatch('skill', { action: 'create', title: '吉他入门', desc: '周六下午，教学楼 B1', categoryId: 'c1', price: 1, duration: 30, longitude: 112.823601, latitude: 23.001079 })
+    secPassOk = true
+  } catch (e) { failed.push('内容安全镜像 → 正常内容被误拦：' + e.message) }
+  if (secPassOk) console.log(`  ${C.green}✓${C.r} 内容安全镜像：正常内容不受影响`)
+
   /* ---- 输出 ---- */
   console.log(`${C.green}通过 ${pass.length}${C.r}   ${C.red}失败 ${failed.length}${C.r}   ${C.yellow}跳过 ${skip.length}${C.r}\n`)
 

@@ -65,6 +65,31 @@ class MockError extends Error {
 }
 const fail = (code, msg) => { throw new MockError(code, msg) }
 
+/* ============================ 内容安全（离线模拟） ============================ */
+/*
+ * ★ 为什么离线也要做：
+ *   项目的原则是「离线模式与真实环境功能一致」。
+ *   如果这里不检，离线演示时一条违规内容会畅通无阻 ——
+ *   而演示恰恰是最容易被看到的时候。
+ *
+ * ★ 与真实实现的差别（必须说清楚）：
+ *   真实环境调微信 security.msgSecCheck，是模型判定；
+ *   离线环境没有这个接口，只能用一份**很小的示例词表**模拟，
+ *   命中即判违规。它不追求覆盖度，只用来演示「拦截确实生效了」。
+ *
+ * ★ 失败策略同样是保守的：这里不会失败，所以不存在云端那个
+ *   「接口挂了怎么办」的问题 —— 云端是 fail-open + 记日志，见 _shared。
+ */
+const SEC_DEMO_WORDS = ['违禁词', '代考', '代写论文', '刷单', '办证', '博彩', '赌博']
+
+/** 命中示例词表就抛 400；空内容直接跳过 */
+function secCheck(content, label) {
+  const text = String(content == null ? '' : content).trim()
+  if (!text) return
+  const hit = SEC_DEMO_WORDS.filter(w => text.indexOf(w) >= 0)[0]
+  if (hit) fail(400, (label || '内容') + '包含违规信息，请修改后再试')
+}
+
 /* ============================ 用户 ============================ */
 /* ------------------------------------------------------------------
  * 演示数据的年级：按「当前届」推算，**不写死**
@@ -1038,6 +1063,9 @@ const handlers = {
     if (!campus.isInside(cLat, cLng).inside) {
       fail(400, '只能发布校内地点。校外的任务一旦出现纠纷或意外，校方无法及时处理，请重新选择校内的位置')
     }
+    // 内容安全：标题与详情是他人可见的 UGC
+    secCheck(d.title, '技能标题')
+    secCheck(d.desc, '技能详情')
     const c = catMap[d.categoryId]
     const item = {
       _id: rid('skill'), _openid: OPENID.me, authorId: OPENID.me,
@@ -1114,6 +1142,8 @@ const handlers = {
     if (u.authStatus !== 2) fail(403, '请先完成校园认证')
     if (u.creditScore < config.minCreditToOrder) fail(403, `信用分低于 ${config.minCreditToOrder}，暂不能下单`)
     if (u.coins < sk.price) fail(409, `时间币不足，还差 ${sk.price - u.coins} 枚`)
+    // 内容安全：留言会被服务方看到
+    secCheck(d.remark, '留言')
 
     u.coins -= sk.price
     u.frozenCoins += sk.price
@@ -1420,6 +1450,8 @@ const handlers = {
     if (!isBuyer && o.sellerId !== OPENID.me) fail(403, '无权评价该订单')
     if (isBuyer && o.isRatedBuyer) fail(409, '你已经评价过了')
     if (!isBuyer && o.isRatedSeller) fail(409, '你已经评价过了')
+    // 内容安全：评价挂在对方主页上
+    secCheck(d.content, '评价内容')
 
     const toId = isBuyer ? o.sellerId : o.buyerId
     const fromInfo = isBuyer ? o.buyerInfo : o.sellerInfo
@@ -1507,6 +1539,8 @@ const handlers = {
     const c = chats.find(x => x._id === d.chatId)
     if (!c) fail(404, '会话不存在')
     if (c.members.indexOf(OPENID.me) < 0) fail(403, '你不在该会话中')
+    // 内容安全：只检文本 —— 图片走另一套接口，本项目未接入
+    if ((d.type || 'text') === 'text') secCheck(d.content, '消息')
     const m = {
       _id: rid('m'), _openid: OPENID.me, chatId: d.chatId,
       fromId: OPENID.me, toId: d.toId, type: d.type || 'text',
