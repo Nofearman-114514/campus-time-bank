@@ -17,13 +17,13 @@
 4. **超时处理「双保险」**：`order` 云函数配了每 10 分钟的定时触发器（`orderAutoTask`）批量兜底超时单；同时任意用户调 `order.counts` 时顺手做一次惰性检查。定时任务漏跑也不会让买家的时间币被无限期冻结，两条路径共用同一组内部函数且都有状态断言，重复执行是幂等的。
 5. **实时聊天用云开发原生 `watch`**：`messages` 集合权限设为「所有用户可读，仅创建者可写」，客户端只拿读权限用于 `db.collection('messages').watch()` 长连接推送，**写入仍强制走 `message.send` 云函数**（服务端校验二人确为会话成员）；`onError` 自动降级为 3 秒轮询，`onUnload` 必关连接防泄漏。
 6. **地理位置零第三方依赖**：附近技能用 `db.Geo.Point` + `_.geoNear({ geometry, maxDistance })` 在云函数里算距离，结果自带 `distance` 字段并天然按距离升序；地图选点用原生 `wx.chooseLocation()`。腾讯位置服务仅作为「逆地址解析」的可选增强，不配 Key 也能跑通全部功能。
-7. **零素材降级 + 零云环境可预览**：项目不含任何图片资源，技能封面/Banner/头像全部有「渐变 + emoji / 昵称首字」降级方案，答辩演示不会出现白块；未填 `ENV_ID` 时自动进入离线模式，`utils/mock.js` 用与真实云函数**完全一致**的返回结构撑起全部 65 个接口，`node tools/smoke-test-mock.js` 一键验证。
+7. **零素材降级 + 零云环境可预览**：项目不含任何图片资源，技能封面/Banner/头像全部有「渐变 + emoji / 昵称首字」降级方案，答辩演示不会出现白块；未填 `ENV_ID` 时自动进入离线模式，`utils/mock.js` 用与真实云函数**完全一致**的返回结构撑起全部 75 个接口，`node tools/smoke-test-mock.js` 一键验证。
 
 ---
 
 ## 二、功能清单
 
-### 2.1 用户端（主包 `pages/`，共 23 个页面）
+### 2.1 用户端（主包 `pages/`，共 27 个页面）
 
 | 模块 | 页面（`app.json` 中的路径） | 说明 |
 |---|---|---|
@@ -39,7 +39,7 @@
 
 > `app.json` 的 `tabBar` 为 4 项 + 中间凸起「发布」按钮（`custom-tab-bar/`）：广场 / 订单 / 时间币 / 我的。
 
-### 2.2 管理端（分包 `packageAdmin/pages/`，8 个页面）
+### 2.2 管理端（分包 `packageAdmin/pages/`，10 个页面）
 
 | 页面 | 说明 |
 |---|---|
@@ -64,7 +64,7 @@
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  小程序端（微信原生，无 npm 依赖）                                        │
 │                                                                          │
-│  pages/ 23 个页面          packageAdmin/ 管理端分包（含 ECharts）         │
+│  pages/ 37 个页面          packageAdmin/ 管理端分包（含 ECharts）         │
 │      │                            │                                      │
 │      └──────────┬─────────────────┘                                      │
 │                 ▼                                                        │
@@ -80,7 +80,7 @@
                                   │  wx.cloud.callFunction({ name, data:{action,...} })
                                   ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  云函数层（Node.js + wx-server-sdk，8 个函数 / 65 个 action）             │
+│  云函数层（Node.js + wx-server-sdk，9 个函数 / 75 个 action）             │
 │                                                                          │
 │   login    skill    order★    wallet    user    message    admin   initdb │
 │     │        │        │         │        │        │         │       │     │
@@ -128,7 +128,7 @@ campus-time-bank/
 │   │   ├── theme.wxss             设计 token：颜色 / 渐变 / 圆角 / 阴影 / 字号 / 间距
 │   │   └── common.wxss            原子类与通用样式
 │   ├── utils/
-│   │   ├── api.js                 ★ 唯一网络出口，把 65 个 action 映射到 8 个云函数
+│   │   ├── api.js                 ★ 唯一网络出口，把 75 个 action 映射到 9 个云函数
 │   │   ├── cloud.js               云函数调用封装：超时、重试、错误归一、MOCK 分发
 │   │   ├── mock.js                离线模拟数据层（与真实云函数返回结构完全一致）
 │   │   ├── constants.js           枚举 / 字典 / 状态机文案 / 徽章 / 信用规则
@@ -146,7 +146,7 @@ campus-time-bank/
 │   │   └── badge-wall/            徽章墙
 │   ├── pages/                     23 个主包页面（结构见 §2.1）
 │   └── packageAdmin/              管理端分包
-│       ├── pages/                 管理端 8 个页面（js/json/wxml/wxss 四件套齐全）
+│       ├── pages/                 管理端 10 个页面（js/json/wxml/wxss 四件套齐全）
 │       ├── components/ec-canvas/  ECharts 小程序 Canvas 适配器 + echarts.js（约 1MB，放分包不占主包体积）
 │       └── utils/
 │           ├── chart.js           7 类图表 option 生成器（折线/饼/柱/信用分布/雷达/仪表盘）
@@ -156,19 +156,19 @@ campus-time-bank/
 ├── cloudfunctions/                云函数（8 个业务函数 + 1 个共享源目录）
 │   ├── _shared/index.js           ★ 共享层唯一源（改完必须跑 tools/sync-shared.mjs）
 │   ├── login/                     登录 / 资料 / 校园认证 / 手机号 / 定位（6 个 action）
-│   ├── skill/                     广场 / 详情 / 发布 / 编辑 / 下架 / 分类 / 轮播 / 举报（9 个 action）
+│   ├── skill/                     广场 / 详情 / 发布 / 编辑 / 下架 / 分类 / 轮播 / 举报（11 个 action）
 │   ├── order/                     ★ 订单与时间币事务核心（9 个 action + autoTask 定时入口）
 │   ├── wallet/                    时间币余额 / 流水 / 统计（3 个 action）
-│   ├── user/                      个人中心 / 信用分 / 徽章 / 评价（7 个 action）
+│   ├── user/                      个人中心 / 信用分 / 徽章 / 评价（11 个 action）
 │   ├── message/                   聊天 / 通知 / 订阅消息（9 个 action）
-│   ├── admin/                     管理端全部接口（20 个 action）
+│   ├── admin/                     管理端全部接口（23 个 action）
 │   ├── initdb/                    一键初始化：建集合 + 种子数据 / 清库 / 设管理员（3 个 action）
 │   └── <每个函数>/shared/index.js ★ 构建产物：由 sync-shared.mjs 生成（8 份副本共 3,392 行，不计入手写量，不要手改）
 │
 ├── tools/                         构建、自检与测试脚本（13 个文件）
 │   ├── sync-shared.mjs            把 _shared 同步进每个云函数的 shared/
 │   ├── check-project.mjs          项目结构自检 + 规模统计
-│   ├── smoke-test-mock.js         离线数据层冒烟测试（65 个 action 全量跑一遍）
+│   ├── smoke-test-mock.js         离线数据层冒烟测试（75 个 action 全量跑一遍）
 │   ├── fetch-echarts.mjs          重新下载 / 升级 ECharts 适配器到 ec-canvas
 │   ├── .smoke-tmp/                冒烟测试临时产物目录
 │   └── test-cloudfunctions/       ★ 云函数离线回归测试（零依赖、不连云环境）
@@ -177,7 +177,7 @@ campus-time-bank/
 │       ├── stub/wx-server-sdk.js  内存版 SDK（含事务快照隔离、写冲突检测与重试）
 │       ├── lib/harness.js         模块解析劫持 + 断言引擎 + 报告渲染
 │       ├── lib/fixtures.js        夹具：用户 / 技能 / 配置 / 订单
-│       └── cases/                 4 个案例文件 → 88 组 / 1901 条断言
+│       └── cases/                 17 个用例文件 → 133 组 / 2261 条断言
 │
 └── docs/                          设计文档
     ├── ARCHITECTURE.md            ★ 架构与接口契约（唯一事实来源，冻结契约）
@@ -203,9 +203,9 @@ campus-time-bank/
 
 # 3. （可选，命令行验证）在项目根目录执行：
 node tools/smoke-test-mock.js
-#    期望输出：通过 65  失败 0  跳过 0     ← 离线数据层：65 个 action 全量跑一遍
+#    期望输出：通过 65  失败 0  跳过 0     ← 离线数据层：75 个 action 全量跑一遍
 node tools/test-cloudfunctions/run.js
-#    期望输出：通过 1901 / 失败 0          ← 云函数离线回归：1901 条断言 / 88 组
+#    期望输出：通过 2261 / 失败 0          ← 云函数离线回归：2261 条断言 / 133 组
 ```
 
 离线模式能看：广场列表与排序、技能详情、发布表单、订单全状态流转、时间币流水与趋势、
@@ -245,15 +245,15 @@ node tools/sync-shared.mjs
 |---|---|---|
 | `node tools/sync-shared.mjs` | 把 `cloudfunctions/_shared/index.js` 复制到每个云函数的 `shared/` 子目录（8 个副本） | **每次修改 `_shared` 后必跑**；否则上传的云函数用的还是旧共享代码（云开发每个函数独立打包，无法跨目录 `require('../_shared')`）。⚠️ 副本是**构建产物**，不要手改，也不计入代码量 |
 | `node tools/check-project.mjs` | 结构自检：页面四件套完整性、`usingComponents` 路径、页面调用的 `api.x.y()` 是否存在、mock 覆盖率（65/65）、`require` 相对路径、tabBar 声明、云函数目录结构、事件绑定、`wx:for` 的 `wx:key`、**`<text>` 内容跨行**（真机会因此偏移）、模板变量、`app.*` 调用；并输出代码规模统计 | 提交前 / 答辩前跑一次；**当前全通过** |
-| `node tools/smoke-test-mock.js` | **离线数据层冒烟**：在 Node 里把 `api.js` 声明的 **65 个 action** 全部真实调用一遍（含订单状态机全流程断言：拒单退款、取消不扣分、确认结算到账、评价写入），验证离线模式下每个接口都有数据 | 改完 `mock.js` 或 `api.js` 后；答辩彩排前的保险 |
-| `node tools/test-cloudfunctions/run.js` | **★ 云函数离线回归测试**：纯 Node、零依赖、不连云环境，用内存版 `wx-server-sdk` 把 `order`（时间币事务核心）与 `wallet` 的业务规则全跑一遍 —— **88 组 / 1901 条断言 / 114 次数据库事务（含 6 次写冲突自动重试）**，约 1 秒跑完。可直接演示「并发下单不会超卖」「时间币账实守恒」「超时自动结算幂等」。详见 [tools/test-cloudfunctions/README.md](tools/test-cloudfunctions/README.md) | 改完 `order` / `wallet` / `_shared` 后立刻跑；也可接进 CI（退出码 0/1） |
+| `node tools/smoke-test-mock.js` | **离线数据层冒烟**：在 Node 里把 `api.js` 声明的 **75 个 action** 全部真实调用一遍（含订单状态机全流程断言：拒单退款、取消不扣分、确认结算到账、评价写入），验证离线模式下每个接口都有数据 | 改完 `mock.js` 或 `api.js` 后；答辩彩排前的保险 |
+| `node tools/test-cloudfunctions/run.js` | **★ 云函数离线回归测试**：纯 Node、零依赖、不连云环境，用内存版 `wx-server-sdk` 把 `order`（时间币事务核心）与 `wallet` 的业务规则全跑一遍 —— **133 组 / 2261 条断言 / 114 次数据库事务（含 7 次写冲突自动重试）**，约 1 秒跑完。可直接演示「并发下单不会超卖」「时间币账实守恒」「超时自动结算幂等」。详见 [tools/test-cloudfunctions/README.md](tools/test-cloudfunctions/README.md) | 改完 `order` / `wallet` / `_shared` 后立刻跑；也可接进 CI（退出码 0/1） |
 | `node tools/fetch-echarts.mjs` | 从 CDN 重新下载 `ec-canvas.js / wx-canvas.js / echarts.js` 等 6 个文件到 `packageAdmin/components/ec-canvas/` | 仓库里已包含下载好的文件，**正常开发不需要执行**，仅在升级 ECharts 版本或文件损坏时用 |
 
 ### 6.2 页面级冒烟（需要一次性配置）
 
 | 命令 | 作用 | 前置条件 |
 |---|---|---|
-| `npm run test:ui` | **★ 一键走遍全部 32 个页面**：用微信官方 `miniprogram-automator` 驱动开发者工具，自动逐个打开 `app.json` 里的每个页面，捕获**未捕获异常**、`console.error`、以及「页面 data 为空（根本没渲染成功）」三种故障，最后给出通过/失败清单 | ① `npm install`（只装 `miniprogram-automator` 这一个开发依赖）<br>② 开发者工具里打开本项目<br>③ **设置 → 安全设置 → 打开「服务端口」**（一次性） |
+| `npm run test:ui` | **★ 一键走遍全部 37 个页面**：用微信官方 `miniprogram-automator` 驱动开发者工具，自动逐个打开 `app.json` 里的每个页面，捕获**未捕获异常**、`console.error`、以及「页面 data 为空（根本没渲染成功）」三种故障，最后给出通过/失败清单 | ① `npm install`（只装 `miniprogram-automator` 这一个开发依赖）<br>② 开发者工具里打开本项目<br>③ **设置 → 安全设置 → 打开「服务端口」**（一次性） |
 
 > `test:ui` 测的是「**页面能不能活着打开**」，不测业务正确性 ——
 > 业务正确性由 6.1 的 `test:mock` 与 `test:cf` 负责。两者互补，不是替代关系。
@@ -267,7 +267,7 @@ node tools/sync-shared.mjs
 
 | 文档 | 内容 |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | **唯一事实来源**：14 个集合字段、8 个云函数与全部 action、订单状态机、信用分算法、页面地图、设计 token、组件接口、编码规范 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | **唯一事实来源**：17 个集合字段、9 个云函数与全部 action、订单状态机、信用分算法、页面地图、设计 token、组件接口、编码规范 |
 | [docs/部署指南.md](docs/部署指南.md) | 前置准备 → 导入项目 → 建环境 → 部署云函数 → 初始化数据库 → 集合权限表 → 设管理员 → 云存储 → 订阅消息 → 定位服务 → 报错排查 → 上线检查清单 |
 | [docs/数据库设计.md](docs/数据库设计.md) | 设计原则、13 张集合详细表结构、Mermaid ER 图、索引建议、枚举数据字典、数据量估算与分页策略 |
 | [docs/核心机制说明.md](docs/核心机制说明.md) | 时间币冻结-结算、订单状态机、并发安全、信用分算法、实时聊天、地理查询 —— 六个机制的「问题 → 方案 → 代码位置 → 关键片段 → 为什么这么设计」 |
@@ -297,13 +297,13 @@ node tools/sync-shared.mjs
 微信云开发**每个云函数是独立打包上传的**：上传 `cloudfunctions/order/` 时，云端只能拿到这个目录以内的文件，不能 `require('../_shared')` 去引用兄弟目录。所以共享层的分发方式是「单一源码 + 构建同步」：`cloudfunctions/_shared/index.js` 是唯一手写的源文件，`tools/sync-shared.mjs` 把它复制成 `cloudfunctions/<每个函数>/shared/index.js`，代码里统一写 `require('./shared')`。改完源文件不同步，上传的云函数跑的就是旧逻辑 —— 这是本项目最容易踩的坑，`check-project.mjs` 会专门检查每个函数的 `shared/index.js` 是否存在。
 
 **Q7：离线模式能干什么？不能干什么？**
-**能做**：不加任何云环境就让全部 32 个页面（含 8 个管理端页面）跑起来并带真实交互数据 —— 广场分类/排序/搜索、技能详情、下单、订单六个状态的完整流转（含拒单退款、取消不扣分、确认后卖家到账 +2 信用分等断言）、时间币流水与 7 日趋势、信用分与七枚徽章、聊天（2 秒轮询模拟实时）、系统通知、ECharts 真图。适合写论文配图、录演示视频、答辩彩排。
+**能做**：不加任何云环境就让全部 37 个页面（含 8 个管理端页面）跑起来并带真实交互数据 —— 广场分类/排序/搜索、技能详情、下单、订单六个状态的完整流转（含拒单退款、取消不扣分、确认后卖家到账 +2 信用分等断言）、时间币流水与 7 日趋势、信用分与七枚徽章、聊天（2 秒轮询模拟实时）、系统通知、ECharts 真图。适合写论文配图、录演示视频、答辩彩排。
 
 **不能做（这里要说清楚边界）**：验证真实云开发的**网络层与权限层** —— `geoNear` 地理索引、聚合管道、`watch` 长连接推送、真实 `openapi.subscribeMessage` 返回码、单次 `get` 的 1000 条上限、冷启动与并发压测。这些必须部署到真云环境才能测。
 
 所以项目有**两层自动化测试**，各管一段：
-① `node tools/smoke-test-mock.js` —— 65 个 action 的**离线数据层冒烟**，保证每个接口都有数据可渲染；
-② `node tools/test-cloudfunctions/run.js` —— **云函数业务规则回归**（1901 条断言 / 88 组 / 121 次事务），在内存版 SDK 上真实跑订单状态机与时间币账务，但**不覆盖网络与权限层**。
+① `node tools/smoke-test-mock.js` —— 75 个 action 的**离线数据层冒烟**，保证每个接口都有数据可渲染；
+② `node tools/test-cloudfunctions/run.js` —— **云函数业务规则回归**（2261 条断言 / 133 组 / 147 次事务），在内存版 SDK 上真实跑订单状态机与时间币账务，但**不覆盖网络与权限层**。
 两者的定位都是「快速回归 + 可演示的证据」，不等于完整的系统测试（见 [tools/test-cloudfunctions/README.md](tools/test-cloudfunctions/README.md) 的「暂时没有覆盖的部分」）。
 
 **Q8：`echarts.js` 有 1MB 太大怎么办？**

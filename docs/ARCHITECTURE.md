@@ -400,7 +400,7 @@ campus-time-bank/
 }
 ```
 
-### 3.14 `favorites` — 技能收藏（第 14 个集合）
+### 3.14 `favorites` — 技能收藏（第 17 个集合）
 ```js
 {
   _id: String,
@@ -577,7 +577,7 @@ await db.runTransaction(async tx => {
 ### 4.9 `initdb` — 一键初始化
 | action | 说明 |
 |---|---|
-| `init` | 创建 14 个集合并写入种子数据（分类、config、banner、演示用户/技能/订单） |
+| `init` | 创建 17 个集合并写入种子数据（分类、config、banner、演示用户/技能/订单） |
 | `clear` | 清空业务集合（保留 users 里的 admin） |
 | `setAdmin` | `{ openid }` 或 `{ studentNo }` 把指定用户设为管理员 |
 
@@ -829,7 +829,7 @@ this.watcher && this.watcher.close()
 
 1. **改云函数的返回结构或业务规则后，立刻检查 `mock.js` 的对应 handler。**
 2. 判断标准不是「字段名一样」，而是**行为一样**：同样的入参要得到同样的结果与同样的错误码。
-3. 每个 action 改完后至少跑一次 `node tools/smoke-test-mock.js`（它会把 65 个 action 全调一遍）。
+3. 每个 action 改完后至少跑一次 `node tools/smoke-test-mock.js`（它会把 75 个 action 全调一遍）。
 4. 结构层面的漂移由 `node tools/check-project.mjs` 兜底（action 名、返回字段名）；
    **行为层面的漂移目前只能靠人工对照** —— 这是本项目已知的工程局限，答辩时可如实说明，
    并指出改进方向：把「业务规则」抽成两端共享的纯函数表（JSON 规则 + 各自的执行器）。
@@ -871,7 +871,7 @@ this.watcher && this.watcher.close()
 `config.json` **不支持**声明超时时间，只能在云开发控制台
 （云函数 → 函数配置）或 CLI 调整。
 
-`initdb` 的 `init` 要创建 14 个集合并写入 60+ 条种子数据，
+`initdb` 的 `init` 要创建 17 个集合并写入 60+ 条种子数据，
 **首次冷启动下 3 秒必然不够**，会返回：
 
 ```json

@@ -476,6 +476,121 @@ for (const wf of wxmlFiles) {
 }
 const wxmlCount = wxmlFiles.length
 
+/* ==================================================================
+ * §5.8 文档里的关键数字与实际一致
+ * ==================================================================
+ * 动因：一轮迭代下来，README / 答辩材料 / 部署指南里的数字**全过时了** ——
+ *   「8 个云函数」实际 9 个、「65 个 action」实际 75、「14 个集合」实际 17、
+ *   「32 个页面」实际 37、「1901 条断言」实际 2261，六份文档都中招。
+ *
+ *   ★ 原有三套门禁**一条都拦不住** —— 它们只看代码，从来不读文档。
+ *   而答辩材料是给老师看的，数字对不上比不写还糟。
+ *
+ * 【为什么要看上下文，而不是"见到 N 个 action 就比总数"】
+ *   文档里的数字不全是**总数**，还有三种：
+ *     · 「admin 云函数的 20 个 action」   —— 单个云函数的
+ *     · 「11 个集合：仅管理端可读写」     —— 按权限分类的
+ *     · 「阶段 1（约 53 个 action）」     —— 分批执行的
+ *   一律当总数比会误报一大片（第一版就误报了约三成）。
+ *   所以：**提到哪个云函数，就按那个云函数的真实 action 数比**；
+ *   带「约 / 阶段 / 权限 / 第 N 个」这类限定词的，直接跳过。
+ *
+ * ★ 真实值会随下面的汇总一起打出来 ——
+ *   门禁自己也会撒谎（我写过一个「读到空值反而判通过」的检查），
+ *   所以中间结果必须可见。
+ * ★ 断言数**不在这里查**：它要靠跑测试才知道，静态算不出来，
+ *   硬编码进去只会又多一处漂移。
+ * ================================================================== */
+const cfCount = fs.readdirSync(CF, { withFileTypes: true })
+  .filter(d => d.isDirectory() && d.name !== '_shared' && exists(path.join(CF, d.name, 'index.js'))).length
+const actionTotal = definedActions.size
+const colTotal = (read(path.join(CF, '_shared', 'index.js')).match(/^\s{2}[A-Z][A-Z_]*:\s*'[a-z_]+'/gm) || []).length
+
+/** 每个云函数各自的 action 数 —— 取自 api.js 的声明，和 definedActions 同源 */
+const actionsByNs = {}
+for (const m of apiSrc.matchAll(/call\(\s*'([A-Za-z_]\w*)'\s*,\s*'([A-Za-z_]\w*)'/g)) {
+  actionsByNs[m[1]] = (actionsByNs[m[1]] || 0) + 1
+}
+
+const subPacks = (appJson && (appJson.subpackages || appJson.subPackages)) || []
+const adminPageCount = subPacks.reduce((s, x) => s + ((x.pages || []).length), 0)
+/* ★ 不能用 main —— 它是 L80 那个 if 块里的 const，块级作用域拿不到（这个错 node --check 查不出来） */
+const mainPageCount = ((appJson && appJson.pages) || []).length
+const pageTotal = mainPageCount + adminPageCount
+
+/** 限定词：出现这些就说明这个数字不是「总数」，跳过不检查 */
+const NOT_TOTAL = /约|阶段|权限|可读写|仅管理端|所有用户|权重|比例/
+
+/** 「N 个页面」的指向看前文 */
+function pageWant(before) {
+  /* ★ 取「最近」出现的那个 —— 只看「出现过」的话，一行里先提用户端后提管理端，
+     两个数字会都被判成前一个从属词。 */
+  const lastUser = Math.max(before.lastIndexOf('用户端'), before.lastIndexOf('主包'))
+  const lastAdmin = Math.max(before.lastIndexOf('管理端'), before.lastIndexOf('分包'), before.lastIndexOf('packageAdmin'))
+  if (lastUser < 0 && lastAdmin < 0) return { want: pageTotal, what: '页面合计' }
+  return lastAdmin > lastUser
+    ? { want: adminPageCount, what: '管理端页面数' }
+    : { want: mainPageCount, what: '主包页面数' }
+}
+
+/** 数字前面点名的云函数（用于「admin 的 N 个 action」这类） */
+function nsBefore(before) {
+  /* ★ 必须扫整个前缀并取「最近」的那个：
+     README 里是树形列表 `├── login/  … （6 个 action）`，函数名在 48 个字符之外，
+     只看最后 32 个字符根本找不到它，结果被当成了总数 75。 */
+  const tail = before.slice(-80)
+  const re = /(login|skill|order|wallet|user|message|admin|initdb|account)/g
+  let last = null, m
+  while ((m = re.exec(tail))) last = m[1]
+  return last
+}
+
+const docFiles = ['README.md'].concat(
+  fs.readdirSync(path.join(ROOT, 'docs')).filter(f => f.endsWith('.md')).map(f => 'docs/' + f)
+)
+
+const docNumBad = new Set()
+for (const f of docFiles) {
+  const abs = path.join(ROOT, f)
+  if (!exists(abs)) continue
+  read(abs).split(/\r?\n/).forEach((line, i) => {
+    const hit = (got, want, what) => {
+      if (Number(got) !== want) docNumBad.add(`${f}:${i + 1}  「${got} 个${what}」实际是 ${want}`)
+    }
+    const before = (m) => line.slice(0, m.index)   // ★ 整个前缀 —— 从属词可能离数字很远
+    /* 序号说法（第 14 个集合）不是总数，别当总数比 */
+    const skip = (m) => NOT_TOTAL.test(line) || /第\s*\d+\s*个/.test(line.slice(Math.max(0, m.index - 10), m.index + 10))
+
+    for (const m of line.matchAll(/(\d+)\s*个业务云函数/g)) hit(m[1], cfCount, '业务云函数')
+    for (const m of line.matchAll(/云函数层[^\n]{0,30}?(\d+)\s*个函数/g)) hit(m[1], cfCount, '云函数')
+    for (const m of line.matchAll(/(\d+)\s*个云函数/g)) hit(m[1], cfCount, '云函数')
+    for (const m of line.matchAll(/(\d+)\s*个集合/g)) { if (!skip(m)) hit(m[1], colTotal, '集合') }
+
+    /* action / 接口：前面点名了哪个云函数，就按那个函数比 */
+    for (const m of line.matchAll(/(\d+)\s*个\s*(?:action|接口)/g)) {
+      if (skip(m)) continue
+      const ns = nsBefore(before(m))
+      if (ns && actionsByNs[ns] !== undefined) hit(m[1], actionsByNs[ns], ns + ' 的 action')
+      else if (!ns) hit(m[1], actionTotal, 'action')
+      /* 点名了但 api.js 里查不到 —— 不猜，跳过 */
+    }
+
+    for (const m of line.matchAll(/(\d+)\s*个页面/g)) {
+      if (skip(m)) continue
+      const ctx = pageWant(before(m))
+      hit(m[1], ctx.want, ctx.what)
+    }
+    for (const m of line.matchAll(/用户端\s*(\d+)\s*(?:个页面|[+＋/、])/g)) { if (!skip(m)) hit(m[1], mainPageCount, '主包页面') }
+    for (const m of line.matchAll(/管理端\s*(\d+)\s*(?:个页面|[)）+＋/、])/g)) { if (!skip(m)) hit(m[1], adminPageCount, '管理端页面') }
+  })
+}
+for (const b of docNumBad) err('文档数字过时 → ' + b)
+
+console.log(`  云函数目录        ${C.b}${cfCount}${C.r} 个`)
+console.log(`  集合常量          ${C.b}${colTotal}${C.r} 个`)
+console.log(`  页面              ${C.b}${pageTotal}${C.r} 个（主包 ${mainPageCount} + 管理端 ${adminPageCount}）`)
+console.log(`  文档数字比对      ${docNumBad.size ? C.red + docNumBad.size + ' 处过时' + C.r : C.b + '一致' + C.r}`)
+
 console.log(`  已定义 action     ${C.b}${definedActions.size}${C.r} 个`)
 console.log(`  mock 覆盖         ${C.b}${definedActions.size - missingMock.length}/${definedActions.size}${C.r}`)
 console.log(`  require 相对引用  ${C.b}${requireCount}${C.r} 处`)
