@@ -42,31 +42,51 @@ module.exports = async function (t) {
   t.eq(sd.config.inserted, 1, '写入 1 份全局配置')
   t.eq(sd.banners.inserted, 3, '写入 3 条首页轮播')
   t.eq(sd.users.inserted, 6, '写入 6 个演示用户')
-  t.eq(sd.skills.inserted, 12, '写入 12 条演示技能')
-  t.eq(sd.orders.inserted, 8, '写入 8 张演示订单')
+  t.eq(sd.skills.inserted, 13, '写入 13 条演示技能')
+  t.eq(sd.orders.inserted, 11, '写入 11 张演示订单')
   t.eq(sd.reviews.inserted, 6, '写入 6 条演示评价')
   t.eq(sd.walletLogs.inserted, 8, '写入 8 条时间币流水')
-  t.eq(sd.creditLogs.inserted, 7, '写入 7 条信用分流水')
+  t.eq(sd.creditLogs.inserted, 10, '写入 10 条信用分流水')
   t.eq(sd.notices.inserted, 5, '写入 5 条系统通知')
-  t.eq(sd.reports.inserted, 2, '写入 2 条举报')
-  t.ok(Object.keys(sd).length === 13, 'seeded 覆盖 13 个种子集合', Object.keys(sd).join(','))
+  t.eq(sd.reports.inserted, 3, '写入 3 条举报')
+  t.ok(Object.keys(sd).length === 15, 'seeded 覆盖 15 个种子集合（含新增的 appeals / favorites）', Object.keys(sd).join(','))
 
   const store = t.store()
   t.eq(store.users.length, 8, '库里 users = 8')
-  t.eq(store.skills.length, 12, '库里 skills = 12')
-  t.eq(store.orders.length, 8, '库里 orders = 8')
+  t.eq(store.skills.length, 13, '库里 skills = 13')
+  t.eq(store.orders.length, 11, '库里 orders = 11')
   t.eq(store.reviews.length, 6, '库里 reviews = 6')
   t.eq(store.categories.length, 10, '库里 categories = 10')
   t.eq(store.banners.length, 3, '库里 banners = 3')
   t.eq(store.config.length, 1, '库里 config = 1')
   t.eq(store.wallet_logs.length, 8, '库里 wallet_logs = 8')
-  t.eq(store.credit_logs.length, 7, '库里 credit_logs = 7')
+  t.eq(store.credit_logs.length, 10, '库里 credit_logs = 10')
   t.eq(store.notices.length, 5, '库里 notices = 5')
-  t.eq(store.reports.length, 2, '库里 reports = 2')
+  t.eq(store.reports.length, 3, '库里 reports = 3')
+
+  /* ==================================================================
+   * ★ 本轮新增的两类演示数据 —— 断言到「状态覆盖」而不只是「有数据」。
+   *   只有数量对、状态不全的话，管理端的筛选页打开还是空的。
+   * ================================================================== */
+  t.eq(store.appeals.length, 4, '★ 库里 appeals = 4（新增：演示申诉）')
+  t.eq(store.appeals.filter(x => x.status === 0).length, 2, '★ 2 条待处理 —— 管理端才有东西可操作')
+  t.eq(store.appeals.filter(x => x.status === 1).length, 1, '★ 1 条已成立')
+  t.eq(store.appeals.filter(x => x.status === 2).length, 1, '★ 1 条未成立')
+  t.eq(store.appeals.filter(x => x.type === 'credit').length, 3, '★ 信用分类 3 条')
+  t.eq(store.appeals.filter(x => x.type === 'skill').length, 1, '★ 技能类 1 条')
+  t.eq(store.skills.filter(x => x.status === 3).length, 1,
+    '★ 有 1 个被违规下架的技能 —— 技能类申诉才有对象（否则那条 demo_appeal_02 点进去是空的）')
+  t.eq(store.favorites.length, 3, '★ 库里 favorites = 3（新增：演示收藏）')
+  t.eq(store.orders.filter(x => x.suspectFast).length, 2,
+    '★ 有 2 笔「可疑快单」—— 异常监控页才有命中的演示案例')
+  /* 异常监控靠「来源集中」命中：这 3 笔的买家必须是同一个 */
+  const suspectOrders = store.orders.filter(o => o.sellerId === 'acct_demo_u6' || o.suspectFast)
+  t.eq(store.orders.filter(x => x.suspectFast).every(x => x.buyerId === store.orders.filter(y => y.suspectFast)[0].buyerId), true,
+    '★ 可疑快单的买家是**同一个人** —— 这正是「来源集中」判据要抓的形态')
 
   t.eq(r.data.summary.users, 8, 'summary.users = 8')
-  t.eq(r.data.summary.skills, 12, 'summary.skills = 12')
-  t.eq(r.data.summary.orders, 8, 'summary.orders = 8')
+  t.eq(r.data.summary.skills, 13, 'summary.skills = 13')
+  t.eq(r.data.summary.orders, 11, 'summary.orders = 11')
   t.eq(r.data.summary.reviews, 6, 'summary.reviews = 6')
   t.eq(r.data.summary.categories, 10, 'summary.categories = 10')
   t.eq(r.data.summary.banners, 3, 'summary.banners = 3')
@@ -107,16 +127,16 @@ module.exports = async function (t) {
   t.eq(r.data.existed.length, 17, '★ 第二次 existed = 17')
   t.ok(Object.keys(r.data.seeded).every(k => r.data.seeded[k].inserted === 0), '★ 所有集合的 inserted 都是 0（没有重复插入）')
   t.eq(r.data.seeded.users.skipped, 6, '已存在的 6 个演示用户被跳过')
-  t.eq(r.data.seeded.skills.skipped, 12, '已存在的 12 条技能被跳过')
+  t.eq(r.data.seeded.skills.skipped, 13, '已存在的 13 条技能被跳过')
   t.eq(t.store().users.length, 8, '★ users 仍是 8（没有翻倍）')
-  t.eq(t.store().skills.length, 12, '★ skills 仍是 12')
-  t.eq(t.store().orders.length, 8, '★ orders 仍是 8')
+  t.eq(t.store().skills.length, 13, '★ skills 仍是 13')
+  t.eq(t.store().orders.length, 11, '★ orders 仍是 11')
   t.eq(t.store().config.length, 1, '★ config 仍是 1（_id=global 不会写两份）')
   t.eq(r.data.summary.users, 8, '第二次 summary 与第一次一致')
 
   r = await consoleCall({})
   t.eq(r.data.seeded.orders.inserted, 0, '第三次 init 同样 inserted=0')
-  t.eq(t.store().orders.length, 8, '第三次 init 后 orders 仍为 8')
+  t.eq(t.store().orders.length, 11, '第三次 init 后 orders 仍为 11')
 
   /* 断点续跑：上一次 init 中途中断留下的半成品，重跑只补缺失的 */
   blank()
@@ -188,7 +208,7 @@ module.exports = async function (t) {
   await mkAdminState()
   r = await t.call('initdb', 'openid_demo_u2', 'clear', {})
   t.eq(r.code, 403, '★ 非管理员 clear → 403')
-  t.eq(t.store().skills.length, 12, '被拒绝后数据未被清空')
+  t.eq(t.store().skills.length, 13, '被拒绝后数据未被清空')
 
   await mkAdminState()
   r = await t.call('initdb', 'openid_demo_u2', 'setAdmin', { openid: 'openid_demo_u2' })
@@ -385,7 +405,7 @@ module.exports = async function (t) {
   t.eq(t.store().config.length, 1, 'config 仍只有 1 条（是 set 覆盖，不是插入第二条）')
   t.eq(t.store().skills.find(s => s._id === 'demo_skill_01').title !== '被改坏的标题', true,
     '★ 演示技能的标题同样被恢复')
-  t.eq(t.store().skills.length, 12, '修复模式不会把技能数据翻倍')
+  t.eq(t.store().skills.length, 13, '修复模式不会把技能数据翻倍')
 
   // ③ 开关不能残留到下一次调用
   r = await consoleCall({ action: 'init' })

@@ -469,8 +469,7 @@ const accounts = INTERNAL_ACCOUNTS.map(a => ({
 
 const sessions = []
 
-/* ★ 申诉：与 reports 分开 —— 语义不同（举报是「指控别人」，申诉是「为自己申辩」） */
-const appeals = []
+/* 申诉：定义见下方（要引用 creditLogs 的 _id，而 const 不提升） */
 
 /** 当前 mock 身份：内部账户带令牌时会被换成它的合成 openid */
 let currentOpenid = ''
@@ -671,6 +670,16 @@ const skills = [
   mkSkill(OPENID.me, 'offer', '羽毛球陪打（会一点点，主要是陪练）',
     '水平一般但体力好，可以陪你练多球、捡球、当固定球友。东区球场或者体育馆都行。',
     'c6', 1, 60, ['陪练', '体力好'])
+,
+  /*
+   * ★ 被违规下架的技能（status = 3）—— 申诉功能要有「可申诉的下架」才有得演示。
+   *   ★ 刻意追加在**数组末尾**：mock 里到处用下标引用（skills[5]、orders[7]…），
+   *     往开头插一条会让后面所有下标错位，而且**不会报错**，只是内容悄悄变了。
+   */
+  mkSkill(OPENID.math, 'offer', '论文降重 / 查重报告解读（知网、维普）',
+    '帮你把重复率降到 15% 以内，并逐段解释查重报告里为什么标红。',
+    'c6', 8, 90, ['降重', '查重报告'],
+    { status: 3, auditRemark: '涉嫌提供代写服务，与互助性质不符，予以下架', auditTime: daysAgo(5) })
 ]
 
 
@@ -744,6 +753,24 @@ const orders = [
     { days: 5, acceptTime: daysAgo(5), finishTime: daysAgo(4), confirmTime: daysAgo(4), isRatedBuyer: true, buyerScore: 5, isRatedSeller: false }),
   mkOrder('TB20250525142009', s(14), OPENID.math, OPENID.me, 'confirming',
     { days: 7, acceptTime: daysAgo(6), finishTime: daysAgo(1), remark: '陪我打两小时羽毛球' })
+,
+  /*
+   * ★★ 异常增长监控的演示数据 —— 刻意做成「来源集中」：
+   *   卖家 run(U6) 的这 3 笔收入**全部来自同一个买家** design(U4)，
+   *   其中 2 笔还带 suspectFast 标记（完成过快）。
+   *   管理员打开「异常监控」就能看到命中案例，验证判据真的会响。
+   *
+   *   ⚠️ 这是**故意埋的演示数据**，不是真实用户的违规记录。
+   *   其余演示订单的买家很分散，它们**不会**命中 —— 正好也演示了「正常数据不误报」。
+   */
+  mkOrder('TB20250605190010', s(8), OPENID.design, OPENID.run, 'finished',
+    { days: 3, acceptTime: daysAgo(3), finishTime: daysAgo(3), confirmTime: daysAgo(3),
+      suspectFast: true, suspectMinutes: 2 }),
+  mkOrder('TB20250606100011', s(8), OPENID.design, OPENID.run, 'finished',
+    { days: 2, acceptTime: daysAgo(2), finishTime: daysAgo(2), confirmTime: daysAgo(2),
+      suspectFast: true, suspectMinutes: 3 }),
+  mkOrder('TB20250607140012', s(9), OPENID.design, OPENID.run, 'finished',
+    { days: 1, acceptTime: daysAgo(1), finishTime: daysAgo(1), confirmTime: daysAgo(1) })
 ]
 
 /* ------------------------------------------------------------------
@@ -876,13 +903,68 @@ let walletLogs = [
 
 /* ============================ 信用分流水 ============================ */
 const creditLogs = [
-  { _id: rid('cl'), change: 2, score: 112, reason: 'order_finish', reasonText: '订单顺利完成', orderId: orders[7]._id, createTime: daysAgo(4) },
-  { _id: rid('cl'), change: 1, score: 110, reason: 'review_5', reasonText: '收到 5 星好评', orderId: orders[7]._id, createTime: daysAgo(4) },
-  { _id: rid('cl'), change: 2, score: 109, reason: 'order_finish', reasonText: '订单顺利完成', orderId: orders[3]._id, createTime: daysAgo(11) },
-  { _id: rid('cl'), change: 1, score: 107, reason: 'review_5', reasonText: '收到 5 星好评', orderId: orders[3]._id, createTime: daysAgo(11) },
-  { _id: rid('cl'), change: 3, score: 106, reason: 'ontime_streak', reasonText: '连续 5 单按时完成', orderId: '', createTime: daysAgo(12) },
-  { _id: rid('cl'), change: -5, score: 103, reason: 'cancel_after_accept', reasonText: '接单后取消 / 爽约', orderId: orders[5]._id, createTime: daysAgo(21) },
-  { _id: rid('cl'), change: 2, score: 108, reason: 'order_finish', reasonText: '订单顺利完成', orderId: orders[4]._id, createTime: daysAgo(17) }
+  /* ★ 补 _openid：云端每条流水都有 _openid 且按人过滤，这里原来没有，
+     「我的信用分明细」会把所有人的流水都列出来。 */
+  { _id: rid('cl'), _openid: OPENID.me, change: 2, score: 112, reason: 'order_finish', reasonText: '订单顺利完成', orderId: orders[7]._id, createTime: daysAgo(4) },
+  { _id: rid('cl'), _openid: OPENID.me, change: 1, score: 110, reason: 'review_5', reasonText: '收到 5 星好评', orderId: orders[7]._id, createTime: daysAgo(4) },
+  { _id: rid('cl'), _openid: OPENID.me, change: 2, score: 109, reason: 'order_finish', reasonText: '订单顺利完成', orderId: orders[3]._id, createTime: daysAgo(11) },
+  { _id: rid('cl'), _openid: OPENID.me, change: 1, score: 107, reason: 'review_5', reasonText: '收到 5 星好评', orderId: orders[3]._id, createTime: daysAgo(11) },
+  { _id: rid('cl'), _openid: OPENID.me, change: 3, score: 106, reason: 'ontime_streak', reasonText: '连续 5 单按时完成', orderId: '', createTime: daysAgo(12) },
+  { _id: rid('cl'), _openid: OPENID.me, change: -5, score: 103, reason: 'cancel_after_accept', reasonText: '接单后取消 / 爽约', orderId: orders[5]._id, createTime: daysAgo(21) },
+  { _id: rid('cl'), _openid: OPENID.me, change: 2, score: 108, reason: 'order_finish', reasonText: '订单顺利完成', orderId: orders[4]._id, createTime: daysAgo(17) }
+,
+  /* ★ 下面 3 条是**申诉功能的演示原料**（别人的流水，不再混进「我的明细」）：
+     demo_cl_math_minus  math 被举报核实成立 → 扣 10 分  ← 申诉对象（已成立，分数已加回）
+     demo_cl_math_plus   math 申诉成立 → 加回 10 分       ← ★ 写反向流水而不是删原记录，两条都在
+     demo_cl_pc_minus    pc 爽约扣 5 分                   ← 申诉对象（被驳回，分数不动） */
+  { _id: 'demo_cl_math_minus', _openid: OPENID.math, change: -10, score: 123, reason: 'report_valid', reasonText: '举报核实成立', orderId: '', createTime: daysAgo(9) },
+  { _id: 'demo_cl_math_plus', _openid: OPENID.math, change: 10, score: 133, reason: 'appeal_ok', reasonText: '申诉成立，信用分已恢复', orderId: '', createTime: daysAgo(6) },
+  { _id: 'demo_cl_pc_minus', _openid: OPENID.pc, change: -5, score: 91, reason: 'cancel_after_accept', reasonText: '接单后取消 / 爽约', orderId: '', createTime: daysAgo(4) }
+]
+
+/*
+ * ============================ 演示申诉 ============================
+ * 覆盖**三种状态 × 两种类型**，这样管理端筛选和详情都有东西可看。
+ * ★ 与 reports 分开：举报是「指控别人」，申诉是「为自己申辩」。
+ *
+ *   ap_demo_01  credit · 待处理   ← 管理端可以当场处理
+ *   ap_demo_02  skill  · 待处理   ← 对末尾那个被下架技能的申诉，点「成立」会真的恢复上架
+ *   ap_demo_03  credit · 已成立   ← 对应 demo_cl_math_minus / plus（扣分 + 恢复，两条都在账上）
+ *   ap_demo_04  credit · 未成立   ← 驳回，信用分不动
+ */
+const appeals = [
+  {
+    _id: 'ap_demo_01', _openid: OPENID.design, type: 'credit', targetId: 'demo_cl_pc_minus',
+    targetTitle: '接单后取消 / 爽约 -5',
+    reason: '那天室友突发高烧，我陪他去了医务室，是提前跟买家说明并征得同意的。',
+    images: [], restore: { scoreChange: 5, prevStatus: 0 },
+    status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: hoursAgo(20)
+  },
+  {
+    _id: 'ap_demo_02', _openid: OPENID.math, type: 'skill',
+    // ★ 不能写死 id：mock 的 _id 是 rid('skill') 随机生成的。取末尾那条（被下架的技能）
+    targetId: skills[skills.length - 1]._id,
+    targetTitle: '论文降重 / 查重报告解读（知网、维普）',
+    reason: '我只教降重方法和怎么读报告，不代写。详情里那句被理解成代写了。',
+    images: [], restore: { scoreChange: 0, prevStatus: 1 },
+    status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: hoursAgo(8)
+  },
+  {
+    _id: 'ap_demo_03', _openid: OPENID.math, type: 'credit', targetId: 'demo_cl_math_minus',
+    targetTitle: '举报核实成立 -10',
+    reason: '那条举报说的是另一个人，管理员核实时看错了账号。',
+    images: [], restore: { scoreChange: 10, prevStatus: 0 },
+    status: 1, handleRemark: '已与举报人核实，确系指认错误，信用分已恢复。',
+    handlerId: OPENID.me, handleTime: daysAgo(6), createTime: daysAgo(7), undo: 'credit'
+  },
+  {
+    _id: 'ap_demo_04', _openid: OPENID.pc, type: 'credit', targetId: 'demo_cl_pc_minus',
+    targetTitle: '接单后取消 / 爽约 -5',
+    reason: '我觉得不应该扣分。',
+    images: [], restore: { scoreChange: 5, prevStatus: 0 },
+    status: 2, handleRemark: '订单日志显示接单 40 分钟后才取消，且未与买家沟通，维持原处理。',
+    handlerId: OPENID.me, handleTime: daysAgo(2), createTime: daysAgo(3)
+  }
 ]
 
 /* ============================ 会话与消息 ============================ */
@@ -969,6 +1051,7 @@ const notices = [
 /* ============================ 举报 ============================ */
 const reports = [
   { _id: rid('rp'), _openid: OPENID.run, targetType: 'skill', targetId: skills[5]._id, targetTitle: '线性代数 / 概率论 答疑', targetUserId: OPENID.math, reason: '虚假信息 / 与描述不符', remark: '描述里写「考前突击」，实际约了两次都临时放我鸽子，希望能核实一下。', images: [], status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: hoursAgo(10) },
+  { _id: 'rp_demo_03', _openid: OPENID.math, targetType: 'review', targetId: reviews[0]._id, targetTitle: '评价：证件照拍摄', targetUserId: OPENID.photo, reason: '恶意差评 / 内容不实', remark: '这条评价说的不是我，而且内容不实。', images: [], status: 2, handleRemark: '经核实该评价为真实体验，不予处理。', handlerId: OPENID.me, handleTime: daysAgo(3), createTime: daysAgo(4) },
   { _id: rid('rp'), _openid: OPENID.pc, targetType: 'user', targetId: OPENID.design, targetTitle: '刘佳怡', targetUserId: OPENID.design, reason: '爽约 / 服务态度恶劣', remark: '约定时间没出现，也没提前说明。', images: [], status: 1, handleRemark: '已联系双方核实，对被举报人信用分扣除 5 分并警告。', handlerId: OPENID.me, handleTime: daysAgo(2), createTime: daysAgo(5) }
 ]
 
@@ -983,7 +1066,12 @@ const banners = [
  * 与云端 favorites 集合等价：{ _openid, skillId, createTime }
  * 单独建集合而不是在 skills 上挂数组，技能文档不会随收藏人数膨胀。
  * ========================================================================== */
-const favorites = []
+/** 演示收藏（「我的收藏」页要有东西可看） */
+const favorites = [
+  { _id: 'fav_demo_01', _openid: OPENID.me, skillId: skills[6]._id, createTime: daysAgo(2) },
+  { _id: 'fav_demo_02', _openid: OPENID.me, skillId: skills[8]._id, createTime: daysAgo(5) },
+  { _id: 'fav_demo_03', _openid: OPENID.me, skillId: skills[0]._id, createTime: daysAgo(3) }
+]
 
 /* ============================ 全局配置 ============================ */
 const config = {
@@ -1617,7 +1705,10 @@ const handlers = {
   },
 
   'user.creditLogs': d => {
-    const list = creditLogs.slice().sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
+    // ★ 按 _openid 过滤，与云端一致 —— 否则会把别人的信用分变动也列出来
+    const list = creditLogs
+      .filter(x => !x._openid || x._openid === OPENID.me)
+      .sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
     return paginate(list, d.page, d.size)
   },
 

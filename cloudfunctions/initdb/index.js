@@ -8,7 +8,7 @@
  *   · 否则必须调用者已是 admin
  *
  * 设计要点：
- *   · 13 个集合逐个 db.createCollection，已存在会抛错 → try/catch 吞掉
+ *   · 全部集合逐个 db.createCollection，已存在会抛错 → try/catch 吞掉（数量见 ALL_COLLECTIONS）
  *   · 幂等：所有种子写入前先按 _id 探测，重复调用不会产生重复数据
  *   · 云数据库单次删除上限 100 条 → 循环批量删除
  *   · 演示数据文案与 Campus Time Bank/utils/mock.js 保持一致（答辩演示用）
@@ -566,6 +566,15 @@ function mkDemoSkill(id, authorId, type, title, desc, catId, price, duration, ta
  * 文案照抄 utils/mock.js 的 mkSkill 清单（剔除作者为演示「我」的两条）
  */
 const DEMO_SKILLS = [
+  /*
+   * ★ 被违规下架的技能（status = 3）—— 申诉功能要有一个「可申诉的下架」才有得演示。
+   *   demo_appeal_02 就是 U3 对它发起的申诉（待处理，管理员可当场点「成立」把它恢复上架）。
+   *   下架原因写在 auditRemark 里：申诉成立后会**保留**它 —— 那是历史的一部分。
+   */
+  mkDemoSkill('demo_skill_13', U3, 'offer', '论文降重 / 查重报告解读（知网、维普）',
+    '帮你把重复率降到 15% 以内，并逐段解释查重报告里为什么标红。',
+    'c6', 8, 90, ['降重', '查重报告'], 20,
+    { status: 3, auditRemark: '涉嫌提供代写服务，与互助性质不符，予以下架', auditTime: daysAgo(5) }),
   mkDemoSkill('demo_skill_01', U1, 'offer', '吉他入门一对一，零基础也能弹唱',
     '六年琴龄，音乐社社长。第一节课带你认识吉他、学会按和弦；三节课内能完整弹唱一首歌。\n自带两把琴，你不用准备任何东西。教学地点在艺术楼琴房或者宿舍楼下都行。',
     'c2', 2, 60, ['零基础友好', '自带吉他', '可试听'], 9, { viewCount: 486, orderCount: 9 }),
@@ -672,6 +681,26 @@ function mkDemoOrder(id, no, skillId, buyerId, sellerId, status, ageDays, extra)
 
 /** 演示订单 8 条，覆盖 waiting / ongoing / confirming / finished / canceled 全状态 */
 const DEMO_ORDERS = [
+  /*
+   * ★★ 异常增长监控的演示数据 —— 刻意做成「来源集中」的样子：
+   *   卖家 U6 有 3 笔收入，**全部来自同一个买家 U4**（前 2 人占比 100%），
+   *   其中 2 笔还带着 suspectFast 标记（完成过快）。
+   *   管理员打开「异常监控」就能看到一个命中案例，验证判据真的会响。
+   *
+   *   ⚠️ 这是**故意埋的演示数据**，不是真实用户的违规记录。
+   *      如果不想在答辩时看到「可疑账户」，删掉这 3 条即可。
+   *
+   *   另外注意：其余演示订单的买家都很分散（U1/U2/U3/U4/U5/U6 互相都有），
+   *   它们**不会**命中 —— 这正好也演示了「正常数据不误报」。
+   */
+  mkDemoOrder('demo_order_10', 'TB20250605190010', 'demo_skill_10', U4, U6, 'finished', 3,
+    { acceptTime: daysAgo(3), finishTime: daysAgo(3), confirmTime: daysAgo(3), amount: 6,
+      suspectFast: true, suspectMinutes: 2, isRatedBuyer: true, buyerScore: 5, isRatedSeller: true, sellerScore: 5 }),
+  mkDemoOrder('demo_order_11', 'TB20250606100011', 'demo_skill_10', U4, U6, 'finished', 2,
+    { acceptTime: daysAgo(2), finishTime: daysAgo(2), confirmTime: daysAgo(2), amount: 6,
+      suspectFast: true, suspectMinutes: 3 }),
+  mkDemoOrder('demo_order_12', 'TB20250607140012', 'demo_skill_11', U4, U6, 'finished', 1,
+    { acceptTime: daysAgo(1), finishTime: daysAgo(1), confirmTime: daysAgo(1), amount: 5 }),
   mkDemoOrder('demo_order_01', 'TB20250601120001', 'demo_skill_01', U2, U1, 'waiting', 0.1,
     { remark: '想学《晴天》，周末下午有空', expectTime: '周六 15:00 之后' }),
 
@@ -776,6 +805,16 @@ const DEMO_WALLET_LOGS = [
 
 /** 演示信用分流水 */
 const DEMO_CREDIT_LOGS = [
+  /*
+   * ★ 下面 3 条是**申诉功能的演示原料**，不是随手加的数据：
+   *   demo_cl_08  U3 被举报核实成立 → 扣 10 分   ← demo_appeal_03 的申诉对象
+   *   demo_cl_09  U3 申诉成立 → 加回 10 分       ← ★ 撤销是「写反向流水」而不是删原记录，
+   *                                              所以 demo_cl_08 **仍然在**，两条都在账上
+   *   demo_cl_10  U5 爽约扣 5 分                 ← demo_appeal_04 的申诉对象（被驳回，分数不动）
+   */
+  { _id: 'demo_cl_08', _openid: U3, change: -10, score: 123, reason: 'report_valid', reasonText: '举报核实成立', orderId: '', createTime: daysAgo(9) },
+  { _id: 'demo_cl_09', _openid: U3, change: 10, score: 133, reason: 'appeal_ok', reasonText: '申诉成立，信用分已恢复', orderId: '', createTime: daysAgo(6) },
+  { _id: 'demo_cl_10', _openid: U5, change: -5, score: 91, reason: 'cancel_after_accept', reasonText: '接单后取消 / 爽约', orderId: '', createTime: daysAgo(4) },
   { _id: 'demo_cl_01', _openid: U4, change: 2, score: 109, reason: 'order_finish', reasonText: '订单顺利完成', orderId: 'demo_order_04', createTime: daysAgo(11) },
   { _id: 'demo_cl_02', _openid: U4, change: 1, score: 107, reason: 'review_5', reasonText: '收到 5 星好评', orderId: 'demo_order_04', createTime: daysAgo(11) },
   { _id: 'demo_cl_03', _openid: U1, change: 2, score: 128, reason: 'order_finish', reasonText: '订单顺利完成', orderId: 'demo_order_01', createTime: daysAgo(8) },
@@ -797,7 +836,60 @@ const DEMO_NOTICES = [
 /** 演示举报 2 条 */
 const DEMO_REPORTS = [
   { _id: 'demo_report_01', _openid: U6, targetType: 'skill', targetId: 'demo_skill_06', targetTitle: '线性代数 / 概率论 答疑', targetUserId: U3, reason: '虚假信息 / 与描述不符', images: [], status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: hoursAgo(10) },
+  // ★ 补一条 status=2（已驳回）：三种状态都有，管理端筛选才演示得全
+  { _id: 'demo_report_03', _openid: U3, targetType: 'review', targetId: 'demo_review_02', targetTitle: '评价：王雨桐 证件照拍摄', targetUserId: U2, reason: '恶意差评 / 内容不实', images: [], status: 2, handleRemark: '经核实该评价为真实体验，不予处理。', handlerId: '', handleTime: daysAgo(3), createTime: daysAgo(4) },
   { _id: 'demo_report_02', _openid: U5, targetType: 'user', targetId: U4, targetTitle: '刘佳怡', targetUserId: U4, reason: '爽约 / 服务态度恶劣', images: [], status: 1, handleRemark: '已联系双方核实，对被举报人信用分扣除 5 分并警告。', handlerId: '', handleTime: daysAgo(2), createTime: daysAgo(5) }
+]
+
+/* ============================ 演示申诉 / 收藏 ============================ */
+/**
+ * 演示申诉 —— 覆盖**三种状态 × 两种类型**，这样管理端筛选和详情都有东西可看：
+ *   demo_appeal_01  credit · 待处理 —— 管理员可以当场处理
+ *   demo_appeal_02  skill  · 待处理 —— 对 demo_skill_13 的下架申诉，点「成立」会真的恢复上架
+ *   demo_appeal_03  credit · 已成立 —— 对应 demo_cl_08 / demo_cl_09（扣分 + 恢复，两条都在账上）
+ *   demo_appeal_04  credit · 未成立 —— 驳回，信用分不动
+ *
+ * ★ restore 里的恢复量是**提交申诉时固化**的（见 user 云函数的说明），
+ *   所以演示数据也按同样结构写，不能等到处理时再算。
+ */
+const DEMO_APPEALS = [
+  {
+    _id: 'demo_appeal_01', _openid: U4, type: 'credit', targetId: 'demo_cl_06',
+    targetTitle: '接单后取消 / 爽约 -5',
+    reason: '那天室友突发高烧，我陪他去了医务室，是提前跟买家说明并征得同意的，不是无故爽约。',
+    images: [], restore: { scoreChange: 5, prevStatus: 0 },
+    status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: hoursAgo(20)
+  },
+  {
+    _id: 'demo_appeal_02', _openid: U3, type: 'skill', targetId: 'demo_skill_13',
+    targetTitle: '论文降重 / 查重报告解读（知网、维普）',
+    reason: '我只教降重方法和怎么读报告，不代写。详情里写的「逐段解释为什么标红」被人理解成代写了。',
+    images: [], restore: { scoreChange: 0, prevStatus: 1 },
+    status: 0, handleRemark: '', handlerId: '', handleTime: null, createTime: hoursAgo(8)
+  },
+  {
+    _id: 'demo_appeal_03', _openid: U3, type: 'credit', targetId: 'demo_cl_08',
+    targetTitle: '举报核实成立 -10',
+    reason: '那条举报说的是另一个人，管理员核实时看错了账号。',
+    images: [], restore: { scoreChange: 10, prevStatus: 0 },
+    status: 1, handleRemark: '已与举报人核实，确系指认错误，信用分已恢复。',
+    handlerId: '', handleTime: daysAgo(6), createTime: daysAgo(7), undo: 'credit'
+  },
+  {
+    _id: 'demo_appeal_04', _openid: U5, type: 'credit', targetId: 'demo_cl_10',
+    targetTitle: '接单后取消 / 爽约 -5',
+    reason: '我觉得不应该扣分。',
+    images: [], restore: { scoreChange: 5, prevStatus: 0 },
+    status: 2, handleRemark: '订单日志显示接单 40 分钟后才取消，且未与买家沟通，维持原处理。',
+    handlerId: '', handleTime: daysAgo(2), createTime: daysAgo(3)
+  }
+]
+
+/** 演示收藏（「我的收藏」页要有东西可看） */
+const DEMO_FAVORITES = [
+  { _id: 'demo_fav_01', _openid: U1, skillId: 'demo_skill_07', createTime: daysAgo(2) },
+  { _id: 'demo_fav_02', _openid: U1, skillId: 'demo_skill_09', createTime: daysAgo(5) },
+  { _id: 'demo_fav_03', _openid: U4, skillId: 'demo_skill_01', createTime: daysAgo(3) }
 ]
 
 /* ============================ action ============================ */
@@ -814,7 +906,7 @@ async function actionInit(event) {
   const openid = getOpenId()
   const guard = await guardDangerous(openid, 'init')
 
-  /* ① 创建 13 个集合（已存在会抛错 → 必须 try/catch 吞掉） */
+  /* ① 创建全部集合（已存在会抛错 → 必须 try/catch 吞掉；清单见 ALL_COLLECTIONS） */
   const created = []
   const existed = []
   for (const name of ALL_COLLECTIONS) {
@@ -843,6 +935,8 @@ async function actionInit(event) {
   seeded.creditLogs = await seedDocs(C.CREDIT_LOGS, DEMO_CREDIT_LOGS, '演示信用分流水')
   seeded.notices = await seedDocs(C.NOTICES, DEMO_NOTICES, '演示系统通知')
   seeded.reports = await seedDocs(C.REPORTS, DEMO_REPORTS, '演示举报')
+  seeded.appeals = await seedDocs(C.APPEALS, DEMO_APPEALS, '演示申诉')
+  seeded.favorites = await seedDocs(C.FAVORITES, DEMO_FAVORITES, '演示收藏')
 
   const summary = {
     users: await countOf(C.USERS),
