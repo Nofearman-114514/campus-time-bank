@@ -435,8 +435,8 @@ const ACCT_ADMIN_OPENID = 'acct_internal_admin'
 const ACCT_DEBUG_OPENID = 'acct_internal_debugger'
 
 const INTERNAL_ACCOUNTS = [
-  { username: 'admin', password: 'Admin@2026', openid: ACCT_ADMIN_OPENID, nickName: '内部管理员', role: 'admin' },
-  { username: 'debugger', password: 'Debug@2026', openid: ACCT_DEBUG_OPENID, nickName: '内部调试员', role: 'debugger' }
+  { username: 'admin', password: 'V7mK2qXp', openid: ACCT_ADMIN_OPENID, nickName: '内部管理员', role: 'admin' },
+  { username: 'debugger', password: 'T4nR9wZb', openid: ACCT_DEBUG_OPENID, nickName: '内部调试员', role: 'debugger' }
 ]
 
 INTERNAL_ACCOUNTS.forEach(a => {

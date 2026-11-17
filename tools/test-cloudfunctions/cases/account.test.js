@@ -46,9 +46,9 @@ module.exports = async function (t) {
    * ================================================================== */
   t.group('组 1 · account.login：账号密码登录（内部账户不绑定微信号）')
 
-  await seedAccount('admin', 'Admin@2026', 'acct_internal_admin', 'admin')
+  await seedAccount('admin', 'test-only-pass-A', 'acct_internal_admin', 'admin')
 
-  let r = await A('o_buy', { username: 'admin', password: 'Admin@2026' })
+  let r = await A('o_buy', { username: 'admin', password: 'test-only-pass-A' })
   t.eq(r.code, 0, '★ 账号密码正确 → 登录成功')
   t.ok(typeof r.data.token === 'string' && r.data.token.length === 64, '★ 发下 64 位十六进制令牌（32 字节随机数）')
   t.ok(r.data.expireTime > Date.now(), '令牌有有效期')
@@ -56,7 +56,7 @@ module.exports = async function (t) {
   t.eq(r.data.user._openid, 'acct_internal_admin', '★ 返回的身份是**合成 openid**，不是微信号')
   t.eq(t.store().sessions.length, 1, '建立 1 条会话')
 
-  r = await A('o_buy', { username: 'ADMIN', password: 'Admin@2026' })
+  r = await A('o_buy', { username: 'ADMIN', password: 'test-only-pass-A' })
   t.eq(r.code, 0, '账号大小写不敏感（统一转小写）')
 
   r = await A('o_buy', { username: 'admin', password: '错的密码' })
@@ -76,7 +76,7 @@ module.exports = async function (t) {
    * ================================================================== */
   t.group('组 2 · 防爆破：连续 5 次失败锁定 15 分钟')
 
-  await seedAccount('admin', 'Admin@2026', 'acct_internal_admin', 'admin')
+  await seedAccount('admin', 'test-only-pass-A', 'acct_internal_admin', 'admin')
 
   for (let i = 0; i < 4; i++) {
     r = await A('o_buy', { username: 'admin', password: 'x' })
@@ -89,15 +89,15 @@ module.exports = async function (t) {
   t.eq(t.store().accounts[0].failCount, 0, '★ 达到阈值后计数清零并进入锁定')
   t.ok(t.store().accounts[0].lockUntil > Date.now(), '★ 已写入锁定截止时间')
 
-  r = await A('o_buy', { username: 'admin', password: 'Admin@2026' })
+  r = await A('o_buy', { username: 'admin', password: 'test-only-pass-A' })
   t.eq(r.code, 429, '★★ 锁定期间**即使密码正确**也拒绝（否则锁定形同虚设）')
   t.ok(/尝试次数过多/.test(r.msg), '429 文案提示稍后再试', r.msg)
 
   t.store().accounts[0].lockUntil = 0
-  r = await A('o_buy', { username: 'admin', password: 'Admin@2026' })
+  r = await A('o_buy', { username: 'admin', password: 'test-only-pass-A' })
   t.eq(r.code, 0, '锁定解除后可正常登录')
 
-  r = await A('o_buy', { username: 'admin', password: 'Admin@2026' })
+  r = await A('o_buy', { username: 'admin', password: 'test-only-pass-A' })
   t.eq(t.store().accounts[0].failCount, 0, '登录成功后失败计数保持 0')
 
   /* ==================================================================
@@ -105,8 +105,8 @@ module.exports = async function (t) {
    * ================================================================== */
   t.group('组 3 · ★ 令牌身份替换：带令牌调用其它云函数时以该账户身份操作')
 
-  await seedAccount('debugger', 'Debug@2026', 'acct_internal_debugger', 'debugger')
-  r = await A('o_buy', { username: 'debugger', password: 'Debug@2026' })
+  await seedAccount('debugger', 'test-only-pass-D', 'acct_internal_debugger', 'debugger')
+  r = await A('o_buy', { username: 'debugger', password: 'test-only-pass-D' })
   t.eq(r.code, 0, '内部调试员登录成功')
   const token = r.data.token
 
@@ -131,8 +131,8 @@ module.exports = async function (t) {
    * ================================================================== */
   t.group('组 4 · ★ 伪造 / 过期令牌只回退微信身份，不提升权限')
 
-  await seedAccount('debugger', 'Debug@2026', 'acct_internal_debugger', 'debugger')
-  r = await A('o_buy', { username: 'debugger', password: 'Debug@2026' })
+  await seedAccount('debugger', 'test-only-pass-D', 'acct_internal_debugger', 'debugger')
+  r = await A('o_buy', { username: 'debugger', password: 'test-only-pass-D' })
   const good = r.data.token
 
   me = await t.call('login', 'o_buy', 'login', { __token: 'f'.repeat(64) })
@@ -156,8 +156,8 @@ module.exports = async function (t) {
    * ================================================================== */
   t.group('组 5 · account.logout / me')
 
-  await seedAccount('admin', 'Admin@2026', 'acct_internal_admin', 'admin')
-  r = await A('o_buy', { username: 'admin', password: 'Admin@2026' })
+  await seedAccount('admin', 'test-only-pass-A', 'acct_internal_admin', 'admin')
+  r = await A('o_buy', { username: 'admin', password: 'test-only-pass-A' })
   const tk2 = r.data.token
 
   let who = await t.call('account', 'o_buy', 'me', { __token: tk2 })
@@ -186,9 +186,9 @@ module.exports = async function (t) {
    * ================================================================== */
   t.group('组 6 · 被禁用的内部账户不能登录')
 
-  await seedAccount('admin', 'Admin@2026', 'acct_internal_admin', 'admin')
+  await seedAccount('admin', 'test-only-pass-A', 'acct_internal_admin', 'admin')
   t.store().accounts[0].status = 0
-  r = await A('o_buy', { username: 'admin', password: 'Admin@2026' })
+  r = await A('o_buy', { username: 'admin', password: 'test-only-pass-A' })
   t.eq(r.code, 401, '★ 已禁用账号 → 401（与密码错误同文案，不透露账号存在）')
   t.eq(t.store().sessions.length, 0, '被拒后没有建立会话')
 }
