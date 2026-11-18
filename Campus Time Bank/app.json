@@ -55,7 +55,7 @@
   "window": {
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#FFFFFF",
-    "navigationBarTitleText": "校园时间银行",
+    "navigationBarTitleText": "校内时间积分平台",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#F5F7F9",
     "enablePullDownRefresh": false
